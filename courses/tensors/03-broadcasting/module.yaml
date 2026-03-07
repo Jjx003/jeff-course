@@ -1,0 +1,14 @@
+title: "Broadcasting"
+slug: "broadcasting"
+description: "Implement NumPy-style broadcasting rules for element-wise tensor operations."
+order: 3
+difficulty: intermediate
+estimatedMinutes: 40
+tags:
+  - broadcasting
+  - numpy
+  - element-wise
+languages:
+  - python
+  - cpp
+defaultLanguage: python

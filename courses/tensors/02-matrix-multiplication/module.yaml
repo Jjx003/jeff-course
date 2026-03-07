@@ -1,0 +1,14 @@
+title: "Matrix Multiplication"
+slug: "matrix-multiplication"
+description: "Implement matmul from scratch using your Tensor class, then analyze its complexity."
+order: 2
+difficulty: intermediate
+estimatedMinutes: 35
+tags:
+  - matmul
+  - linear-algebra
+  - optimization
+languages:
+  - python
+  - cpp
+defaultLanguage: python

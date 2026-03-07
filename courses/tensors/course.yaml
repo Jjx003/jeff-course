@@ -1,0 +1,12 @@
+title: "Introduction to Tensors"
+slug: "tensors"
+description: >
+  Build intuition for tensors from the ground up. Starting from raw memory layouts,
+  you will implement shapes, strides, views, broadcasting, and matrix multiplication —
+  the primitives that underpin every deep-learning framework.
+tags:
+  - machine-learning
+  - linear-algebra
+  - deep-learning
+difficulty: intermediate
+order: 1

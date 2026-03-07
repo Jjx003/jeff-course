@@ -1,0 +1,14 @@
+title: "Tensor Basics: Shape and Strides"
+slug: "intro-to-tensors"
+description: "Create a minimal Tensor class that tracks shape, strides, and raw data."
+order: 1
+difficulty: beginner
+estimatedMinutes: 25
+tags:
+  - tensors
+  - numpy
+  - memory-layout
+languages:
+  - python
+  - cpp
+defaultLanguage: python
