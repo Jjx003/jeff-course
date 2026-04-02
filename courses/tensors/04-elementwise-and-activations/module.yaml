@@ -1,0 +1,14 @@
+title: "Element-wise Operations and Activation Functions"
+slug: "elementwise-and-activations"
+description: "Implement element-wise ops (add, mul, exp, log) and activation functions (ReLU, Sigmoid, Tanh) using numpy, and understand their derivatives."
+order: 4
+difficulty: beginner
+estimatedMinutes: 25
+tags:
+  - numpy
+  - activations
+  - relu
+  - sigmoid
+languages:
+  - python
+defaultLanguage: python

@@ -1,0 +1,15 @@
+title: "Manual Gradients: Linear Regression"
+slug: "manual-gradients"
+description: "Derive and implement gradients of MSE loss through a linear layer by hand, then perform gradient descent to fit a simple dataset."
+order: 6
+difficulty: intermediate
+estimatedMinutes: 40
+tags:
+  - gradients
+  - backpropagation
+  - linear-regression
+  - gradient-descent
+  - numpy
+languages:
+  - python
+defaultLanguage: python

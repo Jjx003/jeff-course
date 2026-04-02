@@ -1,0 +1,4 @@
+Test 1: [11, 12, 13]
+Test 2 shape: (2, 3)
+Test 2 data: [11, 12, 13, 21, 22, 23]
+Test 3: OK (raised ValueError)

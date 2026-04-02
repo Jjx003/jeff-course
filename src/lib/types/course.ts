@@ -13,7 +13,7 @@
 export type Language = 'python' | 'cpp';
 
 /** The canonical tab IDs shown in the left instruction pane. */
-export type TabId = 'problem' | 'theory' | 'tips';
+export type TabId = 'problem' | 'theory' | 'tips' | 'solution';
 
 /** Difficulty classification for a problem. */
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
@@ -93,11 +93,19 @@ export interface Problem extends ProblemMeta {
     problem: string;
     theory: string;
     tips: string;
+    /** Solution walkthrough markdown. Absent if no solution.md exists. */
+    solution?: string;
   };
   /** Starter code source per language. Empty string if not provided. */
   starterCode: Record<Language, string>;
+  /** Full solution code per language. Absent if no solution/ dir exists. */
+  solutionCode?: Partial<Record<Language, string>>;
   /** Previous problem slug in this track, or null if first. */
   prevSlug: string | null;
   /** Next problem slug in this track, or null if last. */
   nextSlug: string | null;
+  /** Absolute path to requirements.txt if present (used by executor). */
+  requirementsPath?: string;
+  /** Pre-computed expected stdout per language (from expected_output/<lang>.txt). */
+  expectedOutput?: Record<Language, string>;
 }

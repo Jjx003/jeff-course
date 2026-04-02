@@ -15,10 +15,10 @@
  *     : localDraftStorage;
  */
 
-// Client-side persistence services (localStorage-backed)
-export { localDraftStorage as draftStorage } from './local/draftStorage.local.js';
-export { localRunHistoryStorage as runHistoryStorage } from './local/runHistoryStorage.local.js';
-export { localSubmissionStorage as submissionStorage } from './local/submissionStorage.local.js';
+// Persistence services — DuckDB-backed via API routes
+export { apiDraftStorage as draftStorage } from './api/draftStorage.api.js';
+export { apiRunHistoryStorage as runHistoryStorage } from './api/runHistoryStorage.api.js';
+export { apiSubmissionStorage as submissionStorage } from './api/submissionStorage.api.js';
 
 // Execution service
 export { localExecutionService as executionService } from './local/executionService.local.js';

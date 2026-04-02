@@ -6,8 +6,10 @@ export default defineConfig({
 
   // Monaco Editor is browser-only; exclude from SSR bundle analysis.
   // Workers are handled with no-op blobs inside CodeEditor.svelte (onMount only).
+  // duckdb uses native binaries — must remain external so Vite doesn't try to bundle it.
   ssr: {
-    noExternal: []
+    noExternal: [],
+    external: ['duckdb']
   },
 
   optimizeDeps: {

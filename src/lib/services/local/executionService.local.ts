@@ -1,113 +1,89 @@
 /**
- * LocalExecutionService
+ * ApiExecutionService
  *
- * Mock execution that runs entirely in the browser with no server round-trip.
+ * Real execution service that delegates to the server-side `/api/execute`
+ * route, which in turn uses `executor.ts` (child_process.spawn + UV/g++).
  *
- * Behavior:
- * - Parses Python `print(...)` calls and echoes their arguments as stdout.
- * - Recognizes C++ `std::cout <<` and echoes those strings.
- * - Simulates a short delay to feel realistic.
- * - Always returns a successful result for the mock.
+ * Previously this was a browser-only mock that parsed print()/cout statements.
+ * That mock has been replaced entirely: all execution now happens on the server.
  *
- * EXTENSION POINT: Replace this with a RemoteExecutionService that POSTs
- * to a sandboxed backend. The interface contract (RunRequest → RunResult)
- * stays identical.
+ * The interface contract (RunRequest → RunResult, SubmitRequest → SubmitResult)
+ * is unchanged, so no call sites in the UI need updating.
  *
- * CLIENT-SIDE ONLY (no Node.js APIs used).
+ * CLIENT-SIDE ONLY — uses fetch(), no Node.js APIs.
  */
 
 import type { ExecutionService } from '../executionService.js';
 import type { RunRequest, RunResult, SubmitRequest, SubmitResult } from '$lib/types/execution.js';
 
-// ── Mock helpers ──────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────
 
-function extractPythonOutput(code: string): string {
-  const lines: string[] = [];
-  const printRegex = /^\s*print\s*\(\s*(.*?)\s*\)\s*$/gm;
-  let match: RegExpExecArray | null;
-  while ((match = printRegex.exec(code)) !== null) {
-    // Strip surrounding quotes for simple string literals
-    let arg = match[1].trim();
-    if ((arg.startsWith('"') && arg.endsWith('"')) ||
-        (arg.startsWith("'") && arg.endsWith("'"))) {
-      arg = arg.slice(1, -1);
-    }
-    // For f-strings or expressions, show the raw expression
-    lines.push(arg);
-  }
-  return lines.join('\n');
-}
-
-function extractCppOutput(code: string): string {
-  const lines: string[] = [];
-  const coutRegex = /std::cout\s*<<\s*"([^"]+)"/g;
-  let match: RegExpExecArray | null;
-  while ((match = coutRegex.exec(code)) !== null) {
-    lines.push(match[1]);
-  }
-  return lines.join('\n');
-}
-
-function simulatedOutput(language: string, code: string): string {
-  if (language === 'python') {
-    const extracted = extractPythonOutput(code);
-    const header = '# [Local Mock] Python execution simulated\n';
-    return extracted ? header + extracted : header + '(no output)';
-  }
-  if (language === 'cpp') {
-    const extracted = extractCppOutput(code);
-    const header = '// [Local Mock] C++ execution simulated\n';
-    return extracted ? header + extracted : header + '(no output)';
-  }
-  return '[Local Mock] Execution simulated (no output)';
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
+/** Generate a unique run/submission ID (used by +page.svelte via services/index.ts). */
 function generateId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 // ── Implementation ────────────────────────────────────────────────────────
 
-export class LocalExecutionService implements ExecutionService {
+class ApiExecutionService implements ExecutionService {
   async run(request: RunRequest): Promise<RunResult> {
-    // Simulate network + execution latency
-    const delay = 300 + Math.random() * 400;
-    await sleep(delay);
+    const [trackSlug, problemSlug] = request.problemId.split('/');
 
-    const stdout = simulatedOutput(request.language, request.code);
+    const response = await fetch('/api/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'run',
+        language: request.language,
+        code: request.code,
+        problemId: `${trackSlug}/${problemSlug}`
+      })
+    });
 
-    return {
-      stdout,
-      stderr: '',
-      durationMs: Math.round(delay),
-      success: true,
-      status: 'ok'
-    };
+    if (!response.ok) {
+      const text = await response.text().catch(() => response.statusText);
+      return {
+        stdout: '',
+        stderr: `Execution request failed (${response.status}): ${text}`,
+        durationMs: null,
+        success: false,
+        status: 'error'
+      };
+    }
+
+    const result: RunResult = await response.json();
+    return result;
   }
 
   async submit(request: SubmitRequest): Promise<SubmitResult> {
-    await sleep(600 + Math.random() * 600);
+    const [trackSlug, problemSlug] = request.problemId.split('/');
 
-    // Local mock: always accept (replace with real test runner later).
-    return {
-      verdict: 'accepted',
-      message:
-        '[Local Mock] All test cases passed. ' +
-        'Connect a real execution backend to run actual tests.',
-      score: 100,
-      testResults: [
-        { name: 'Sample test 1', passed: true, durationMs: 12 },
-        { name: 'Sample test 2', passed: true, durationMs: 8 }
-      ]
-    };
+    const response = await fetch('/api/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'submit',
+        language: request.language,
+        code: request.code,
+        problemId: `${trackSlug}/${problemSlug}`
+      })
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => response.statusText);
+      return {
+        verdict: 'error',
+        message: `Submission request failed (${response.status}): ${text}`,
+        score: null
+      };
+    }
+
+    const result: SubmitResult = await response.json();
+    return result;
   }
 }
 
-export const localExecutionService = new LocalExecutionService();
+export const localExecutionService = new ApiExecutionService();
 
-// Utility: generate a unique run/submission ID
+// Re-export generateId — imported by services/index.ts and used in +page.svelte
 export { generateId };

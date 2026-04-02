@@ -108,10 +108,12 @@ export function parseFullProblem(
   const meta = parseModuleMeta(modulePath, trackSlug, order);
   if (!meta) return null;
 
+  const solutionMd = readFileOrEmpty(path.join(modulePath, 'solution.md'));
   const tabs = {
     problem: readFileOrEmpty(path.join(modulePath, 'problem.md')),
     theory:  readFileOrEmpty(path.join(modulePath, 'theory.md')),
-    tips:    readFileOrEmpty(path.join(modulePath, 'tips.md'))
+    tips:    readFileOrEmpty(path.join(modulePath, 'tips.md')),
+    ...(solutionMd.trim() ? { solution: solutionMd } : {})
   };
 
   const starterCode: Record<Language, string> = {
@@ -119,7 +121,49 @@ export function parseFullProblem(
     cpp:    readFileOrEmpty(path.join(modulePath, 'starter', 'cpp.cpp'))
   };
 
-  return { ...meta, tabs, starterCode, prevSlug, nextSlug };
+  // Optional: solution code per language (solution/python.py, solution/cpp.cpp)
+  const solutionCode: Partial<Record<Language, string>> = {};
+  const langSolutionMap: Record<Language, string> = { python: 'python.py', cpp: 'cpp.cpp' };
+  for (const lang of ['python', 'cpp'] as Language[]) {
+    const solPath = path.join(modulePath, 'solution', langSolutionMap[lang]);
+    if (fs.existsSync(solPath)) {
+      const content = readFileOrEmpty(solPath).trim();
+      if (content) solutionCode[lang] = content;
+    }
+  }
+  const hasSolutionCode = Object.keys(solutionCode).length > 0;
+
+  // Optional: requirements.txt for UV-based Python dependency management
+  const requirementsTxtPath = path.join(modulePath, 'requirements.txt');
+  const requirementsPath = fs.existsSync(requirementsTxtPath)
+    ? requirementsTxtPath
+    : undefined;
+
+  // Optional: expected_output/<lang>.txt for grading
+  const expectedOutput: Partial<Record<Language, string>> = {};
+  const languages: Language[] = ['python', 'cpp'];
+  const langFileMap: Record<Language, string> = { python: 'python.txt', cpp: 'cpp.txt' };
+  for (const lang of languages) {
+    const outPath = path.join(modulePath, 'expected_output', langFileMap[lang]);
+    if (fs.existsSync(outPath)) {
+      const content = readFileOrEmpty(outPath).trim();
+      if (content) {
+        expectedOutput[lang] = content;
+      }
+    }
+  }
+  const hasExpectedOutput = Object.keys(expectedOutput).length > 0;
+
+  return {
+    ...meta,
+    tabs,
+    starterCode,
+    prevSlug,
+    nextSlug,
+    ...(requirementsPath ? { requirementsPath } : {}),
+    ...(hasExpectedOutput ? { expectedOutput: expectedOutput as Record<Language, string> } : {}),
+    ...(hasSolutionCode ? { solutionCode } : {})
+  };
 }
 
 // ── Track parsing ────────────────────────────────────────────────────────

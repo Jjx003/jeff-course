@@ -27,6 +27,7 @@
   "dependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/katex": "^0.16.7",
+    "duckdb": "^1.4.4",
     "js-yaml": "^4.1.0",
     "katex": "^0.16.21",
     "monaco-editor": "^0.52.2",

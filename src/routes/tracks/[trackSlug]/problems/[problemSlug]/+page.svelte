@@ -49,20 +49,26 @@
   // ── Output state ─────────────────────────────────────────────────────
   let latestRun = $state<RunSnapshot | null>(null);
   let latestSubmit = $state<SubmitSnapshot | null>(null);
-  let runs = $state<RunSnapshot[]>([]);
-  let submissions = $state<SubmitSnapshot[]>([]);
+  let submissions = $state<SubmitSnapshot[]>([]); // accepted only, for the dropdown
+
+  // ── Submissions dropdown ──────────────────────────────────────────────
+  let showSubmissions = $state(false);
 
   // ── Running / submitting state ────────────────────────────────────────
   let isRunning = $state(false);
   let isSubmitting = $state(false);
 
   // ── Tab state ─────────────────────────────────────────────────────────
-  const TABS = [
-    { id: 'problem', label: 'Problem' },
-    { id: 'theory',  label: 'Theory'  },
-    { id: 'tips',    label: 'Tips'    }
-  ];
+  let TABS = $derived([
+    { id: 'problem',  label: 'Problem'  },
+    { id: 'theory',   label: 'Theory'   },
+    { id: 'tips',     label: 'Tips'     },
+    ...(problem.tabs.solution ? [{ id: 'solution', label: 'Solution' }] : [])
+  ]);
   let activeTabId = $state('problem');
+
+  // Solution gate
+  let solutionRevealed = $state(false);
 
   // ── Services (client-side only) ───────────────────────────────────────
   // Imported lazily to avoid SSR issues
@@ -71,14 +77,13 @@
   onMount(async () => {
     services = await import('$lib/services/index.js');
 
-    // Restore latest history snapshots for the output panel
+    // Restore latest run and accepted submissions on page load
     const [savedRuns, savedSubmissions] = await Promise.all([
       services.runHistoryStorage.getRuns(problemId),
       services.submissionStorage.getSubmissions(problemId)
     ]);
-    runs = savedRuns;
-    submissions = savedSubmissions;
     latestRun = savedRuns[0] ?? null;
+    submissions = savedSubmissions;
     latestSubmit = savedSubmissions[0] ?? null;
 
     // Load saved draft for the default language
@@ -140,10 +145,19 @@
     };
 
     await services.runHistoryStorage.addRun(snapshot);
-    runs = await services.runHistoryStorage.getRuns(problemId);
     latestRun = snapshot;
 
     isRunning = false;
+  }
+
+  // ── Load submission into editor ───────────────────────────────────────
+
+  async function handleLoadSubmission(code: string, language: Language) {
+    if (language !== currentLanguage) {
+      await handleLanguageChange(language);
+    }
+    editorRef?.setValue(code);
+    showSubmissions = false;
   }
 
   // ── Submit ────────────────────────────────────────────────────────────
@@ -169,8 +183,11 @@
     };
 
     await services.submissionStorage.addSubmission(snapshot);
-    submissions = await services.submissionStorage.getSubmissions(problemId);
     latestSubmit = snapshot;
+    // Refresh accepted submissions for the dropdown only if this one was accepted
+    if (snapshot.result.verdict === 'accepted') {
+      submissions = await services.submissionStorage.getSubmissions(problemId);
+    }
 
     isSubmitting = false;
   }
@@ -223,6 +240,50 @@
                   <MarkdownRenderer content={problem.tabs.theory} />
                 {:else if activeId === 'tips'}
                   <MarkdownRenderer content={problem.tabs.tips} />
+                {:else if activeId === 'solution'}
+                  {#if !solutionRevealed}
+                    <!-- Confirm gate -->
+                    <div class="solution-gate">
+                      <div class="solution-gate-box">
+                        <div class="solution-gate-icon">&#128274;</div>
+                        <h3 class="solution-gate-title">View Solution?</h3>
+                        <p class="solution-gate-body">
+                          Revealing the solution before solving the problem yourself will reduce your learning.
+                          Only proceed if you are truly stuck or have already solved it.
+                        </p>
+                        <div class="solution-gate-actions">
+                          <button
+                            class="btn-ghost"
+                            onclick={() => { activeTabId = 'problem'; }}
+                          >
+                            Go Back
+                          </button>
+                          <button
+                            class="btn-danger"
+                            onclick={() => { solutionRevealed = true; }}
+                          >
+                            Reveal Solution
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  {:else}
+                    <!-- Solution content -->
+                    <MarkdownRenderer content={problem.tabs.solution ?? ''} />
+                    {#if problem.solutionCode}
+                      <div class="solution-code-section">
+                        <h3 class="solution-code-title">Solution Code</h3>
+                        {#each problem.languages as lang}
+                          {#if problem.solutionCode[lang]}
+                            <div class="solution-code-block">
+                              <div class="solution-code-lang-label">{lang === 'python' ? 'Python' : 'C++'}</div>
+                              <pre class="solution-code-pre"><code>{problem.solutionCode[lang]}</code></pre>
+                            </div>
+                          {/if}
+                        {/each}
+                      </div>
+                    {/if}
+                  {/if}
                 {/if}
               </div>
             {/snippet}
@@ -248,6 +309,52 @@
               onchange={handleLanguageChange}
             />
             <div class="flex items-center gap-2 ml-auto">
+              <!-- Submissions dropdown -->
+              <div class="relative">
+                <button
+                  class="btn-ghost text-xs"
+                  onclick={() => showSubmissions = !showSubmissions}
+                  title="View accepted submissions"
+                >
+                  Submissions
+                  {#if submissions.length > 0}
+                    <span class="ml-1 badge badge-green">{submissions.length}</span>
+                  {/if}
+                  <span class="ml-1 text-slate-500">{showSubmissions ? '▲' : '▼'}</span>
+                </button>
+
+                {#if showSubmissions}
+                  <!-- Backdrop to close on outside click -->
+                  <div
+                    class="fixed inset-0 z-10"
+                    role="presentation"
+                    onclick={() => showSubmissions = false}
+                  ></div>
+                  <!-- Dropdown panel -->
+                  <div class="submissions-dropdown z-20">
+                    {#if submissions.length === 0}
+                      <p class="text-slate-500 italic text-xs px-3 py-2">No accepted submissions yet.</p>
+                    {:else}
+                      {#each submissions as s}
+                        <div class="submission-row">
+                          <span class="text-slate-400 text-xs">{new Date(s.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          <span class="badge badge-blue text-xs">{s.language}</span>
+                          {#if s.result.score !== null}
+                            <span class="text-green-400 text-xs">{s.result.score}/100</span>
+                          {/if}
+                          <button
+                            class="ml-auto text-xs text-accent-400 hover:text-accent-300 border border-accent-600 hover:border-accent-400 rounded px-2 py-0.5 transition-colors"
+                            onclick={() => handleLoadSubmission(s.code, s.language)}
+                          >
+                            Load
+                          </button>
+                        </div>
+                      {/each}
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+
               <button
                 class="btn-ghost"
                 onclick={handleRun}
@@ -291,8 +398,6 @@
             <OutputPanel
               {latestRun}
               {latestSubmit}
-              {runs}
-              {submissions}
             />
           </div>
         </div>
@@ -372,5 +477,114 @@
     flex-shrink: 0;
     border-top: 1px solid #1e293b;
     overflow: hidden;
+  }
+
+  /* ── Submissions dropdown ── */
+  .submissions-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 320px;
+    max-height: 280px;
+    background: #1a1f2e;
+    border: 1px solid #2d3748;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+  }
+
+  .submission-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #1e293b;
+  }
+
+  .submission-row:last-child {
+    border-bottom: none;
+  }
+
+  .submission-row:hover {
+    background: #1e2535;
+  }
+
+  /* ── Solution gate ── */
+  .solution-gate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem 1.5rem;
+  }
+
+  .solution-gate-box {
+    text-align: center;
+    max-width: 340px;
+  }
+
+  .solution-gate-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    filter: grayscale(0.3);
+  }
+
+  .solution-gate-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 0.75rem;
+  }
+
+  .solution-gate-body {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .solution-gate-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  /* ── Solution code section ── */
+  .solution-code-section {
+    padding: 0 1.25rem 1.5rem;
+    border-top: 1px solid #1e293b;
+    margin-top: 0.5rem;
+  }
+
+  .solution-code-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    padding: 1rem 0 0.75rem;
+  }
+
+  .solution-code-block {
+    margin-bottom: 1rem;
+  }
+
+  .solution-code-lang-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-bottom: 0.35rem;
+  }
+
+  .solution-code-pre {
+    background: #0d1117;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    overflow-x: auto;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #c9d1d9;
+    white-space: pre;
   }
 </style>

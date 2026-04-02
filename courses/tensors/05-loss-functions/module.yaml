@@ -1,0 +1,15 @@
+title: "Loss Functions and Their Gradients"
+slug: "loss-functions"
+description: "Implement MSE and Binary Cross-Entropy losses, then derive and implement their gradients with respect to predictions."
+order: 5
+difficulty: intermediate
+estimatedMinutes: 30
+tags:
+  - loss-functions
+  - mse
+  - cross-entropy
+  - gradients
+  - numpy
+languages:
+  - python
+defaultLanguage: python

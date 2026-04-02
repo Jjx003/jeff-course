@@ -57,6 +57,9 @@
   .btn-success {
     @apply btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-400;
   }
+  .btn-danger {
+    @apply btn bg-red-700 text-white hover:bg-red-600 focus:ring-red-400;
+  }
 }
 
 /* ── Prose overrides for dark theme ───────────────────────────────────── */

@@ -1,0 +1,15 @@
+title: "Scalar Autograd Engine"
+slug: "scalar-autograd"
+description: "Build a scalar automatic differentiation engine: implement forward operations and backward gradient propagation using a computation graph."
+order: 7
+difficulty: intermediate
+estimatedMinutes: 50
+tags:
+  - autograd
+  - backpropagation
+  - computation-graph
+  - chain-rule
+  - numpy
+languages:
+  - python
+defaultLanguage: python

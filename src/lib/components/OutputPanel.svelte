@@ -2,26 +2,21 @@
   /**
    * OutputPanel
    *
-   * Shows run results, submission verdicts, and recent history.
-   * Tabs: Output (latest run) | Submit (latest verdict) | History
+   * Shows run output and latest submission verdict.
+   * Tabs: Output (latest run) | Submit (latest verdict)
+   *
+   * Submission history is surfaced in the toolbar dropdown, not here.
    */
   import type { RunSnapshot, SubmitSnapshot } from '$lib/types/execution.js';
 
   interface Props {
     latestRun?: RunSnapshot | null;
     latestSubmit?: SubmitSnapshot | null;
-    runs?: RunSnapshot[];
-    submissions?: SubmitSnapshot[];
   }
 
-  let {
-    latestRun = null,
-    latestSubmit = null,
-    runs = [],
-    submissions = []
-  }: Props = $props();
+  let { latestRun = null, latestSubmit = null }: Props = $props();
 
-  let activeTab = $state<'output' | 'submit' | 'history'>('output');
+  let activeTab = $state<'output' | 'submit'>('output');
 
   function formatTime(ts: number): string {
     return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -36,15 +31,14 @@
 </script>
 
 <div class="output-panel-wrap">
-  <!-- Mini tab bar -->
   <div class="flex border-b border-slate-700 px-3 pt-1">
-    {#each (['output', 'submit', 'history'] as const) as t}
+    {#each (['output', 'submit'] as const) as t}
       <button
         class="tab-btn text-xs py-1.5 px-3"
         class:active={activeTab === t}
         onclick={() => activeTab = t}
       >
-        {t === 'output' ? 'Output' : t === 'submit' ? 'Submit' : 'History'}
+        {t === 'output' ? 'Output' : 'Submit'}
       </button>
     {/each}
   </div>
@@ -104,40 +98,6 @@
         {/if}
       {:else}
         <p class="text-slate-500 italic text-sm">Click "Submit" to grade your solution.</p>
-      {/if}
-    {/if}
-
-    <!-- ── History tab ── -->
-    {#if activeTab === 'history'}
-      {#if runs.length === 0 && submissions.length === 0}
-        <p class="text-slate-500 italic text-sm">No history yet.</p>
-      {:else}
-        <div class="space-y-2">
-          <!-- Interleave runs and submissions sorted by timestamp -->
-          {#each [...runs.map(r => ({ ...r, kind: 'run' as const })),
-                  ...submissions.map(s => ({ ...s, kind: 'submit' as const }))]
-                  .sort((a, b) => b.timestamp - a.timestamp)
-                  .slice(0, 20) as entry}
-            <div class="flex items-center gap-2 text-xs border-b border-slate-800 pb-1.5">
-              <span class="badge" class:badge-blue={entry.kind === 'run'}
-                                  class:badge-green={entry.kind === 'submit' && (entry as typeof submissions[0]).result.verdict === 'accepted'}
-                                  class:badge-red={entry.kind === 'submit' && (entry as typeof submissions[0]).result.verdict !== 'accepted'}>
-                {entry.kind === 'run' ? 'Run' : 'Submit'}
-              </span>
-              <span class="text-slate-500">{formatTime(entry.timestamp)}</span>
-              <span class="text-slate-400">{entry.language}</span>
-              {#if entry.kind === 'run'}
-                <span class={entry.result.status === 'ok' ? 'text-green-400' : 'text-red-400'}>
-                  {entry.result.status}
-                </span>
-              {:else}
-                <span class="{verdictClass((entry as typeof submissions[0]).result.verdict)} capitalize">
-                  {(entry as typeof submissions[0]).result.verdict.replace('_', ' ')}
-                </span>
-              {/if}
-            </div>
-          {/each}
-        </div>
       {/if}
     {/if}
   </div>
