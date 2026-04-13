@@ -17,6 +17,7 @@
   let { latestRun = null, latestSubmit = null }: Props = $props();
 
   let activeTab = $state<'output' | 'submit'>('output');
+  let copied = $state(false);
 
   function formatTime(ts: number): string {
     return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -28,10 +29,34 @@
     if (verdict === 'error')        return 'text-red-400';
     return 'text-slate-400';
   }
+
+  function getOutputText(): string {
+    if (activeTab === 'output' && latestRun) {
+      return [latestRun.result.stdout, latestRun.result.stderr].filter(Boolean).join('\n');
+    }
+    if (activeTab === 'submit' && latestSubmit) {
+      const parts: string[] = [latestSubmit.result.message];
+      if (latestSubmit.result.testResults?.length) {
+        for (const tr of latestSubmit.result.testResults) {
+          parts.push(`${tr.passed ? '✓' : '✗'} ${tr.name}`);
+        }
+      }
+      return parts.filter(Boolean).join('\n');
+    }
+    return '';
+  }
+
+  async function handleCopy() {
+    const text = getOutputText();
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+    copied = true;
+    setTimeout(() => { copied = false; }, 1500);
+  }
 </script>
 
 <div class="output-panel-wrap">
-  <div class="flex border-b border-slate-700 px-3 pt-1">
+  <div class="flex items-center border-b border-slate-700 px-3 pt-1">
     {#each (['output', 'submit'] as const) as t}
       <button
         class="tab-btn text-xs py-1.5 px-3"
@@ -41,6 +66,14 @@
         {t === 'output' ? 'Output' : 'Submit'}
       </button>
     {/each}
+    <button
+      class="ml-auto mb-1 px-2 py-0.5 text-xs rounded text-slate-400 hover:text-slate-200 hover:bg-slate-700 transition-colors disabled:opacity-30"
+      onclick={handleCopy}
+      disabled={!getOutputText()}
+      title="Copy output"
+    >
+      {copied ? '✓ Copied' : 'Copy'}
+    </button>
   </div>
 
   <div class="output-body output-panel text-slate-300">
@@ -58,10 +91,10 @@
           {/if}
         </div>
         {#if latestRun.result.stdout}
-          <pre class="whitespace-pre-wrap text-green-300">{latestRun.result.stdout}</pre>
+          <pre class="output-text text-green-300">{latestRun.result.stdout}</pre>
         {/if}
         {#if latestRun.result.stderr}
-          <pre class="whitespace-pre-wrap text-red-400 mt-2">{latestRun.result.stderr}</pre>
+          <pre class="output-text text-red-400 mt-2">{latestRun.result.stderr}</pre>
         {/if}
       {:else}
         <p class="text-slate-500 italic text-sm">Click "Run" to execute your code.</p>
@@ -115,5 +148,11 @@
     flex: 1;
     overflow-y: auto;
     padding: 0.75rem 1rem;
+  }
+
+  .output-text {
+    white-space: pre-wrap;
+    user-select: text;
+    cursor: text;
   }
 </style>

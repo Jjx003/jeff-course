@@ -1,0 +1,8 @@
+title: Buffer Pool Manager
+slug: buffer-pool-manager
+description: Implement a fixed-frame buffer pool with LRU eviction, pin counts, dirty bits, and a page table. This is the central cache layer that every query executor and index talks to.
+order: 6
+difficulty: advanced
+estimatedMinutes: 70
+languages: [cpp]
+defaultLanguage: cpp

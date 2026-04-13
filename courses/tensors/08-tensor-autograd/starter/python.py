@@ -1,8 +1,9 @@
 """
-Tensor Autograd with NumPy — Solution
+Tensor Autograd Engine
 
-A minimal autograd engine that wraps numpy arrays and supports:
-  add, multiply, matmul, sum, relu — each with correct backward passes.
+Extend the scalar autograd idea to NumPy arrays. Implement a Tensor class
+with forward operations and backward passes that correctly propagate gradients
+through add, multiply, matmul, sum, and relu.
 """
 import numpy as np
 
@@ -24,60 +25,29 @@ class Tensor:
     # ------------------------------------------------------------------
 
     def __add__(self, other):
+        """Elementwise addition with broadcasting support."""
         other = other if isinstance(other, Tensor) else Tensor(other)
-        out = Tensor(self.data + other.data,
-                     requires_grad=self.requires_grad or other.requires_grad)
+        out = Tensor(self.data + other.data)
         out._prev = [self, other]
 
         def _backward():
-            # Handle broadcasting: sum over any axes that were broadcast
-            if self.requires_grad:
-                grad = out.grad
-                # Sum over leading broadcast dims
-                while grad.ndim > self.data.ndim:
-                    grad = grad.sum(axis=0)
-                # Sum over axes where self had size 1
-                for axis, size in enumerate(self.data.shape):
-                    if size == 1:
-                        grad = grad.sum(axis=axis, keepdims=True)
-                self.grad = self.grad + grad if self.grad is not None else grad.copy()
-
-            if other.requires_grad:
-                grad = out.grad
-                while grad.ndim > other.data.ndim:
-                    grad = grad.sum(axis=0)
-                for axis, size in enumerate(other.data.shape):
-                    if size == 1:
-                        grad = grad.sum(axis=axis, keepdims=True)
-                other.grad = other.grad + grad if other.grad is not None else grad.copy()
+            # TODO: unbroadcast out.grad back to self.data.shape and other.data.shape
+            # then accumulate into self.grad and other.grad
+            pass
 
         out._backward = _backward
         return out
 
     def __mul__(self, other):
+        """Elementwise multiplication with broadcasting support."""
         other = other if isinstance(other, Tensor) else Tensor(other)
-        out = Tensor(self.data * other.data,
-                     requires_grad=self.requires_grad or other.requires_grad)
+        out = Tensor(self.data * other.data)
         out._prev = [self, other]
 
         def _backward():
-            if self.requires_grad:
-                g = other.data * out.grad
-                while g.ndim > self.data.ndim:
-                    g = g.sum(axis=0)
-                for axis, size in enumerate(self.data.shape):
-                    if size == 1:
-                        g = g.sum(axis=axis, keepdims=True)
-                self.grad = self.grad + g if self.grad is not None else g.copy()
-
-            if other.requires_grad:
-                g = self.data * out.grad
-                while g.ndim > other.data.ndim:
-                    g = g.sum(axis=0)
-                for axis, size in enumerate(other.data.shape):
-                    if size == 1:
-                        g = g.sum(axis=axis, keepdims=True)
-                other.grad = other.grad + g if other.grad is not None else g.copy()
+            # TODO: dL/dself = other.data * out.grad, unbroadcasted
+            #       dL/dother = self.data * out.grad, unbroadcasted
+            pass
 
         out._backward = _backward
         return out
@@ -85,44 +55,36 @@ class Tensor:
     def matmul(self, other):
         """Matrix multiply: out = self @ other."""
         other = other if isinstance(other, Tensor) else Tensor(other)
-        out = Tensor(np.matmul(self.data, other.data),
-                     requires_grad=self.requires_grad or other.requires_grad)
+        out = Tensor(np.matmul(self.data, other.data))
         out._prev = [self, other]
 
         def _backward():
-            # if C = A @ B, then dL/dA = dL/dC @ B^T, dL/dB = A^T @ dL/dC
-            if self.requires_grad:
-                g = np.matmul(out.grad, other.data.T)
-                self.grad = self.grad + g if self.grad is not None else g.copy()
-            if other.requires_grad:
-                g = np.matmul(self.data.T, out.grad)
-                other.grad = other.grad + g if other.grad is not None else g.copy()
+            # TODO: if C = A @ B, then dL/dA = dL/dC @ B.T, dL/dB = A.T @ dL/dC
+            pass
 
         out._backward = _backward
         return out
 
     def sum(self):
         """Sum all elements → scalar Tensor."""
-        out = Tensor(self.data.sum(), requires_grad=self.requires_grad)
+        out = Tensor(self.data.sum())
         out._prev = [self]
 
         def _backward():
-            if self.requires_grad:
-                g = np.ones_like(self.data) * out.grad
-                self.grad = self.grad + g if self.grad is not None else g.copy()
+            # TODO: broadcast out.grad back to self.data.shape
+            pass
 
         out._backward = _backward
         return out
 
     def relu(self):
         """Elementwise ReLU."""
-        out = Tensor(np.maximum(0, self.data), requires_grad=self.requires_grad)
+        out = Tensor(np.maximum(0, self.data))
         out._prev = [self]
 
         def _backward():
-            if self.requires_grad:
-                g = (self.data > 0).astype(float) * out.grad
-                self.grad = self.grad + g if self.grad is not None else g.copy()
+            # TODO: pass gradient where input was positive, zero otherwise
+            pass
 
         out._backward = _backward
         return out
@@ -133,21 +95,8 @@ class Tensor:
 
     def backward(self):
         """Topological sort → call _backward in reverse order."""
-        topo = []
-        visited = set()
-
-        def build_topo(node):
-            if id(node) not in visited:
-                visited.add(id(node))
-                for parent in node._prev:
-                    build_topo(parent)
-                topo.append(node)
-
-        build_topo(self)
-
-        self.grad = np.ones_like(self.data)
-        for node in reversed(topo):
-            node._backward()
+        # TODO: build topological order and run backward pass
+        raise NotImplementedError
 
     # ------------------------------------------------------------------
     # Utilities
@@ -185,26 +134,16 @@ if __name__ == "__main__":
 
     # ── Numerical gradient checks ─────────────────────────────────────────────
     def numerical_grad_matmul(eps=1e-5):
-        """Check X.grad numerically for the matmul test."""
-        errors = []
         X_data = np.array([[1.0, 2.0], [3.0, 4.0]])
         W_data = np.array([[0.1, 0.2], [0.3, 0.4]])
-
-        analytic = np.round(np.matmul(np.ones((2, 2)), W_data.T), 4)  # dL/dX = ones @ W^T
-
+        analytic = np.round(np.matmul(np.ones((2, 2)), W_data.T), 4)
         num_grad = np.zeros_like(X_data)
         for i in range(X_data.shape[0]):
             for j in range(X_data.shape[1]):
                 Xp = X_data.copy(); Xp[i, j] += eps
                 Xm = X_data.copy(); Xm[i, j] -= eps
-                lp = np.matmul(Xp, W_data).sum()
-                lm = np.matmul(Xm, W_data).sum()
-                num_grad[i, j] = (lp - lm) / (2 * eps)
-
+                num_grad[i, j] = (np.matmul(Xp, W_data).sum() - np.matmul(Xm, W_data).sum()) / (2 * eps)
         return np.max(np.abs(num_grad - analytic))
-
-    err_x = numerical_grad_matmul()
-    print(f"Matmul X.grad check error: {err_x:.2e}")
 
     def numerical_grad_relu(eps=1e-5):
         A_data = np.array([-1.0, 2.0, -3.0, 4.0])
@@ -216,5 +155,5 @@ if __name__ == "__main__":
             num_grad[i] = (np.maximum(0, Ap).sum() - np.maximum(0, Am).sum()) / (2 * eps)
         return np.max(np.abs(num_grad - analytic))
 
-    err_a = numerical_grad_relu()
-    print(f"ReLU A.grad check error: {err_a:.2e}")
+    print(f"Matmul X.grad check error: {numerical_grad_matmul():.2e}")
+    print(f"ReLU A.grad check error: {numerical_grad_relu():.2e}")

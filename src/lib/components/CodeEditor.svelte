@@ -22,11 +22,12 @@
   interface Props {
     language: Language;
     initialValue: string;
+    fontSize?: number;
     onsave?: (code: string) => void;
     onready?: () => void;
   }
 
-  let { language, initialValue, onsave, onready }: Props = $props();
+  let { language, initialValue, fontSize = 14, onsave, onready }: Props = $props();
 
   let container: HTMLDivElement;
   let editor: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
@@ -80,7 +81,7 @@
         value: initialValue,
         language: MONACO_LANG[language],
         theme: 'course-dark',
-        fontSize: 14,
+        fontSize,
         fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
         fontLigatures: true,
         lineHeight: 22,
@@ -130,6 +131,12 @@
     if (model) {
       monacoLib.editor.setModelLanguage(model, MONACO_LANG[language]);
     }
+  });
+
+  // Sync font size when prop changes (gate on mounted so editor exists)
+  $effect(() => {
+    if (!mounted) return;
+    editor?.updateOptions({ fontSize });
   });
 
   export function getValue(): string {

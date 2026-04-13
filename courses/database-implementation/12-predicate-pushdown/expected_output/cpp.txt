@@ -1,0 +1,13 @@
+=== Before pushdown ===
+Project [id, name]
+  Filter [id > 3] on employees
+    Join [employees.id = departments.emp_id]
+      Scan [employees]
+      Scan [departments]
+
+=== After pushdown ===
+Project [id, name]
+  Join [employees.id = departments.emp_id]
+    Filter [id > 3] on employees
+      Scan [employees]
+    Scan [departments]

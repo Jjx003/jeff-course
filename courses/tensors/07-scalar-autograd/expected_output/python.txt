@@ -1,0 +1,5 @@
+L      = 16.0
+a.grad = -24.0
+b.grad = 16.0
+c.grad = 8.0
+Max numerical gradient error: 4.24e-10

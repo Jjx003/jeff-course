@@ -1,0 +1,10 @@
+title: "Query Planner: Running Basic SELECT"
+slug: query-planner
+description: >
+  Tie everything together: parse a minimal SQL SELECT statement, build a logical
+  plan, apply predicate pushdown, choose physical operators, execute, and print results.
+order: 14
+difficulty: advanced
+estimatedMinutes: 90
+languages: [cpp]
+defaultLanguage: cpp

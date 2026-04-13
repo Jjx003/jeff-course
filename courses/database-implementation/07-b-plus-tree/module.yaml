@@ -1,0 +1,8 @@
+title: B+ Tree Index
+slug: b-plus-tree
+description: Implement a B+ tree with insert and point search. Internal nodes fan out up to ORDER children; leaf nodes form a singly-linked list for range scans. The foundation for primary key and secondary indexes.
+order: 7
+difficulty: advanced
+estimatedMinutes: 90
+languages: [cpp]
+defaultLanguage: cpp

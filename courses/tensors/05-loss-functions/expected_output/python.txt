@@ -1,0 +1,6 @@
+MSE loss:     0.0625
+MSE gradient: [-0.05  0.1  -0.1   0.2 ]
+BCE loss:     0.2656
+BCE gradient: [-0.2778  0.3125 -0.3125  0.4167]
+MSE grad check error: 2.47e-13
+BCE grad check error: 3.60e-11

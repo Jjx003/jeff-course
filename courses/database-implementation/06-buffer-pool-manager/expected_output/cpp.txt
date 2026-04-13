@@ -1,0 +1,13 @@
+NewPage: allocated page 0 in frame 0
+NewPage: allocated page 1 in frame 1
+FetchPage 0: hit frame 0
+UnpinPage 0 dirty=false
+UnpinPage 0 dirty=false
+UnpinPage 1 dirty=false
+FetchPage 2: miss, evicting page 0 from frame 0
+Evicted page 0 (clean)
+FetchPage 2: loaded page 2 into frame 0
+FetchPage 1: hit frame 1
+pool full test: nullptr (all pinned)
+UnpinPage 2 dirty=false
+FlushPage 2: dirty=false, no write needed

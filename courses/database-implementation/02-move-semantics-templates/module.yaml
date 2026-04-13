@@ -1,0 +1,8 @@
+title: Move Semantics and Templates
+slug: move-semantics-templates
+description: Implement a move-only Buffer<T> and a fixed-size RingBuffer<T,N> with if constexpr to_string support. These patterns appear in buffer pool frame transfer and WAL queue implementations.
+order: 2
+difficulty: intermediate
+estimatedMinutes: 45
+languages: [cpp]
+defaultLanguage: cpp

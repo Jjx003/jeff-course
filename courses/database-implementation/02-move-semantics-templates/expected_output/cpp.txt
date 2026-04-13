@@ -1,0 +1,9 @@
+Buffer<int> size=4
+Buffer moved: source size=0
+After move: src.Size()=0 dst.Size()=4
+RingBuffer push: 10 20 30
+RingBuffer pop: 10
+RingBuffer size: 2
+to_string(42): 42
+to_string(3.14): 3.140000
+to_string(string): <non-arithmetic>

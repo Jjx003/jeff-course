@@ -58,6 +58,45 @@
   let isRunning = $state(false);
   let isSubmitting = $state(false);
 
+  // ── Editor font size ──────────────────────────────────────────────────
+  const FONT_SIZE_MIN = 10;
+  const FONT_SIZE_MAX = 24;
+  let editorFontSize = $state(14);
+  function zoomIn()  { editorFontSize = Math.min(FONT_SIZE_MAX, editorFontSize + 1); }
+  function zoomOut() { editorFontSize = Math.max(FONT_SIZE_MIN, editorFontSize - 1); }
+
+  // ── Output panel resize ───────────────────────────────────────────────
+  const OUTPUT_MIN = 60;
+  const OUTPUT_MAX = 700;
+  let outputHeight = $state(220);
+  let outputCollapsed = $state(false);
+  let outputResizing = $state(false);
+  let editorPane: HTMLDivElement;
+
+  function onOutputResizerDown(e: MouseEvent) {
+    e.preventDefault();
+    outputResizing = true;
+  }
+  function onOutputResizerMove(e: MouseEvent) {
+    if (!outputResizing) return;
+    const rect = editorPane.getBoundingClientRect();
+    const h = Math.max(OUTPUT_MIN, Math.min(OUTPUT_MAX, rect.bottom - e.clientY));
+    outputHeight = h;
+    if (outputCollapsed && h > OUTPUT_MIN + 10) outputCollapsed = false;
+  }
+  function onOutputResizerUp() {
+    if (!outputResizing) return;
+    outputResizing = false;
+    if (browser) {
+      localStorage.setItem('output-panel-height', String(outputHeight));
+      localStorage.setItem('output-panel-collapsed', String(outputCollapsed));
+    }
+  }
+  function toggleOutput() {
+    outputCollapsed = !outputCollapsed;
+    if (browser) localStorage.setItem('output-panel-collapsed', String(outputCollapsed));
+  }
+
   // ── Tab state ─────────────────────────────────────────────────────────
   let TABS = $derived([
     { id: 'problem',  label: 'Problem'  },
@@ -76,6 +115,12 @@
 
   onMount(async () => {
     services = await import('$lib/services/index.js');
+
+    // Restore output panel size/state
+    const savedH = localStorage.getItem('output-panel-height');
+    if (savedH) outputHeight = Math.max(OUTPUT_MIN, Math.min(OUTPUT_MAX, parseInt(savedH)));
+    const savedC = localStorage.getItem('output-panel-collapsed');
+    if (savedC) outputCollapsed = savedC === 'true';
 
     // Restore latest run and accepted submissions on page load
     const [savedRuns, savedSubmissions] = await Promise.all([
@@ -300,7 +345,16 @@
 
       <!-- ── RIGHT: Editor pane ────────────────────────────────────── -->
       {#snippet right()}
-        <div class="editor-pane">
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+        <div
+          class="editor-pane"
+          class:cursor-row-resize={outputResizing}
+          bind:this={editorPane}
+          onmousemove={onOutputResizerMove}
+          onmouseup={onOutputResizerUp}
+          onmouseleave={onOutputResizerUp}
+          role="presentation"
+        >
           <!-- Editor toolbar -->
           <div class="editor-toolbar">
             <LanguageSwitcher
@@ -308,6 +362,22 @@
               current={currentLanguage}
               onchange={handleLanguageChange}
             />
+            <!-- Font size controls -->
+            <div class="flex items-center gap-0.5 ml-2">
+              <button
+                class="zoom-btn"
+                onclick={zoomOut}
+                disabled={editorFontSize <= FONT_SIZE_MIN}
+                title="Decrease font size"
+              >−</button>
+              <span class="zoom-label">{editorFontSize}</span>
+              <button
+                class="zoom-btn"
+                onclick={zoomIn}
+                disabled={editorFontSize >= FONT_SIZE_MAX}
+                title="Increase font size"
+              >+</button>
+            </div>
             <div class="flex items-center gap-2 ml-auto">
               <!-- Submissions dropdown -->
               <div class="relative">
@@ -389,17 +459,36 @@
               bind:this={editorRef}
               language={currentLanguage}
               initialValue={editorInitialValue}
+              fontSize={editorFontSize}
               onsave={handleDraftSave}
             />
           </div>
 
-          <!-- Output panel — fixed height at bottom -->
-          <div class="output-area">
-            <OutputPanel
-              {latestRun}
-              {latestSubmit}
-            />
+          <!-- Output resize handle -->
+          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+          <div
+            class="output-resizer"
+            role="separator"
+            aria-label="Resize output panel"
+            onmousedown={onOutputResizerDown}
+          >
+            <button
+              class="output-toggle"
+              onclick={toggleOutput}
+              onmousedown={(e) => e.stopPropagation()}
+              title={outputCollapsed ? 'Expand output' : 'Collapse output'}
+            >{outputCollapsed ? '▲ Output' : '▼'}</button>
           </div>
+
+          <!-- Output panel — resizable -->
+          {#if !outputCollapsed}
+            <div class="output-area" style="height: {outputHeight}px">
+              <OutputPanel
+                {latestRun}
+                {latestSubmit}
+              />
+            </div>
+          {/if}
         </div>
       {/snippet}
     </SplitPane>
@@ -472,11 +561,79 @@
     min-height: 0;
   }
 
-  .output-area {
-    height: 220px;
+  .output-resizer {
     flex-shrink: 0;
-    border-top: 1px solid #1e293b;
+    height: 6px;
+    background: #1e293b;
+    cursor: row-resize;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .output-resizer:hover {
+    background: #2d3f5e;
+  }
+
+  .output-toggle {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0 0.4rem;
+    height: 18px;
+    font-size: 0.65rem;
+    color: #64748b;
+    background: #131720;
+    border: 1px solid #2d3748;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+  }
+  .output-toggle:hover {
+    color: #94a3b8;
+    border-color: #475569;
+  }
+
+  .output-area {
+    flex-shrink: 0;
     overflow: hidden;
+  }
+
+  /* ── Zoom controls ── */
+  :global(.zoom-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    line-height: 1;
+    color: #94a3b8;
+    background: transparent;
+    border: 1px solid #334155;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+  }
+  :global(.zoom-btn:hover:not(:disabled)) {
+    background: #1e293b;
+    color: #e2e8f0;
+  }
+  :global(.zoom-btn:disabled) {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .zoom-label {
+    min-width: 2rem;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
   }
 
   /* ── Submissions dropdown ── */

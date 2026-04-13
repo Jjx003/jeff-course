@@ -1,0 +1,9 @@
+Allocated page 0
+Allocated page 1
+Allocated page 2
+Wrote page 0
+Wrote page 1
+Wrote page 2
+Page 0: OK
+Page 1: OK
+Page 2: OK

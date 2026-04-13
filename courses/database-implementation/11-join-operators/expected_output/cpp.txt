@@ -1,0 +1,9 @@
+NestedLoopJoin (employees JOIN departments ON id=emp_id):
+1 | Alice | 1 | Eng
+2 | Bob | 2 | Mkt
+2 | Bob | 2 | Sales
+
+HashJoin (employees JOIN departments ON id=emp_id):
+1 | Alice | 1 | Eng
+2 | Bob | 2 | Mkt
+2 | Bob | 2 | Sales

@@ -1,0 +1,10 @@
+title: Statistics and Cost Estimation
+slug: cost-estimation
+description: >
+  Implement table statistics and a cost model that estimates the number of
+  tuples flowing through each plan node — the foundation of cost-based optimization.
+order: 13
+difficulty: advanced
+estimatedMinutes: 60
+languages: [cpp]
+defaultLanguage: cpp

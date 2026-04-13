@@ -1,0 +1,8 @@
+title: Memory Pools and Allocators
+slug: memory-pools-allocators
+description: Implement a free-list SlabAllocator and wrap it as a std::pmr::memory_resource so it works with pmr::vector. Memory pools eliminate per-object malloc overhead in the buffer pool's hot path.
+order: 3
+difficulty: intermediate
+estimatedMinutes: 50
+languages: [cpp]
+defaultLanguage: cpp

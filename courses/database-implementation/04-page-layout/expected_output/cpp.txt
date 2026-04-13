@@ -1,0 +1,9 @@
+Inserted slot 0: Hello
+Inserted slot 1: World!
+Inserted slot 2: DB
+FreeSpace before delete: 4067
+Deleted slot 1
+FreeSpace after delete: 4067
+GetTuple(1) after delete: <deleted>
+GetTuple(0): Hello
+GetTuple(2): DB

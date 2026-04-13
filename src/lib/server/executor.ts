@@ -218,7 +218,7 @@ async function runCpp(code: string, timeoutMs: number): Promise<RunResult> {
 
   try {
     // Compile step
-    const compileResult = await spawnAsync('g++', ['-O2', '-o', tmpBin, tmpSrc], {}, 30_000);
+    const compileResult = await spawnAsync('g++', ['-std=c++17', '-O2', '-o', tmpBin, tmpSrc], {}, 30_000);
     if (compileResult.exitCode !== 0) {
       return {
         stdout: '',

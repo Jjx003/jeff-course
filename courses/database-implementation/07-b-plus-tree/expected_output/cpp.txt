@@ -1,0 +1,12 @@
+Inserted: 5 3 7 1 4 6 8 2 9 10
+Search(1): found 1
+Search(2): found 2
+Search(3): found 3
+Search(4): found 4
+Search(5): found 5
+Search(6): found 6
+Search(7): found 7
+Search(8): found 8
+Search(9): found 9
+Search(10): found 10
+Search(11): not found

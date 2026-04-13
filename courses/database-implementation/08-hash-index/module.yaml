@@ -1,0 +1,8 @@
+title: Extendible Hash Index
+slug: hash-index
+description: Implement extendible hashing with global and local depth, bucket splitting on overflow, and directory doubling. O(1) average-case lookup with graceful growth under insertions.
+order: 8
+difficulty: advanced
+estimatedMinutes: 70
+languages: [cpp]
+defaultLanguage: cpp

@@ -1,0 +1,8 @@
+title: Tuple and Schema
+slug: tuple-schema
+description: Implement TypeId, Column, Schema, Value, and Tuple. The schema defines the fixed-offset layout of a tuple's bytes; Value wraps typed data with std::variant; Tuple provides typed access into raw bytes.
+order: 9
+difficulty: intermediate
+estimatedMinutes: 50
+languages: [cpp]
+defaultLanguage: cpp

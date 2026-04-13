@@ -1,0 +1,8 @@
+title: Disk Manager
+slug: disk-manager
+description: Implement a DiskManager that manages a single binary database file with page-aligned reads and writes using pread/pwrite. This is the I/O layer every higher storage component depends on.
+order: 5
+difficulty: intermediate
+estimatedMinutes: 45
+languages: [cpp]
+defaultLanguage: cpp

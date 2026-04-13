@@ -1,0 +1,8 @@
+title: Join Operators
+slug: join-operators
+description: Implement NestedLoopJoinExecutor and HashJoinExecutor, both extending AbstractExecutor. See why hash join dominates OLAP and when NLJ is acceptable for small inputs.
+order: 11
+difficulty: advanced
+estimatedMinutes: 70
+languages: [cpp]
+defaultLanguage: cpp

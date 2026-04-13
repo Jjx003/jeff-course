@@ -1,0 +1,8 @@
+title: Smart Pointers and RAII
+slug: smart-pointers-raii
+description: Implement a FileHandle RAII wrapper, a PageGuard with a custom unique_ptr deleter, and a reference-counted Frame using shared_ptr. These three patterns underpin every object lifetime decision in a database storage engine.
+order: 1
+difficulty: intermediate
+estimatedMinutes: 40
+languages: [cpp]
+defaultLanguage: cpp

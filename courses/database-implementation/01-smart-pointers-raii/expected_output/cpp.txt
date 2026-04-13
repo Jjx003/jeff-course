@@ -1,0 +1,7 @@
+FileHandle opened fd=3
+Frame ref count: 1
+Frame ref count: 2
+Frame ref count: 1
+Frame destroyed for page 0
+PageGuard released page 0
+FileHandle closed fd=3

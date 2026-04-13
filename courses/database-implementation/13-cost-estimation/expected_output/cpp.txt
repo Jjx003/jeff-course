@@ -1,0 +1,6 @@
+Table 'orders': 10000 tuples
+Selectivity(amount > 500): 0.50
+Selectivity(status == 1): 0.10
+Plan cost (scan orders): 10000.00
+Plan cost (filter amount>500): 5000.00
+Plan cost (join orders x customers): 500000.00

@@ -1,0 +1,8 @@
+title: Page Layout — Slotted Pages
+slug: page-layout
+description: Implement a 4 KB slotted-page with a header, slot array, and tuples packed from the end. InsertTuple, GetTuple, DeleteTuple, and FreeSpace — the foundation every higher-level storage structure sits on.
+order: 4
+difficulty: intermediate
+estimatedMinutes: 55
+languages: [cpp]
+defaultLanguage: cpp

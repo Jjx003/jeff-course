@@ -1,0 +1,6 @@
+Schema: id INT32, score FLOAT64, name VARCHAR
+Tuple size (fixed): 16
+id=42
+score=3.140000
+name=Alice
+Row: 42 | 3.140000 | Alice

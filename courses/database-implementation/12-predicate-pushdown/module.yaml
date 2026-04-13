@@ -1,0 +1,8 @@
+title: Predicate Pushdown
+slug: predicate-pushdown
+description: Implement a logical plan tree with ScanNode, FilterNode, ProjectNode, and JoinNode, then write PredicatePushdownRule that moves filters below joins when safe. The core of rule-based query optimization.
+order: 12
+difficulty: advanced
+estimatedMinutes: 60
+languages: [cpp]
+defaultLanguage: cpp

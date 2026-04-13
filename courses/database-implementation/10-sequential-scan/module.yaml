@@ -1,0 +1,8 @@
+title: Sequential Scan Executor
+slug: sequential-scan
+description: Implement the Volcano iterator model with AbstractExecutor, a TableHeap backed by the buffer pool, and SeqScanExecutor with predicate support. This is the foundation of the query execution engine.
+order: 10
+difficulty: advanced
+estimatedMinutes: 75
+languages: [cpp]
+defaultLanguage: cpp
