@@ -22,10 +22,12 @@ import type {
   ProblemMeta,
   RawCourseYaml,
   RawModuleYaml,
+  RuntimeHint,
   Language,
   Difficulty,
   ModuleType
 } from '$lib/types/course.js';
+import type { SandboxMode } from '$lib/types/sandbox.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -63,6 +65,35 @@ function normalizeModuleType(value: string | undefined): ModuleType {
   return value === 'reading' ? 'reading' : 'coding';
 }
 
+const VALID_SANDBOX_MODES: readonly SandboxMode[] = ['baremetal', 'docker', 'docker-gpu'];
+
+/**
+ * Normalize the optional `runtime:` block from module.yaml. Returns
+ * undefined when the field is absent or empty so the consumer can fall
+ * back to per-track preferences without having to special-case empty
+ * objects.
+ */
+function normalizeRuntimeHint(raw: RuntimeHint | undefined): RuntimeHint | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const out: RuntimeHint = {};
+  if (raw.recommendedMode && VALID_SANDBOX_MODES.includes(raw.recommendedMode)) {
+    out.recommendedMode = raw.recommendedMode;
+  }
+  if (raw.resources && typeof raw.resources === 'object') {
+    const r = raw.resources;
+    const resources: NonNullable<RuntimeHint['resources']> = {};
+    if (typeof r.memoryMb === 'number' && r.memoryMb >= 0) resources.memoryMb = r.memoryMb;
+    if (typeof r.cpus === 'number' && r.cpus >= 0) resources.cpus = r.cpus;
+    if (typeof r.timeoutMs === 'number' && r.timeoutMs > 0) resources.timeoutMs = r.timeoutMs;
+    if (r.gpu === 'all' || r.gpu === 'none') resources.gpu = r.gpu;
+    else if (r.gpu && typeof r.gpu === 'object' && typeof r.gpu.device === 'number') {
+      resources.gpu = { device: r.gpu.device };
+    }
+    if (Object.keys(resources).length > 0) out.resources = resources;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 // ── Module (problem) parsing ─────────────────────────────────────────────
 
 /**
@@ -86,6 +117,7 @@ function parseModuleMeta(
   const defaultLanguage: Language = languages.includes(raw.defaultLanguage as Language)
     ? (raw.defaultLanguage as Language)
     : languages[0];
+  const runtime = normalizeRuntimeHint(raw.runtime);
 
   return {
     slug: raw.slug,
@@ -98,7 +130,8 @@ function parseModuleMeta(
     tags: raw.tags ?? [],
     type,
     languages,
-    defaultLanguage
+    defaultLanguage,
+    ...(runtime ? { runtime } : {})
   };
 }
 

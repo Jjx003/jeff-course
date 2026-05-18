@@ -1,25 +1,21 @@
 /**
- * POST /api/execute
+ * POST /api/execute  —  legacy compat shim
  *
- * Executes user code for a given problem and language.
+ * The original endpoint accepted { action, language, code, problemId } and
+ * synchronously returned RunResult / SubmitResult. The new pipeline is the
+ * session-oriented API in /api/sessions/* with live SSE output.
  *
- * Body:
- *   {
- *     action: 'run' | 'submit',
- *     language: 'python' | 'cpp',
- *     code: string,
- *     problemId: string,   // "{trackSlug}/{problemSlug}"
- *   }
+ * For backwards compatibility (e.g. tooling or older client builds) this
+ * shim accepts the same body, starts a baremetal session, awaits its
+ * completion, and folds the result back into the legacy response shape.
  *
- * For 'run': spawns the code and returns stdout/stderr/timing.
- * For 'submit': compares stdout against expected_output/<lang>.txt.
- *   If no expected output is configured, returns verdict 'pending'.
+ * Cancellation: the caller's `request.signal` is wired through so closing
+ * the connection cancels the underlying session.
  */
 
-import { json, error } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { runCode, submitCode } from '$lib/server/executor.js';
-import { loadProblem } from '$lib/content/courseLoader.js';
+import { startSession, getSession, cancelSession, collectOutput } from '$lib/server/sandbox/index.js';
 import type { Language } from '$lib/types/course.js';
 import type { RunResult, SubmitResult } from '$lib/types/execution.js';
 
@@ -37,100 +33,66 @@ export const POST: RequestHandler = async ({ request }) => {
   } catch {
     throw error(400, 'Invalid JSON body');
   }
-
   const { action, language, code, problemId } = body;
-
-  if (!action || !language || !code || !problemId) {
+  if (!action || !language || code === undefined || !problemId) {
     throw error(400, 'Missing required fields: action, language, code, problemId');
   }
   if (action !== 'run' && action !== 'submit') {
-    throw error(400, `Invalid action: ${action}. Must be 'run' or 'submit'`);
+    throw error(400, `Invalid action: ${action}`);
   }
   if (language !== 'python' && language !== 'cpp') {
     throw error(400, `Unsupported language: ${language}`);
   }
 
-  const lang = language as Language;
+  const { id } = await startSession({
+    problemId,
+    language: language as Language,
+    code,
+    action,
+    mode: 'baremetal'
+  });
 
-  // Resolve problem to get requirementsPath and expectedOutput
-  const [trackSlug, problemSlug] = problemId.split('/');
-  if (!trackSlug || !problemSlug) {
-    throw error(400, `Invalid problemId format: expected "trackSlug/problemSlug"`);
-  }
+  // Cancel the underlying session if the HTTP request goes away.
+  const onAbort = () => { void cancelSession(id); };
+  request.signal.addEventListener('abort', onAbort, { once: true });
 
-  const problem = await loadProblem(trackSlug, problemSlug);
-  if (!problem) {
-    throw error(404, `Problem not found: ${problemId}`);
-  }
+  const collected = await collectOutput(id);
+  request.signal.removeEventListener('abort', onAbort);
 
-  const requirementsPath = problem.requirementsPath;
-
-  // `request.signal` fires when the client disconnects (navigation, tab
-  // close, explicit AbortController). Threading it into the executor lets
-  // it tree-kill the spawned uv/python/g++ process and any grandchildren
-  // immediately, instead of leaking them until the timeout expires.
-  const runOpts = { signal: request.signal };
+  const finalRecord = await getSession(id);
 
   if (action === 'run') {
-    const result = await runCode(lang, code, requirementsPath, undefined, runOpts);
-
+    const status: RunResult['status'] =
+      collected.status === 'killed' ? 'timeout'
+      : collected.status === 'cancelled' ? 'error'
+      : collected.status === 'completed' ? 'ok'
+      : 'error';
     const runResult: RunResult = {
-      stdout: result.stdout,
-      stderr: result.aborted ? 'Cancelled' : result.stderr,
-      durationMs: result.durationMs,
-      success: result.exitCode === 0 && !result.timedOut && !result.aborted,
-      status: result.aborted
-        ? 'error'
-        : result.timedOut
-          ? 'timeout'
-          : result.exitCode === 0
-            ? 'ok'
-            : 'error'
+      stdout: collected.stdout,
+      stderr: collected.status === 'cancelled' ? 'Cancelled' : collected.stderr,
+      durationMs: collected.durationMs,
+      success: collected.status === 'completed',
+      status
     };
-
     return json(runResult);
   }
 
   // action === 'submit'
-  const expectedOutput = problem.expectedOutput?.[lang];
-
-  if (!expectedOutput) {
-    const submitResult: SubmitResult = {
-      verdict: 'pending',
-      message: 'No expected output configured for this language.',
-      score: null
-    };
-    return json(submitResult);
-  }
-
-  const result = await submitCode(lang, code, expectedOutput, requirementsPath, undefined, runOpts);
-
+  const verdict = (finalRecord?.submitVerdict ?? 'error') as SubmitResult['verdict'];
+  const message = finalRecord?.submitMessage ?? collected.stderr ?? 'Submission failed.';
+  const score = finalRecord?.submitScore ?? (verdict === 'accepted' ? 100 : 0);
   const submitResult: SubmitResult = {
-    verdict: result.aborted
-      ? 'error'
-      : result.passed
-        ? 'accepted'
-        : result.stderr
-          ? 'error'
-          : 'wrong_answer',
-    message: result.aborted
-      ? 'Submission cancelled.'
-      : result.passed
-        ? 'All outputs matched.'
-        : result.stderr
-          ? result.stderr
-          : 'Output did not match expected.',
-    score: result.passed ? 100 : 0,
-    testResults: [
+    verdict,
+    message,
+    score: verdict === 'pending' ? null : score,
+    testResults: verdict === 'pending' ? undefined : [
       {
         name: 'Expected output comparison',
-        passed: result.passed,
-        expected: expectedOutput,
-        actual: result.stdout,
-        durationMs: result.durationMs
+        passed: verdict === 'accepted',
+        actual: collected.stdout,
+        durationMs: collected.durationMs
       }
     ]
   };
-
   return json(submitResult);
 };

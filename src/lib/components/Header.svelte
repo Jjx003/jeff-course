@@ -6,6 +6,7 @@
    * pill that links to /stats, and a small "Stats" tab.
    */
   import StreakBadge from './StreakBadge.svelte';
+  import SessionPill from './SessionPill.svelte';
 
   interface Crumb {
     label: string;
@@ -44,6 +45,8 @@
   {/if}
 
   <div class="ml-auto flex items-center gap-3 text-xs">
+    <SessionPill />
+    <a href="/sessions" class="header-link" title="Running and recent sandbox sessions">Sessions</a>
     <a href="/stats" class="header-link" title="Your progress">Stats</a>
     <StreakBadge />
   </div>

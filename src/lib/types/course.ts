@@ -12,6 +12,19 @@
 /** Supported editor languages. Extend here to add more. */
 export type Language = 'python' | 'cpp';
 
+import type { SandboxMode, ResourceLimits } from './sandbox.js';
+
+/**
+ * Optional per-module hint for the sandbox runtime. When present, the
+ * problem page uses these as fallback defaults for new visitors who don't
+ * have a per-track preference saved yet. Course authors can use this to
+ * nudge users toward, say, "Container + GPU" for a training exercise.
+ */
+export interface RuntimeHint {
+  recommendedMode?: SandboxMode;
+  resources?: Partial<ResourceLimits>;
+}
+
 /** The canonical tab IDs shown in the left instruction pane. */
 export type TabId = 'problem' | 'theory' | 'tips' | 'solution';
 
@@ -57,6 +70,8 @@ export interface RawModuleYaml {
   type?: ModuleType;
   languages?: Language[];
   defaultLanguage?: Language;
+  /** Optional sandbox runtime hint (recommended mode + default resources). */
+  runtime?: RuntimeHint;
 }
 
 // ── Normalized app models ────────────────────────────────────────────────
@@ -93,6 +108,8 @@ export interface ProblemMeta {
   type: ModuleType;
   languages: Language[];
   defaultLanguage: Language;
+  /** Optional sandbox runtime hint authored in module.yaml. */
+  runtime?: RuntimeHint;
 }
 
 /**

@@ -29,8 +29,16 @@
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 
   import type { Language } from '$lib/types/course.js';
-  import type { RunSnapshot, SubmitSnapshot } from '$lib/types/execution.js';
+  import type { RunSnapshot, SubmitSnapshot, RunResult, SubmitResult } from '$lib/types/execution.js';
   import type { Achievement } from '$lib/types/gamification.js';
+  import type {
+    LogChunk,
+    ResourceLimits,
+    SandboxCapabilities,
+    SandboxMode,
+    SessionRecord,
+    SessionStatus
+  } from '$lib/types/sandbox.js';
   import type { PageData } from './$types';
 
   const POINTS_BY_DIFFICULTY: Record<string, number> = {
@@ -89,17 +97,147 @@
   // ── Running / submitting state ────────────────────────────────────────
   let isRunning = $state(false);
   let isSubmitting = $state(false);
+
   /**
-   * AbortController for the in-flight run/submit fetch, if any. Aborting it
-   * closes the HTTP connection to /api/execute, which the server observes
-   * via request.signal and uses to tree-kill the spawned child process.
-   * Cleared back to `null` whenever the request settles, so beforeunload /
-   * beforeNavigate handlers can use it as a "is execution still live?" flag
-   * — finished runs never trigger a warning.
+   * The id of the currently in-flight sandbox session, or null if nothing
+   * is running. We track this so the navigation/unmount handlers can
+   * dispatch a cancel to the server (which tree-kills the child process
+   * even when the SSE connection is already torn down).
    */
-  let execController = $state<AbortController | null>(null);
+  let activeSessionId = $state<string | null>(null);
+  /** Unsubscribe callback for the active SSE log stream. */
+  let unsubscribeStream: (() => void) | null = null;
+  /** Stable status string from the most recent SSE `status` event. */
+  let liveStatus = $state<SessionStatus | null>(null);
+
   function isExecutionLive(): boolean {
-    return execController !== null;
+    return activeSessionId !== null;
+  }
+
+  // ── Run mode + resource picker ────────────────────────────────────────
+  //
+  // Per-track preference: stored on the server in `sandbox_preferences`,
+  // seeded on mount via GET /api/sandbox/preferences/[trackSlug] and pushed
+  // back via PUT whenever the user changes anything. The defaults come from
+  // `defaultResourcesFor(mode)` on the server side; we mirror the same
+  // numbers here so the UI never has to wait for a fetch before being
+  // usable.
+
+  const DEFAULT_RESOURCES: Record<SandboxMode, ResourceLimits> = {
+    baremetal:    { memoryMb: 0,      cpus: 0, gpu: 'none', timeoutMs: 60_000   },
+    docker:       { memoryMb: 4096,   cpus: 2, gpu: 'none', timeoutMs: 600_000  },
+    'docker-gpu': { memoryMb: 16_384, cpus: 4, gpu: 'all',  timeoutMs: 1_200_000 }
+  };
+
+  let runMode = $state<SandboxMode>('baremetal');
+  let memoryMb = $state<number>(DEFAULT_RESOURCES.baremetal.memoryMb);
+  let cpus = $state<number>(DEFAULT_RESOURCES.baremetal.cpus);
+  let timeoutMs = $state<number>(DEFAULT_RESOURCES.baremetal.timeoutMs);
+  let gpuDevice = $state<'all' | number>('all');
+  let showAdvanced = $state(false);
+
+  let capabilities = $state<SandboxCapabilities | null>(null);
+  /** Per-session-only dismissal of the "Docker not detected" banner. */
+  let dockerBannerDismissed = $state(false);
+  /** Suppresses the PUT during the initial preference seed. */
+  let preferenceLoaded = $state(false);
+
+  function modeLabel(mode: SandboxMode): string {
+    if (mode === 'baremetal') return 'baremetal';
+    if (mode === 'docker') return 'container';
+    if (mode === 'docker-gpu') return 'container + GPU';
+    return mode;
+  }
+
+  function isModeAvailable(mode: SandboxMode): boolean {
+    if (mode === 'baremetal') return true;
+    if (!capabilities) return true; // optimistic until probed
+    if (mode === 'docker') return capabilities.docker.available;
+    if (mode === 'docker-gpu') return capabilities.docker.available && capabilities.gpu.available;
+    return false;
+  }
+
+  function modeUnavailableReason(mode: SandboxMode): string {
+    if (!capabilities) return '';
+    if (mode === 'docker' && !capabilities.docker.available) {
+      return capabilities.docker.reason ?? 'Docker not available';
+    }
+    if (mode === 'docker-gpu') {
+      if (!capabilities.docker.available) return capabilities.docker.reason ?? 'Docker not available';
+      if (!capabilities.gpu.available) return capabilities.gpu.reason ?? 'GPU passthrough not available';
+    }
+    return '';
+  }
+
+  /**
+   * Apply the per-mode defaults to the local sliders. Used both on the
+   * initial preference fetch and whenever the user picks a different
+   * mode from the segmented control.
+   */
+  function applyModeDefaults(mode: SandboxMode) {
+    const d = DEFAULT_RESOURCES[mode];
+    memoryMb = d.memoryMb;
+    cpus = d.cpus;
+    timeoutMs = d.timeoutMs;
+    if (mode === 'docker-gpu') {
+      gpuDevice = 'all';
+    }
+  }
+
+  function selectRunMode(mode: SandboxMode) {
+    if (!isModeAvailable(mode)) return;
+    if (mode === runMode) return;
+    runMode = mode;
+    applyModeDefaults(mode);
+  }
+
+  async function savePreference() {
+    if (!services || !preferenceLoaded) return;
+    const gpu: ResourceLimits['gpu'] = runMode === 'docker-gpu'
+      ? (gpuDevice === 'all' ? 'all' : { device: gpuDevice })
+      : 'none';
+    try {
+      await services.sessionsService.setPreference({
+        trackSlug: track.slug,
+        preferredMode: runMode,
+        resources: { memoryMb, cpus, gpu, timeoutMs }
+      });
+    } catch {
+      // non-fatal — picker stays usable even if the PUT fails.
+    }
+  }
+
+  /**
+   * Push the preference whenever any of the relevant fields changes. We
+   * gate on `preferenceLoaded` so the initial seed doesn't immediately
+   * overwrite the server state with our local defaults.
+   */
+  $effect(() => {
+    if (!browser || !preferenceLoaded) return;
+    // Read every dependency so $effect re-runs on any change.
+    runMode; memoryMb; cpus; timeoutMs; gpuDevice;
+    void savePreference();
+  });
+
+  function resourcesForStart(): ResourceLimits {
+    const gpu: ResourceLimits['gpu'] = runMode === 'docker-gpu'
+      ? (gpuDevice === 'all' ? 'all' : { device: gpuDevice })
+      : 'none';
+    return { memoryMb, cpus, gpu, timeoutMs };
+  }
+
+  /**
+   * The preferences endpoint returns a "default" baremetal preference when
+   * no row exists for this track. We use this helper to detect that case
+   * so we can fall back to the module's `runtime.recommendedMode` hint.
+   */
+  function isDefaultPreference(pref: import('$lib/types/sandbox.js').TrackPreference): boolean {
+    const d = DEFAULT_RESOURCES.baremetal;
+    return pref.preferredMode === 'baremetal'
+      && pref.resources.memoryMb === d.memoryMb
+      && pref.resources.cpus === d.cpus
+      && pref.resources.timeoutMs === d.timeoutMs
+      && pref.resources.gpu === d.gpu;
   }
 
   // ── Reward toast ──────────────────────────────────────────────────────
@@ -200,6 +338,59 @@
     latestSubmit = savedSubmissions[0] ?? null;
     wasAlreadySolved = savedSubmissions.length > 0;
 
+    // Sandbox capabilities + per-track preference. Both are best-effort —
+    // if either fetch fails we silently fall back to baremetal defaults.
+    void services.sessionsService.capabilities()
+      .then((caps) => { capabilities = caps; })
+      .catch(() => { capabilities = null; });
+
+    try {
+      const pref = await services.sessionsService.getPreference(track.slug);
+      // The API returns a "default" preference (baremetal) for first-visit
+      // tracks. We treat it as "no real preference" only when it matches
+      // the baked-in defaults exactly. Otherwise the user has explicitly
+      // saved something and we honor it as-is.
+      const hasRealPreference = pref && !isDefaultPreference(pref);
+      if (hasRealPreference && pref) {
+        // Apply mode first, then layer the persisted resources on top of
+        // the per-mode defaults so any field the user never touched stays
+        // sensible.
+        runMode = pref.preferredMode;
+        applyModeDefaults(pref.preferredMode);
+        memoryMb = pref.resources.memoryMb ?? memoryMb;
+        cpus = pref.resources.cpus ?? cpus;
+        timeoutMs = pref.resources.timeoutMs ?? timeoutMs;
+        if (pref.preferredMode === 'docker-gpu') {
+          const g = pref.resources.gpu;
+          if (g === 'all') gpuDevice = 'all';
+          else if (typeof g === 'object' && g.device !== undefined) gpuDevice = g.device;
+        }
+      } else if (problem.runtime?.recommendedMode && isModeAvailable(problem.runtime.recommendedMode)) {
+        // No saved per-track preference yet — fall back to the module
+        // author's recommendation if it's actually usable on this host.
+        const hint = problem.runtime;
+        const hintMode = hint.recommendedMode!;
+        runMode = hintMode;
+        applyModeDefaults(hintMode);
+        const r = hint.resources;
+        if (r) {
+          if (typeof r.memoryMb === 'number') memoryMb = r.memoryMb;
+          if (typeof r.cpus === 'number') cpus = r.cpus;
+          if (typeof r.timeoutMs === 'number') timeoutMs = r.timeoutMs;
+          if (hintMode === 'docker-gpu' && r.gpu) {
+            if (r.gpu === 'all') gpuDevice = 'all';
+            else if (typeof r.gpu === 'object' && r.gpu.device !== undefined) gpuDevice = r.gpu.device;
+          }
+        }
+      } else {
+        applyModeDefaults('baremetal');
+      }
+    } catch {
+      applyModeDefaults('baremetal');
+    } finally {
+      preferenceLoaded = true;
+    }
+
     // Load saved draft for the default language
     await loadDraftIntoEditor(problem.defaultLanguage);
   });
@@ -271,43 +462,97 @@
   }
 
   // ── Run ───────────────────────────────────────────────────────────────
+  //
+  // Switched from the legacy single-shot /api/execute call to the new
+  // sandbox session pipeline. The flow is:
+  //   1. sessionsService.start(...) — POST /api/sessions, get an id back
+  //   2. subscribe via SSE — chunks fan in for live tail
+  //   3. on the `exit` event — fetch the final SessionRecord for verdict
+  //
+  // While the session is running we mutate `latestRun.result.stdout/stderr`
+  // in place; Svelte 5's $state proxy re-renders OutputPanel on each chunk.
+
+  function statusToRunStatus(status: SessionStatus, exitCode: number | null): RunResult['status'] {
+    if (status === 'completed' && exitCode === 0) return 'ok';
+    if (status === 'killed') return 'timeout';
+    return 'error';
+  }
 
   async function handleRun() {
-    if (!services || !editorRef || isRunning) return;
+    if (!services || !editorRef || isRunning || activeSessionId) return;
     isRunning = true;
-    const controller = new AbortController();
-    execController = controller;
+    liveStatus = null;
 
+    const code = editorRef.getValue();
+    const startedAt = Date.now();
+
+    // Seed an empty snapshot so the Output panel renders the live tail
+    // as chunks arrive. We mutate result.stdout/result.stderr in place.
+    const snapshot: RunSnapshot = {
+      id: services.generateId(),
+      problemId,
+      language: currentLanguage,
+      code,
+      result: {
+        stdout: '',
+        stderr: '',
+        durationMs: null,
+        success: false,
+        status: 'ok'
+      },
+      timestamp: startedAt
+    };
+    latestRun = snapshot;
+
+    let sessionId: string;
     try {
-      const code = editorRef.getValue();
-      const result = await services.executionService.run(
-        {
-          problemId,
-          language: currentLanguage,
-          code
-        },
-        { signal: controller.signal }
-      );
-
-      // If the abort fired (navigation/unmount), don't persist or display
-      // the synthetic cancelled result — the user is gone.
-      if (controller.signal.aborted) return;
-
-      const snapshot: RunSnapshot = {
-        id: services.generateId(),
+      const started = await services.sessionsService.start({
         problemId,
         language: currentLanguage,
         code,
-        result,
-        timestamp: Date.now()
-      };
-
-      latestRun = snapshot;
-      await services.runHistoryStorage.addRun(snapshot).catch(() => {});
-    } finally {
+        action: 'run',
+        mode: runMode,
+        resources: resourcesForStart()
+      });
+      sessionId = started.id;
+    } catch (err) {
+      snapshot.result.stderr = err instanceof Error ? err.message : String(err);
+      snapshot.result.status = 'error';
       isRunning = false;
-      if (execController === controller) execController = null;
+      return;
     }
+    activeSessionId = sessionId;
+
+    await new Promise<void>((resolve) => {
+      const unsub = services!.sessionsService.subscribe(sessionId, async (chunk: LogChunk) => {
+        if (chunk.kind === 'stdout') {
+          snapshot.result.stdout += chunk.data;
+        } else if (chunk.kind === 'stderr') {
+          snapshot.result.stderr += chunk.data;
+        } else if (chunk.kind === 'status') {
+          liveStatus = chunk.status;
+        } else if (chunk.kind === 'exit') {
+          const rec = await services!.sessionsService.get(sessionId).catch(() => null);
+          const finalStatus = rec?.status ?? 'completed';
+          snapshot.result.durationMs = chunk.durationMs;
+          snapshot.result.status = statusToRunStatus(finalStatus, chunk.exitCode);
+          snapshot.result.success = finalStatus === 'completed' && chunk.exitCode === 0;
+          resolve();
+        }
+      });
+      unsubscribeStream = unsub;
+    });
+
+    if (unsubscribeStream) {
+      unsubscribeStream();
+      unsubscribeStream = null;
+    }
+    activeSessionId = null;
+    isRunning = false;
+    liveStatus = null;
+
+    // Persist the run snapshot so it shows up after a page refresh.
+    await services.runHistoryStorage.addRun(snapshot).catch(() => {});
   }
 
   // ── Load submission into editor ───────────────────────────────────────
@@ -323,90 +568,168 @@
   // ── Submit ────────────────────────────────────────────────────────────
 
   async function handleSubmit() {
-    if (!services || !editorRef || isSubmitting) return;
+    if (!services || !editorRef || isSubmitting || activeSessionId) return;
     isSubmitting = true;
-    const controller = new AbortController();
-    execController = controller;
+    liveStatus = null;
 
+    const code = editorRef.getValue();
+    const startedAt = Date.now();
+
+    // Live snapshot: result mutates as chunks arrive. We pre-populate
+    // verdict='pending' / message='Running…' so the UI shows progress
+    // immediately. The final verdict comes from the SessionRecord on exit.
+    const submitSnapshot: SubmitSnapshot = {
+      id: services.generateId(),
+      problemId,
+      language: currentLanguage,
+      code,
+      result: {
+        verdict: 'pending',
+        message: 'Running…',
+        score: null
+      },
+      timestamp: startedAt
+    };
+    latestSubmit = submitSnapshot;
+
+    // Run tab mirrors stdout/stderr live so the user can watch progress.
+    const runSnapshot: RunSnapshot = {
+      id: services.generateId(),
+      problemId,
+      language: currentLanguage,
+      code,
+      result: { stdout: '', stderr: '', durationMs: null, success: false, status: 'ok' },
+      timestamp: startedAt
+    };
+    latestRun = runSnapshot;
+
+    let sessionId: string;
     try {
-      const code = editorRef.getValue();
-      const result = await services.executionService.submit(
-        {
-          problemId,
-          language: currentLanguage,
-          code
-        },
-        { signal: controller.signal }
-      );
-
-      if (controller.signal.aborted) return;
-
-      const snapshot: SubmitSnapshot = {
-        id: services.generateId(),
+      const started = await services.sessionsService.start({
         problemId,
         language: currentLanguage,
         code,
-        result,
-        timestamp: Date.now()
+        action: 'submit',
+        mode: runMode,
+        resources: resourcesForStart()
+      });
+      sessionId = started.id;
+    } catch (err) {
+      submitSnapshot.result = {
+        verdict: 'error',
+        message: err instanceof Error ? err.message : String(err),
+        score: null
       };
-
-      latestSubmit = snapshot;
-      await services.submissionStorage.addSubmission(snapshot).catch(() => {});
-      if (snapshot.result.verdict === 'accepted') {
-        const isFirstSolve = !wasAlreadySolved;
-        submissions = await services.submissionStorage.getSubmissions(problemId).catch(() => submissions);
-        wasAlreadySolved = true;
-
-        if (isFirstSolve) {
-          const pts = POINTS_BY_DIFFICULTY[problem.difficulty] ?? 10;
-          toastRef?.show({
-            kind: 'points',
-            title: `+${pts} pts`,
-            subtitle: 'First solve'
-          });
-          // After the points toast, look for newly unlocked achievements and
-          // queue them with a gentle delay so they don't pile up at once.
-          void checkForNewAchievements(1400);
-        }
-      }
-    } finally {
       isSubmitting = false;
-      if (execController === controller) execController = null;
+      return;
+    }
+    activeSessionId = sessionId;
+
+    // Captured in the closure below and read after the promise settles.
+    const finalRecordRef: { value: SessionRecord | null } = { value: null };
+    await new Promise<void>((resolve) => {
+      const unsub = services!.sessionsService.subscribe(sessionId, async (chunk: LogChunk) => {
+        if (chunk.kind === 'stdout') {
+          runSnapshot.result.stdout += chunk.data;
+        } else if (chunk.kind === 'stderr') {
+          runSnapshot.result.stderr += chunk.data;
+        } else if (chunk.kind === 'status') {
+          liveStatus = chunk.status;
+        } else if (chunk.kind === 'exit') {
+          finalRecordRef.value = await services!.sessionsService.get(sessionId).catch(() => null);
+          runSnapshot.result.durationMs = chunk.durationMs;
+          const fStatus = finalRecordRef.value?.status ?? 'completed';
+          runSnapshot.result.status = statusToRunStatus(fStatus, chunk.exitCode);
+          runSnapshot.result.success = fStatus === 'completed' && chunk.exitCode === 0;
+          resolve();
+        }
+      });
+      unsubscribeStream = unsub;
+    });
+    const finalRecord = finalRecordRef.value;
+
+    if (unsubscribeStream) {
+      unsubscribeStream();
+      unsubscribeStream = null;
+    }
+    activeSessionId = null;
+    isSubmitting = false;
+    liveStatus = null;
+
+    // Build the final SubmitResult from the record's verdict fields.
+    const verdict = finalRecord?.submitVerdict ?? 'error';
+    const message = finalRecord?.submitMessage ?? 'Submission completed.';
+    const score = finalRecord?.submitScore ?? null;
+    const submitResult: SubmitResult = {
+      verdict,
+      message,
+      score: verdict === 'pending' ? null : score,
+      testResults: verdict === 'pending' ? undefined : [
+        {
+          name: 'Expected output comparison',
+          passed: verdict === 'accepted',
+          actual: runSnapshot.result.stdout,
+          durationMs: runSnapshot.result.durationMs ?? undefined
+        }
+      ]
+    };
+    submitSnapshot.result = submitResult;
+
+    await services.submissionStorage.addSubmission(submitSnapshot).catch(() => {});
+    if (submitResult.verdict === 'accepted') {
+      const isFirstSolve = !wasAlreadySolved;
+      submissions = await services.submissionStorage.getSubmissions(problemId).catch(() => submissions);
+      wasAlreadySolved = true;
+
+      if (isFirstSolve) {
+        const pts = POINTS_BY_DIFFICULTY[problem.difficulty] ?? 10;
+        toastRef?.show({
+          kind: 'points',
+          title: `+${pts} pts`,
+          subtitle: 'First solve'
+        });
+        void checkForNewAchievements(1400);
+      }
     }
   }
 
   // ── In-flight execution lifecycle ─────────────────────────────────────
   //
-  // Three scenarios where we need to cancel a running child:
-  //   1. SvelteKit client-side navigation (Prev/Next link, breadcrumb,
-  //      sidebar). beforeNavigate intercepts → confirm → abort.
-  //   2. Tab close, full reload, or external link. beforeunload triggers
-  //      the browser's native "Leave site?" prompt, but only if execution
-  //      is still live.
-  //   3. Component teardown for any other reason (HMR, etc). onDestroy
-  //      fires a silent abort so the server kills its child immediately.
+  // With the sessions pipeline the SSE connection is decoupled from the
+  // running child process: closing the stream doesn't stop the sandbox
+  // session by itself. We must explicitly POST /api/sessions/[id]/cancel
+  // to tear down the underlying spawn / container.
   //
-  // The "is execution live?" check uses execController, which is non-null
-  // only between fetch start and fetch settle. Already-finished runs do
-  // NOT prompt — matches the UX intent (don't nag about completed work).
+  // Three scenarios where we need to cancel:
+  //   1. Client-side navigation: beforeNavigate → confirm → cancel.
+  //   2. Tab close / reload: beforeunload prompt + best-effort cancel via
+  //      sendBeacon-equivalent fetch (browsers may interrupt, but the
+  //      server-side AbortSignal on the SSE will also fire on disconnect).
+  //   3. Component teardown for other reasons (HMR, etc): silent cancel.
+
+  function cancelActiveSession() {
+    if (!activeSessionId || !services) return;
+    void services.sessionsService.cancel(activeSessionId);
+    if (unsubscribeStream) {
+      unsubscribeStream();
+      unsubscribeStream = null;
+    }
+  }
 
   beforeNavigate(({ cancel }) => {
     if (!isExecutionLive()) return;
     const ok = browser
-      ? confirm('A code run is still in progress. Cancel it and leave the page?')
+      ? confirm(`A ${modeLabel(runMode)} run is still in progress. Cancel it and leave the page?`)
       : true;
     if (!ok) {
       cancel();
       return;
     }
-    execController?.abort();
+    cancelActiveSession();
   });
 
   onDestroy(() => {
-    // Silent — by this point either beforeNavigate already confirmed, or
-    // the component is unmounting for an unrelated reason (HMR, route
-    // tree rebuild). Either way we don't want to leak the child.
-    execController?.abort();
+    cancelActiveSession();
   });
 
   $effect(() => {
@@ -597,6 +920,24 @@
           onmouseleave={onOutputResizerUp}
           role="presentation"
         >
+          <!-- Docker-missing banner: only when capabilities are loaded and
+               docker is unavailable, and the user hasn't dismissed it. -->
+          {#if capabilities && !capabilities.docker.available && !dockerBannerDismissed}
+            <div class="docker-banner">
+              <span>
+                Container runtime not detected. Install
+                <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener noreferrer">Docker Desktop</a>
+                to enable sandboxed execution.
+                {#if capabilities.docker.reason}<span class="docker-banner-reason"> ({capabilities.docker.reason})</span>{/if}
+              </span>
+              <button
+                class="docker-banner-dismiss"
+                aria-label="Dismiss banner"
+                onclick={() => { dockerBannerDismissed = true; }}
+              >×</button>
+            </div>
+          {/if}
+
           <!-- Editor toolbar -->
           <div class="editor-toolbar">
             <LanguageSwitcher
@@ -604,6 +945,36 @@
               current={currentLanguage}
               onchange={handleLanguageChange}
             />
+            <!-- Run-mode segmented control + advanced panel -->
+            <div class="run-mode-wrap">
+              <div class="segmented" role="group" aria-label="Run mode">
+                {#each ['baremetal', 'docker', 'docker-gpu'] as const as m}
+                  {@const available = isModeAvailable(m)}
+                  {@const reason = modeUnavailableReason(m)}
+                  <button
+                    type="button"
+                    class="segment"
+                    class:segment-active={runMode === m}
+                    class:segment-disabled={!available}
+                    disabled={!available}
+                    onclick={() => selectRunMode(m)}
+                    title={available
+                      ? `Use ${modeLabel(m)} for Run / Submit`
+                      : `${modeLabel(m)} unavailable: ${reason}`}
+                  >
+                    {m === 'baremetal' ? 'Baremetal' : m === 'docker' ? 'Container' : 'Container + GPU'}
+                  </button>
+                {/each}
+              </div>
+              <button
+                type="button"
+                class="advanced-toggle"
+                onclick={() => { showAdvanced = !showAdvanced; }}
+                title="Show resource limits"
+              >
+                Advanced {showAdvanced ? '▴' : '▾'}
+              </button>
+            </div>
             <!-- Font size controls -->
             <div class="flex items-center gap-0.5 ml-2">
               <button
@@ -704,6 +1075,61 @@
             </div>
           </div>
 
+          {#if showAdvanced}
+            <div class="advanced-panel">
+              <label class="advanced-field">
+                <span>Memory (MB)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="256"
+                  bind:value={memoryMb}
+                  disabled={runMode === 'baremetal'}
+                  title={runMode === 'baremetal' ? 'Memory limits only apply to container modes.' : ''}
+                />
+              </label>
+              <label class="advanced-field">
+                <span>CPUs</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  bind:value={cpus}
+                  disabled={runMode === 'baremetal'}
+                  title={runMode === 'baremetal' ? 'CPU limits only apply to container modes.' : ''}
+                />
+              </label>
+              <label class="advanced-field">
+                <span>Timeout (s)</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={Math.round(timeoutMs / 1000)}
+                  oninput={(e) => {
+                    const v = parseInt((e.currentTarget as HTMLInputElement).value, 10);
+                    if (!isNaN(v) && v > 0) timeoutMs = v * 1000;
+                  }}
+                />
+              </label>
+              {#if runMode === 'docker-gpu'}
+                <label class="advanced-field">
+                  <span>GPU device</span>
+                  <select
+                    bind:value={gpuDevice}
+                  >
+                    <option value="all">all</option>
+                    {#if capabilities?.gpu.deviceCount}
+                      {#each Array(capabilities.gpu.deviceCount) as _, idx}
+                        <option value={idx}>device {idx}</option>
+                      {/each}
+                    {/if}
+                  </select>
+                </label>
+              {/if}
+            </div>
+          {/if}
+
           <!-- Monaco editor — grows to fill space -->
           <div class="editor-area">
             <CodeEditor
@@ -737,6 +1163,7 @@
               <OutputPanel
                 {latestRun}
                 {latestSubmit}
+                {liveStatus}
               />
             </div>
           {/if}
@@ -815,6 +1242,139 @@
     flex-shrink: 0;
     gap: 0.5rem;
     background: #131720;
+    flex-wrap: wrap;
+  }
+
+  /* ── Run-mode picker ── */
+  .run-mode-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .segmented {
+    display: inline-flex;
+    align-items: stretch;
+    background: #0f1117;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .segment {
+    padding: 0.3rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    border-right: 1px solid #1e293b;
+    cursor: pointer;
+    transition: color 0.1s, background 0.1s;
+    white-space: nowrap;
+  }
+  .segment:last-child { border-right: none; }
+  .segment:hover:not(:disabled) {
+    background: #1e293b;
+    color: #e2e8f0;
+  }
+  .segment-active {
+    background: #1e3a5f !important;
+    color: #93c5fd !important;
+  }
+  .segment-disabled {
+    color: #475569 !important;
+    cursor: not-allowed;
+  }
+  .advanced-toggle {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    background: transparent;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 0.25rem 0.55rem;
+    cursor: pointer;
+    transition: color 0.1s, background 0.1s, border-color 0.1s;
+  }
+  .advanced-toggle:hover {
+    color: #e2e8f0;
+    background: #1e293b;
+    border-color: #475569;
+  }
+
+  /* ── Advanced panel ── */
+  .advanced-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #1e293b;
+    background: #0f1623;
+  }
+  .advanced-field {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.65rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .advanced-field input,
+  .advanced-field select {
+    background: #0d1117;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    color: #e2e8f0;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    text-transform: none;
+    letter-spacing: 0;
+    min-width: 90px;
+  }
+  .advanced-field input:focus,
+  .advanced-field select:focus {
+    outline: none;
+    border-color: #60a5fa;
+  }
+  .advanced-field input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ── Docker banner ── */
+  .docker-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.45rem 0.8rem;
+    background: #422006;
+    color: #fde68a;
+    border-bottom: 1px solid #b45309;
+    font-size: 0.75rem;
+  }
+  .docker-banner a {
+    color: #fcd34d;
+    text-decoration: underline;
+  }
+  .docker-banner a:hover {
+    color: #fde68a;
+  }
+  .docker-banner-reason {
+    color: #fcd34d;
+    opacity: 0.85;
+  }
+  .docker-banner-dismiss {
+    background: transparent;
+    border: none;
+    color: #fcd34d;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.35rem;
+  }
+  .docker-banner-dismiss:hover {
+    color: #fde68a;
   }
 
   .editor-area {

@@ -8,13 +8,30 @@
    * Submission history is surfaced in the toolbar dropdown, not here.
    */
   import type { RunSnapshot, SubmitSnapshot } from '$lib/types/execution.js';
+  import type { SessionStatus } from '$lib/types/sandbox.js';
 
   interface Props {
     latestRun?: RunSnapshot | null;
     latestSubmit?: SubmitSnapshot | null;
+    /** Status of the live session, if one is running. Drives the badge. */
+    liveStatus?: SessionStatus | null;
   }
 
-  let { latestRun = null, latestSubmit = null }: Props = $props();
+  let { latestRun = null, latestSubmit = null, liveStatus = null }: Props = $props();
+
+  function liveStatusLabel(s: SessionStatus): string {
+    switch (s) {
+      case 'queued':    return 'Queued';
+      case 'starting':  return 'Starting';
+      case 'running':   return 'Running';
+      case 'completed': return 'OK';
+      case 'cancelled': return 'Cancelled';
+      case 'killed':    return 'Timed out';
+      case 'failed':    return 'Error';
+      case 'crashed':   return 'Crashed';
+      default:          return s;
+    }
+  }
 
   let activeTab = $state<'output' | 'submit'>('output');
   let copied = $state(false);
@@ -82,10 +99,17 @@
       {#if latestRun}
         <div class="flex items-center gap-3 mb-2">
           <span class="text-xs text-slate-500">{formatTime(latestRun.timestamp)}</span>
-          <span class="badge" class:badge-green={latestRun.result.status === 'ok'}
-                              class:badge-red={latestRun.result.status !== 'ok'}>
-            {latestRun.result.status === 'ok' ? 'OK' : 'Error'}
-          </span>
+          {#if liveStatus && liveStatus !== 'completed' && liveStatus !== 'failed' && liveStatus !== 'killed' && liveStatus !== 'crashed'}
+            <span class="badge badge-blue inline-flex items-center gap-1.5">
+              <span class="inline-block h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
+              {liveStatusLabel(liveStatus)}
+            </span>
+          {:else}
+            <span class="badge" class:badge-green={latestRun.result.status === 'ok'}
+                                class:badge-red={latestRun.result.status !== 'ok'}>
+              {latestRun.result.status === 'ok' ? 'OK' : latestRun.result.status === 'timeout' ? 'Timed out' : 'Error'}
+            </span>
+          {/if}
           {#if latestRun.result.durationMs !== null}
             <span class="text-xs text-slate-500">{latestRun.result.durationMs}ms</span>
           {/if}

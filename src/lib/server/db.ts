@@ -127,4 +127,45 @@ export const dbReady: Promise<void> = (async () => {
       last_heartbeat_at BIGINT  NOT NULL
     )
   `);
+
+  // ── Sandbox (containerized / baremetal code execution) ────────────────
+  //
+  // One row per Run/Submit click that goes through the sandbox pipeline.
+  // Persisted so the /sessions page can show history across restarts and
+  // so the boot-time zombie reaper can find stale rows to mark crashed.
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS sandbox_sessions (
+      id              VARCHAR PRIMARY KEY,
+      problem_id      VARCHAR NOT NULL,
+      language        VARCHAR NOT NULL,
+      action          VARCHAR NOT NULL,
+      mode            VARCHAR NOT NULL,
+      status          VARCHAR NOT NULL,
+      container_name  VARCHAR,
+      host_pid        INTEGER,
+      started_at      BIGINT  NOT NULL,
+      completed_at    BIGINT,
+      exit_code       INTEGER,
+      error_message   TEXT,
+      resources_json  TEXT    NOT NULL,
+      stdout_bytes    BIGINT  NOT NULL DEFAULT 0,
+      stderr_bytes    BIGINT  NOT NULL DEFAULT 0,
+      submit_verdict  VARCHAR,
+      submit_message  TEXT,
+      submit_score    INTEGER
+    )
+  `);
+
+  await dbRun(`CREATE INDEX IF NOT EXISTS sandbox_sessions_status_idx ON sandbox_sessions (status)`);
+  await dbRun(`CREATE INDEX IF NOT EXISTS sandbox_sessions_started_idx ON sandbox_sessions (started_at)`);
+
+  // Per-track preference for sandbox mode + resources. Sticky between visits.
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS sandbox_preferences (
+      track_slug      VARCHAR PRIMARY KEY,
+      preferred_mode  VARCHAR NOT NULL,
+      resources_json  TEXT    NOT NULL,
+      updated_at      BIGINT  NOT NULL
+    )
+  `);
 })();

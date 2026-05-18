@@ -29,6 +29,10 @@ export { apiStudyTimeService as studyTimeService } from './api/studyTimeService.
 export { localExecutionService as executionService } from './local/executionService.local.js';
 export { generateId } from './local/executionService.local.js';
 
+// Sandbox session service — new sandboxed pipeline with live SSE output,
+// containerized execution, and per-track resource preferences.
+export { apiSessionsService as sessionsService } from './api/sessionsService.api.js';
+
 // NOTE: CourseRepository is NOT exported here because it is server-side only.
 // Server load functions import localCourseRepository directly from
 // services/local/courseRepository.local.ts.
