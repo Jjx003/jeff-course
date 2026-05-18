@@ -96,6 +96,10 @@
     height: 100%;
     width: 100%;
     overflow: hidden;
+  }
+
+  /* Only suppress text selection while the divider is being dragged. */
+  .split-container.cursor-col-resize {
     user-select: none;
   }
 

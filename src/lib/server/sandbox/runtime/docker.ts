@@ -22,7 +22,7 @@
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdirSync, writeFileSync, unlinkSync, existsSync, readdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 
 import * as registry from '../registry.js';
@@ -56,40 +56,11 @@ export const IMAGE_PYTHON_CPU = 'jeff-course/python:1';
 const UV_CACHE_VOLUME  = 'jeff-course-uv-cache';
 const PIP_CACHE_VOLUME = 'jeff-course-pip-cache';
 
-function hostCacheRoot(): string {
-  return path.join(process.cwd(), 'data', 'cache');
-}
-
 function ensureCacheDirs(): { huggingface: string } {
-  const root = hostCacheRoot();
+  const root = path.join(process.cwd(), 'data', 'cache');
   const huggingface = path.join(root, 'huggingface');
   mkdirSync(huggingface, { recursive: true });
   return { huggingface };
-}
-
-function hfCacheIsCold(huggingfaceDir: string): boolean {
-  try {
-    // No hub directory at all → definitely cold.
-    const hub = path.join(huggingfaceDir, 'hub');
-    if (!existsSync(hub)) return true;
-
-    // Any *.incomplete blob means a prior download was interrupted.
-    // Treat as cold so the container gets network access to resume it.
-    const hasIncomplete = (dir: string): boolean => {
-      try {
-        for (const entry of readdirSync(dir, { withFileTypes: true })) {
-          if (entry.isDirectory()) {
-            if (hasIncomplete(path.join(dir, entry.name))) return true;
-          } else if (entry.name.endsWith('.incomplete')) {
-            return true;
-          }
-        }
-      } catch { /* ignore permission errors */ }
-      return false;
-    };
-    if (hasIncomplete(hub)) return true;
-  } catch { /* fall through */ }
-  return false;
 }
 
 // ── GPU args ──────────────────────────────────────────────────────────────
@@ -161,7 +132,6 @@ export async function runDocker(opts: DockerRunOpts): Promise<DockerOutcome> {
   writeFileSync(hostSrc, code, 'utf-8');
 
   const { huggingface } = ensureCacheDirs();
-  const cold = hfCacheIsCold(huggingface);
 
   const containerName = `jeff-course-${record.id}`;
   registry.patchRecord(record.id, { containerName });
@@ -174,9 +144,7 @@ export async function runDocker(opts: DockerRunOpts): Promise<DockerOutcome> {
     '--workdir', '/workspace',
     '--memory', `${resources.memoryMb}m`,
     '--cpus', String(resources.cpus),
-    // Cold huggingface cache → allow network so model weights can be pulled
-    // on first run. Once the cache is warmed, lock the network down again.
-    '--network', cold ? 'bridge' : 'none',
+    '--network', 'bridge',
     ...gpuArgs(resources.gpu),
     // Mounts
     '-v', `${hostSrc}:/workspace/${fileName}:ro`,
