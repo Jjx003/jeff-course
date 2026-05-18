@@ -1,0 +1,8 @@
+title: "Lead optimisation: putting it all together"
+slug: "lead-optimisation-pipeline"
+description: "How a real protein engineering pipeline (Cradle's logiter loop) chains pretraining, evotuning, g-DPO, predictor heads, masking, and a wet-lab feedback loop."
+order: 22
+difficulty: advanced
+estimatedMinutes: 35
+tags: [pipeline, cradle, dpo, lead-optimisation, capstone]
+type: reading

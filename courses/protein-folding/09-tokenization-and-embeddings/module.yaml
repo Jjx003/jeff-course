@@ -1,0 +1,10 @@
+title: "Tokenizing protein sequences with ESM-2"
+slug: "tokenization-and-embeddings"
+description: "Use the HuggingFace ESM-2 tokenizer to encode a protein sequence into integer IDs, inspect the special tokens, and look up vectors in the model's learned embedding matrix."
+order: 9
+difficulty: intermediate
+estimatedMinutes: 25
+tags: [tokenization, embeddings, transformers, esm2]
+type: coding
+languages: [python]
+defaultLanguage: python

@@ -1,0 +1,8 @@
+title: "Encoder transformers as continuous fuzzy string matching"
+slug: "transformers-as-fuzzy-matching"
+description: "Build the mental model that powers the rest of the course: an encoder transformer is a learned, continuous BLOSUM-style alignment over a compressed database of training patterns."
+order: 10
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [transformers, attention, theory]
+type: reading

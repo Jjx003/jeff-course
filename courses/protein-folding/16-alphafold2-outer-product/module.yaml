@@ -1,0 +1,8 @@
+title: "AlphaFold2: outer product mean and pair representation"
+slug: "alphafold2-outer-product"
+description: "How AlphaFold2 turns MSA column-pair statistics into a pair representation update — the operation that explicitly encodes co-evolution."
+order: 16
+difficulty: advanced
+estimatedMinutes: 30
+tags: [alphafold2, evoformer, coevolution]
+type: reading

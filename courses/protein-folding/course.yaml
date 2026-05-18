@@ -1,0 +1,10 @@
+title: "Protein Folding and Design"
+slug: "protein-folding"
+description: >
+  From the chemistry of amino acids to modern ML pipelines for protein lead
+  optimisation. Build intuition for AlphaFold2, ESMFold, ESM3, ProteinMPNN,
+  and the Cradle lead-optimisation pipeline through 24 short modules — half
+  textbook-style reading, half hands-on code you can run on a desktop GPU.
+tags: [biology, machine-learning, transformers, protein-folding]
+difficulty: intermediate
+order: 3

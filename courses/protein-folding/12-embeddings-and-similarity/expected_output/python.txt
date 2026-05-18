@@ -1,0 +1,25 @@
+Loading facebook/esm2_t33_650M_UR50D ...
+Model loaded. Parameters: 652,353,941
+Running on: cpu
+
+MB_fragment  (length 30)
+HBB_fragment (length 31)
+
+Embedding tensors:
+  MB:  shape (30, 1280)
+  HBB: shape (31, 1280)
+
+Cross-similarity matrix:
+  Shape: (30, 31)
+  Mean similarity: 0.8381
+  Max similarity:  0.9477
+  Min similarity:  0.7373
+
+Sequence-level cosine similarity (mean-pooled): 0.9701
+
+Top-5 most-similar cross-protein residue pairs:
+  MB[17]=K   HBB[17]=K   sim=0.9477
+  MB[30]=L   HBB[31]=L   sim=0.9474
+  MB[28]=E   HBB[26]=E   sim=0.9429
+  MB[30]=L   HBB[28]=L   sim=0.9423
+  MB[16]=G   HBB[16]=G   sim=0.9414

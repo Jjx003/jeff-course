@@ -1,0 +1,8 @@
+title: "ESM3: multimodal training on sequence, structure, and function"
+slug: "esm3-multimodal"
+description: "Why pure sequence data hits a ceiling, how ESM3 tokenises sequence + structure + function into a single transformer, and the esmGFP case study that designed a novel fluorescent protein from scratch."
+order: 14
+difficulty: intermediate
+estimatedMinutes: 25
+tags: [esm3, multimodal, design, generation]
+type: reading

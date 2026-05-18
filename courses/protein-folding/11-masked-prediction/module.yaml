@@ -1,0 +1,10 @@
+title: "Masked residue prediction with ESM-2 650M"
+slug: "masked-prediction"
+description: "Load a pretrained protein language model, mask a single residue in a short sequence, and inspect the top-5 predicted amino acids for that position."
+order: 11
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [esm2, transformers, mlm, gpu]
+type: coding
+languages: [python]
+defaultLanguage: python

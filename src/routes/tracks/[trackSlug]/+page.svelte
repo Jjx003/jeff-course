@@ -69,9 +69,13 @@
             {problem.difficulty}
           </span>
           <span class="text-xs text-slate-600">{problem.estimatedMinutes}m</span>
-          {#each problem.languages as lang}
-            <span class="text-xs text-slate-600 font-mono">{lang === 'cpp' ? 'C++' : 'Py'}</span>
-          {/each}
+          {#if problem.type === 'reading'}
+            <span class="text-xs text-slate-500 font-mono uppercase tracking-wider">Read</span>
+          {:else}
+            {#each problem.languages as lang}
+              <span class="text-xs text-slate-600 font-mono">{lang === 'cpp' ? 'C++' : 'Py'}</span>
+            {/each}
+          {/if}
         </div>
 
         <span class="text-slate-600 group-hover:text-slate-400 transition-colors">→</span>

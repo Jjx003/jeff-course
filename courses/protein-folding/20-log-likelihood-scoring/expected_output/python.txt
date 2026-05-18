@@ -1,0 +1,20 @@
+Loading facebook/esm2_t33_650M_UR50D ...
+
+ESM-2 650M pseudo-log-likelihood scoring
+Wild-type sequence (length 30):
+MGLSDGEWQLVLNVWGKVEADIPGHGQEVL
+
+Computing PLL for 5 sequences x 30 positions = 150 forward passes ...
+
+  WT     PLL = -82.530
+  W8A    PLL = -83.496   delta =  -0.966
+  W15A   PLL = -81.166   delta =  +1.364
+  K17R   PLL = -81.516   delta =  +1.014
+  A20V   PLL = -83.681   delta =  -1.151
+
+Ranking (most likely first):
+  1. W15A     PLL = -81.166
+  2. K17R     PLL = -81.516
+  3. WT       PLL = -82.530
+  4. W8A      PLL = -83.496
+  5. A20V     PLL = -83.681

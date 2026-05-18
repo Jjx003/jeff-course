@@ -14,6 +14,10 @@
  *
  * The pipeline is instantiated once and reused (unified processors are stateless).
  *
+ * Mermaid diagrams: ```mermaid fences pass through as <pre><code class="language-mermaid">
+ * blocks. They are upgraded to SVG client-side in MarkdownRenderer.svelte after
+ * insertion, which avoids pulling Playwright into the SSR pipeline.
+ *
  * Extension point: swap rehype-katex for MathJax or a server-side renderer
  * without changing any call sites — just update this file.
  */

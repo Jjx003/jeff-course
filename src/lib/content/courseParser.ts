@@ -23,7 +23,8 @@ import type {
   RawCourseYaml,
   RawModuleYaml,
   Language,
-  Difficulty
+  Difficulty,
+  ModuleType
 } from '$lib/types/course.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -58,6 +59,10 @@ function normalizeLanguages(values: string[] | undefined): Language[] {
   return values.filter((v) => valid.includes(v as Language)) as Language[];
 }
 
+function normalizeModuleType(value: string | undefined): ModuleType {
+  return value === 'reading' ? 'reading' : 'coding';
+}
+
 // ── Module (problem) parsing ─────────────────────────────────────────────
 
 /**
@@ -76,6 +81,7 @@ function parseModuleMeta(
     return null;
   }
 
+  const type = normalizeModuleType(raw.type);
   const languages = normalizeLanguages(raw.languages);
   const defaultLanguage: Language = languages.includes(raw.defaultLanguage as Language)
     ? (raw.defaultLanguage as Language)
@@ -90,6 +96,7 @@ function parseModuleMeta(
     difficulty: normalizeDifficulty(raw.difficulty),
     estimatedMinutes: raw.estimatedMinutes ?? 30,
     tags: raw.tags ?? [],
+    type,
     languages,
     defaultLanguage
   };

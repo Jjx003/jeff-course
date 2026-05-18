@@ -1,0 +1,10 @@
+ProteinMPNN inverse folding (stub fallback)
+Backbone: 12 residues (chain A)
+Wild-type sequence: MAEGLKWIVASR
+
+Sampling 5 candidates at temperature = 1.0 ...
+  1. AAARGKWILALT  log_prob = -22.039  recovery =  5/12 ( 41.7%)
+  2. NMPSHEWYSRVQ  log_prob = -28.316  recovery =  1/12 (  8.3%)
+  3. IGQSYQWCIMGC  log_prob = -25.128  recovery =  1/12 (  8.3%)
+  4. AGIGQFEVVTGL  log_prob = -33.344  recovery =  2/12 ( 16.7%)
+  5. SIGMMYWVVKGR  log_prob = -21.485  recovery =  3/12 ( 25.0%)

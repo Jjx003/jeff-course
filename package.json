@@ -30,6 +30,7 @@
     "duckdb": "^1.4.4",
     "js-yaml": "^4.1.0",
     "katex": "^0.16.21",
+    "mermaid": "^11.4.1",
     "monaco-editor": "^0.52.2",
     "rehype-katex": "^7.0.1",
     "rehype-stringify": "^10.0.1",

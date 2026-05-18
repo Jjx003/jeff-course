@@ -1,0 +1,10 @@
+title: "PDB files and 3D structure parsing"
+slug: "pdb-parsing"
+description: "Parse a small embedded PDB structure with Biopython, extract alpha-carbon coordinates, and compute the contact map."
+order: 8
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [biopython, pdb, structure]
+type: coding
+languages: [python]
+defaultLanguage: python

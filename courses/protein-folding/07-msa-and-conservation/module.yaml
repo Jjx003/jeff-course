@@ -1,0 +1,10 @@
+title: "Multiple Sequence Alignments and conservation"
+slug: "msa-and-conservation"
+description: "Compute per-column Shannon entropy across a small globin MSA and surface the most-conserved positions."
+order: 7
+difficulty: beginner
+estimatedMinutes: 30
+tags: [biopython, msa, evolution]
+type: coding
+languages: [python]
+defaultLanguage: python

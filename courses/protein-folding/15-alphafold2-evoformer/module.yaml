@@ -1,0 +1,8 @@
+title: "AlphaFold2: MSA representation and the Evoformer block"
+slug: "alphafold2-evoformer"
+description: "The two-axis attention pattern at the heart of AlphaFold2 — row attention within sequences, column attention across sequences — and how the MSA representation interacts with the pair representation."
+order: 15
+difficulty: advanced
+estimatedMinutes: 30
+tags: [alphafold2, evoformer, attention]
+type: reading

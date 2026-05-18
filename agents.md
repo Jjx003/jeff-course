@@ -21,6 +21,7 @@ The owner (Jeff) uses an agent to author new courses on demand: given a subject 
 | Styling | Tailwind CSS v3 + `@tailwindcss/typography` |
 | Code editor | Monaco Editor (dynamic import, no-op blob worker) |
 | Markdown/Math | unified → remark → rehype → KaTeX (rehype-katex) |
+| Diagrams | `mermaid` (client-side render to inline SVG) |
 | Course parsing | js-yaml + Node.js `fs` (server-side only) |
 | Deployment | `@sveltejs/adapter-node` |
 | Build tool | Vite 6.x |
@@ -45,15 +46,19 @@ jeff-course/
 │   └── <track-slug>/
 │       ├── course.yaml          # Track metadata
 │       └── <NN>-<problem-slug>/
-│           ├── module.yaml      # Problem metadata
-│           ├── problem.md       # Problem statement
+│           ├── module.yaml      # Problem metadata (includes `type: reading | coding`)
+│           ├── problem.md       # Problem statement / reading body
 │           ├── theory.md        # Theory/explanation
 │           ├── tips.md          # Hints
-│           ├── starter/
+│           ├── solution.md      # optional: walkthrough of the reference solution
+│           ├── starter/         # coding modules only
+│           │   ├── python.py
+│           │   └── cpp.cpp
+│           ├── solution/        # optional: reference solution code
 │           │   ├── python.py
 │           │   └── cpp.cpp
 │           ├── requirements.txt         # optional: UV pip deps
-│           └── expected_output/         # optional: grading reference
+│           └── expected_output/         # optional: grading reference (omit for non-deterministic output)
 │               ├── python.txt
 │               └── cpp.txt
 │
@@ -128,19 +133,32 @@ order: 1
 difficulty: beginner
 estimatedMinutes: 25
 tags: [tensors, numpy]
-languages: [python, cpp]
-defaultLanguage: python
+type: coding              # 'coding' | 'reading'
+languages: [python, cpp]  # CODING only — omit for reading modules
+defaultLanguage: python   # CODING only — omit for reading modules
 ```
 
 The `<NN>-` numeric prefix in the directory name controls sort order within a track. The `slug` field in `module.yaml` is what appears in the URL.
+
+### Module types
+
+`type: coding` (the default) is the original behaviour: an editor pane plus run/submit grading against optional `expected_output/`. The module folder must contain `starter/`, and may contain `requirements.txt` and `expected_output/` for grading.
+
+`type: reading` is a textbook-style module: no editor, no run/submit, just `problem.md` + `theory.md` + `tips.md` rendered with KaTeX and Mermaid. Reading modules MUST omit `languages` and `defaultLanguage`. They MUST NOT have a `starter/` directory; if one exists the parser ignores it. Use reading modules for conceptual deep-dives between coding exercises.
 
 ### Markdown files
 All three Markdown files (`problem.md`, `theory.md`, `tips.md`) support:
 - GitHub Flavored Markdown (tables, task lists, strikethrough)
 - Inline LaTeX: `$C_{ij} = \sum_k A_{ik} B_{kj}$`
 - Block LaTeX: `$$\text{stride}_i = \prod_{j=i+1}^{k-1} d_j$$`
+- Mermaid diagrams in ` ```mermaid ` fences — rendered to inline SVG client-side via the `mermaid` package. The renderer fails gracefully (renders as a code block) if the package fails to load, so old browsers don't break the page.
 
-### Starter code
+Mermaid syntax notes when authoring: no spaces in node IDs, quote labels containing parentheses or special characters, and avoid `style` / `classDef` directives (they don't reliably render with our default theme). See `courses/protein-folding/02-protein-structure/problem.md` and `04-folding-problem/problem.md` for examples.
+
+### Figure convention
+Course-bundled images live at `static/courses/<track-slug>/<image>.png` and are referenced from Markdown as `![alt](/courses/<track-slug>/<image>.png)`. SvelteKit serves the `static/` directory at the site root, so the leading `/courses/...` URL works in both dev and production. External URLs (RCSB PDB, Wikipedia Commons, etc.) work for public-domain figures and don't need to be bundled.
+
+### Starter code (coding modules only)
 `starter/python.py` and `starter/cpp.cpp` — the code the user sees when first opening a problem. Should compile/run cleanly as a skeleton (with TODOs or `pass`/stubs, not blank files).
 
 ---
@@ -243,15 +261,16 @@ npm run check        # svelte-check + tsc
 When asked to create a new course/track:
 
 1. Create `courses/<track-slug>/course.yaml` with track metadata.
-2. For each problem, create `courses/<track-slug>/<NN>-<problem-slug>/` containing:
-   - `module.yaml`
-   - `problem.md` — clear problem statement, constraints, expected I/O, LaTeX where helpful
+2. For each module, create `courses/<track-slug>/<NN>-<problem-slug>/` containing:
+   - `module.yaml` (with `type: coding` or `type: reading`)
+   - `problem.md` — for coding: clear problem statement, constraints, expected I/O. For reading: textbook-style content with KaTeX and Mermaid as needed; end with a "Recap" and a link to the next module.
    - `theory.md` — conceptual background, formulas, diagrams in Markdown/LaTeX
-   - `tips.md` — incremental hints (avoid spoiling the solution)
-   - `starter/python.py` and/or `starter/cpp.cpp` — runnable skeleton with TODOs
-3. No code changes required — the platform auto-discovers new content on next request.
+   - `tips.md` — incremental hints (avoid spoiling the solution) and a "Going deeper" section with markdown links to references
+3. **Coding modules only:** add `starter/python.py` (and optionally `starter/cpp.cpp`), `solution/python.py`, `solution.md`, `requirements.txt` (if needed), and `expected_output/python.txt` (only when output is CPU-deterministic and easy to verify by hand — for GPU / model-load / network-dependent code, omit it; the platform returns a `pending` verdict).
+4. **Reading modules only:** the four Markdown files are sufficient — no `starter/`, no `expected_output/`, no `requirements.txt`. The parser will ignore those directories if present.
+5. No code changes required — the platform auto-discovers new content on next request.
 
-**Content-only courses** (reading + quizzes, no coding) are a planned future extension. The current platform always expects starter code; this will need a `languages: []` path in the parser when implemented.
+A typical track mixes coding and reading modules: reading modules introduce the concepts and theory, coding modules let the user implement the ideas hands-on. The `protein-folding` track is the canonical example of this pattern (24 modules, ~half coding / half reading).
 
 ---
 
@@ -334,10 +353,10 @@ The previously mock-only `LocalExecutionService` has been replaced with `ApiExec
 |---|---|
 | Remote judge / sandbox | Replace `ApiExecutionService` with a call to Judge0 / Docker judge; executor.ts is already swappable |
 | User accounts & progress | Implement `SubmissionStorage` / `RunHistoryStorage` against a backend API |
-| Quiz/theory-only modules | Add `type: reading | quiz | coding` to `module.yaml`; branch rendering in problem page |
 | Habit tracking | New service interface + UI route |
 | Remote course source | Implement `CourseRepository` against an API or DB |
 | Monaco workers | Replace no-op blob with proper Vite-bundled workers |
+| Quiz modules | Extend `type` field beyond `reading | coding`; add a quiz renderer + answer-checking service |
 
 ---
 

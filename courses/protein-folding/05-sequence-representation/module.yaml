@@ -1,0 +1,10 @@
+title: "FASTA, IUPAC codes, and sequence objects"
+slug: "sequence-representation"
+description: "Parse a FASTA string with Biopython and compute amino-acid composition statistics."
+order: 5
+difficulty: beginner
+estimatedMinutes: 25
+tags: [biopython, sequences]
+type: coding
+languages: [python]
+defaultLanguage: python

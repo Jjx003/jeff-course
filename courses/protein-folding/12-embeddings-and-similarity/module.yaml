@@ -1,0 +1,10 @@
+title: "Per-residue embeddings and cosine similarity"
+slug: "embeddings-and-similarity"
+description: "Extract per-residue embeddings from ESM-2 650M for two related sequences and compute pairwise cosine similarities — the continuous analogue of pairwise alignment."
+order: 12
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [esm2, embeddings, similarity, gpu]
+type: coding
+languages: [python]
+defaultLanguage: python

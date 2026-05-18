@@ -1,0 +1,30 @@
+MSA: 6 sequences x 20 columns
+
+Per-column Shannon entropy (bits):
+Col  0  H=0.6500  most_common=V (5/6)
+Col  1  H=0.0000  most_common=L (6/6)
+Col  2  H=0.0000  most_common=S (6/6)
+Col  3  H=0.6500  most_common=P (5/6)
+Col  4  H=1.2516  most_common=A (4/6)
+Col  5  H=0.0000  most_common=D (6/6)
+Col  6  H=0.0000  most_common=K (6/6)
+Col  7  H=0.6500  most_common=T (5/6)
+Col  8  H=0.6500  most_common=N (5/6)
+Col  9  H=0.0000  most_common=V (6/6)
+Col 10  H=0.6500  most_common=K (5/6)
+Col 11  H=0.0000  most_common=A (6/6)
+Col 12  H=0.6500  most_common=A (5/6)
+Col 13  H=0.0000  most_common=W (6/6)
+Col 14  H=0.9183  most_common=G (4/6)
+Col 15  H=0.0000  most_common=K (6/6)
+Col 16  H=0.6500  most_common=V (5/6)
+Col 17  H=1.2516  most_common=G (4/6)
+Col 18  H=0.0000  most_common=A (6/6)
+Col 19  H=0.0000  most_common=H (6/6)
+
+Top 5 most-conserved columns (lowest entropy):
+Col  1  'L' frequency 6/6
+Col  2  'S' frequency 6/6
+Col  5  'D' frequency 6/6
+Col  6  'K' frequency 6/6
+Col  9  'V' frequency 6/6

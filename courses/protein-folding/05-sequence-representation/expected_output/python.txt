@@ -1,0 +1,27 @@
+Header: sp|P02144|MYG_HUMAN Myoglobin OS=Homo sapiens OX=9606 GN=MB
+Length: 154
+
+Composition:
+  A:  12 (  7.8%)
+  C:   1 (  0.6%)
+  D:   8 (  5.2%)
+  E:  14 (  9.1%)
+  F:   7 (  4.5%)
+  G:  15 (  9.7%)
+  H:   9 (  5.8%)
+  I:   8 (  5.2%)
+  K:  20 ( 13.0%)
+  L:  17 ( 11.0%)
+  M:   4 (  2.6%)
+  N:   3 (  1.9%)
+  P:   5 (  3.2%)
+  Q:   7 (  4.5%)
+  R:   2 (  1.3%)
+  S:   7 (  4.5%)
+  T:   4 (  2.6%)
+  V:   7 (  4.5%)
+  W:   2 (  1.3%)
+  Y:   2 (  1.3%)
+
+Most frequent: K (count 20)
+Hydrophobic fraction (AVLIMFW):  37.0%

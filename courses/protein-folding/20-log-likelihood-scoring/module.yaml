@@ -1,0 +1,10 @@
+title: "Pseudo-log-likelihood: ESM-2 as a variant-effect predictor"
+slug: "log-likelihood-scoring"
+description: "Score wild-type and mutant sequences with ESM-2 by summing masked-position log-probabilities. The cheapest zero-shot fitness predictor that exists."
+order: 20
+difficulty: advanced
+estimatedMinutes: 35
+tags: [esm2, plm, variant-effects, gpu]
+type: coding
+languages: [python]
+defaultLanguage: python

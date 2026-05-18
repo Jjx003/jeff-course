@@ -1,0 +1,10 @@
+title: "Evaluating predictions: pLDDT, TM-score, RMSD"
+slug: "structure-quality"
+description: "Compute RMSD and a TM-score-like metric between two embedded toy structures, and analyse a pLDDT distribution from an AlphaFold-style PDB."
+order: 19
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [structure, metrics, biopython]
+type: coding
+languages: [python]
+defaultLanguage: python

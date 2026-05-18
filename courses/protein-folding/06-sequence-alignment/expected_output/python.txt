@@ -1,0 +1,11 @@
+Aligning MB_fragment vs HBB_fragment
+Substitution matrix: BLOSUM62
+Mode: global
+
+Alignment:
+target            0 MGLSDGEWQLVLNVWGKVEAD-IPGHGQEVL 30
+                  0 ..|...|...|...||||..|-..|.....| 31
+query             0 VHLTPEEKSAVTALWGKVNVDEVGGEALGRL 31
+Score: 30.0
+Identity: 10/30 (33.3%)
+Alignment length: 31

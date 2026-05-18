@@ -1,0 +1,8 @@
+title: "Scaling walls and modern protein language models (2024–2026)"
+slug: "scaling-walls-and-modern-plms"
+description: "Where the PLM scale story actually went after 2023: the empirical scaling wall around 1B parameters, ESM Cambrian, structure-aware PLMs (ProSST, SaESM-2, VespaG), and MSA-conditioned models like PoET."
+order: 23
+difficulty: intermediate
+estimatedMinutes: 25
+tags: [plm, esm, scaling-laws, frontier]
+type: reading

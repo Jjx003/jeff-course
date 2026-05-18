@@ -1,0 +1,8 @@
+title: "ESMFold: replacing the MSA with a language model"
+slug: "esmfold-vs-msa"
+description: "How a single forward pass of a 15B-parameter protein language model substitutes for the entire MSA + Evoformer pipeline of AlphaFold2 — the speed, the accuracy trade-off, and the regimes where each system wins."
+order: 17
+difficulty: intermediate
+estimatedMinutes: 25
+tags: [esmfold, alphafold2, msa, comparison]
+type: reading

@@ -18,6 +18,14 @@ export type TabId = 'problem' | 'theory' | 'tips' | 'solution';
 /** Difficulty classification for a problem. */
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 
+/**
+ * The kind of module:
+ *   - `coding`  : standard split-pane exercise with a code editor (default).
+ *   - `reading` : full-width textbook-style page (no editor, no runner). Use
+ *                 for theory, background concepts, or pure-reading lessons.
+ */
+export type ModuleType = 'coding' | 'reading';
+
 // ── Raw filesystem metadata shapes (used by the parser) ─────────────────
 
 /**
@@ -45,6 +53,8 @@ export interface RawModuleYaml {
   difficulty?: Difficulty;
   estimatedMinutes?: number;
   tags?: string[];
+  /** Defaults to `coding` when omitted. */
+  type?: ModuleType;
   languages?: Language[];
   defaultLanguage?: Language;
 }
@@ -79,6 +89,8 @@ export interface ProblemMeta {
   difficulty: Difficulty;
   estimatedMinutes: number;
   tags: string[];
+  /** `coding` (split pane + editor) or `reading` (textbook layout). */
+  type: ModuleType;
   languages: Language[];
   defaultLanguage: Language;
 }

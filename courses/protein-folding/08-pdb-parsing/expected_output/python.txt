@@ -1,0 +1,6 @@
+Parsed 10 alpha-carbons from chain A
+First residues: ALA1, ALA2, ALA3
+Distance matrix shape: (10, 10)
+Min non-zero distance: 3.800 A
+Max distance: 15.668 A
+Number of contacts (d < 8.0 A, |i-j| >= 2): 18

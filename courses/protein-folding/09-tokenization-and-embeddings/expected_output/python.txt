@@ -1,0 +1,26 @@
+ESM-2 tokenizer: facebook/esm2_t6_8M_UR50D
+  vocab_size: 33
+  <cls>=0  <pad>=1  <eos>=2  <unk>=3  <mask>=32
+
+Sequence: MGLSDGEW (length 8)
+  Token IDs: [0, 20, 6, 4, 8, 13, 6, 9, 22, 2]
+  Encoded length (with <cls>/<eos>): 10
+  Distinct token IDs: 9
+  Per-residue IDs:
+    pos  1  M -> 20
+    pos  2  G -> 6
+    pos  3  L -> 4
+    pos  4  S -> 8
+    pos  5  D -> 13
+    pos  6  G -> 6
+    pos  7  E -> 9
+    pos  8  W -> 22
+
+Loaded ESM-2 8M model
+  embedding matrix shape: (33, 320)
+
+Embedding for 'M' (token id 20)
+  shape: (320,)
+  first 4 values: [-0.1202, -0.0626, -0.0312, 0.0082]
+  last 4 values: [-0.4539, -0.2532, 0.0479, -0.0889]
+  sum of all 320 values: -4.5855

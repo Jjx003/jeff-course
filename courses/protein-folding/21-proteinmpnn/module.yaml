@@ -1,0 +1,10 @@
+title: "Inverse folding with ProteinMPNN"
+slug: "proteinmpnn"
+description: "Sample candidate sequences for a fixed backbone using ProteinMPNN, measure recovery to wild-type, and compare with a stub when the model isn't available."
+order: 21
+difficulty: advanced
+estimatedMinutes: 40
+tags: [proteinmpnn, inverse-folding, gpu]
+type: coding
+languages: [python]
+defaultLanguage: python

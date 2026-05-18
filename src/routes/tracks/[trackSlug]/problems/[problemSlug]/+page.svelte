@@ -22,6 +22,7 @@
   import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
   import OutputPanel from '$lib/components/OutputPanel.svelte';
   import ProblemNav from '$lib/components/ProblemNav.svelte';
+  import ReadingView from '$lib/components/ReadingView.svelte';
 
   import type { Language } from '$lib/types/course.js';
   import type { RunSnapshot, SubmitSnapshot } from '$lib/types/execution.js';
@@ -33,17 +34,21 @@
   let problem      = $derived(data.problem);
   let prevProblem  = $derived(data.prevProblem);
   let nextProblem  = $derived(data.nextProblem);
+  let isReading    = $derived(problem.type === 'reading');
 
   // ── Problem ID ────────────────────────────────────────────────────────
   let problemId = $derived(`${track.slug}/${problem.slug}`);
 
   // ── Language state ────────────────────────────────────────────────────
   let currentLanguage = $state<Language>('python');
-  // Set proper default once problem is available
-  $effect.pre(() => { currentLanguage = problem.defaultLanguage; });
+  // Set proper default once problem is available (skipped for reading modules,
+  // which have no editor and may carry placeholder language values).
+  $effect.pre(() => {
+    if (!isReading) currentLanguage = problem.defaultLanguage;
+  });
 
   // ── Editor ref ────────────────────────────────────────────────────────
-  let editorRef: CodeEditor;
+  let editorRef = $state<CodeEditor | undefined>(undefined);
   let editorInitialValue = $derived(problem.starterCode[problem.defaultLanguage] ?? '');
 
   // ── Output state ─────────────────────────────────────────────────────
@@ -71,14 +76,14 @@
   let outputHeight = $state(220);
   let outputCollapsed = $state(false);
   let outputResizing = $state(false);
-  let editorPane: HTMLDivElement;
+  let editorPane = $state<HTMLDivElement | undefined>(undefined);
 
   function onOutputResizerDown(e: MouseEvent) {
     e.preventDefault();
     outputResizing = true;
   }
   function onOutputResizerMove(e: MouseEvent) {
-    if (!outputResizing) return;
+    if (!outputResizing || !editorPane) return;
     const rect = editorPane.getBoundingClientRect();
     const h = Math.max(OUTPUT_MIN, Math.min(OUTPUT_MAX, rect.bottom - e.clientY));
     outputHeight = h;
@@ -114,6 +119,9 @@
   let services: typeof import('$lib/services/index.js') | null = null;
 
   onMount(async () => {
+    // Reading modules have no editor, runner, or drafts — skip all of that.
+    if (isReading) return;
+
     services = await import('$lib/services/index.js');
 
     // Restore output panel size/state
@@ -133,6 +141,39 @@
 
     // Load saved draft for the default language
     await loadDraftIntoEditor(problem.defaultLanguage);
+  });
+
+  // ── Reset state when navigating between problems ──────────────────────
+  // SvelteKit reuses this +page.svelte component across [problemSlug]
+  // changes, so onMount only runs once. Without this effect, the Monaco
+  // editor keeps the previous problem's starter code, and the run/submit
+  // panels show stale results when the user clicks Prev/Next.
+  let lastSeenProblemId = $state(problemId);
+  $effect(() => {
+    if (problemId === lastSeenProblemId) return;
+    lastSeenProblemId = problemId;
+
+    latestRun = null;
+    latestSubmit = null;
+    submissions = [];
+    solutionRevealed = false;
+    activeTabId = 'problem';
+    showSubmissions = false;
+
+    if (isReading || !services) return;
+
+    const svc = services;
+    const pid = problemId;
+    void (async () => {
+      const [savedRuns, savedSubmissions] = await Promise.all([
+        svc.runHistoryStorage.getRuns(pid),
+        svc.submissionStorage.getSubmissions(pid)
+      ]);
+      latestRun = savedRuns[0] ?? null;
+      submissions = savedSubmissions;
+      latestSubmit = savedSubmissions[0] ?? null;
+      await loadDraftIntoEditor(problem.defaultLanguage);
+    })();
   });
 
   // ── Draft loading ─────────────────────────────────────────────────────
@@ -173,26 +214,28 @@
     if (!services || !editorRef || isRunning) return;
     isRunning = true;
 
-    const code = editorRef.getValue();
-    const result = await services.executionService.run({
-      problemId,
-      language: currentLanguage,
-      code
-    });
+    try {
+      const code = editorRef.getValue();
+      const result = await services.executionService.run({
+        problemId,
+        language: currentLanguage,
+        code
+      });
 
-    const snapshot: RunSnapshot = {
-      id: services.generateId(),
-      problemId,
-      language: currentLanguage,
-      code,
-      result,
-      timestamp: Date.now()
-    };
+      const snapshot: RunSnapshot = {
+        id: services.generateId(),
+        problemId,
+        language: currentLanguage,
+        code,
+        result,
+        timestamp: Date.now()
+      };
 
-    await services.runHistoryStorage.addRun(snapshot);
-    latestRun = snapshot;
-
-    isRunning = false;
+      latestRun = snapshot;
+      await services.runHistoryStorage.addRun(snapshot).catch(() => {});
+    } finally {
+      isRunning = false;
+    }
   }
 
   // ── Load submission into editor ───────────────────────────────────────
@@ -211,30 +254,31 @@
     if (!services || !editorRef || isSubmitting) return;
     isSubmitting = true;
 
-    const code = editorRef.getValue();
-    const result = await services.executionService.submit({
-      problemId,
-      language: currentLanguage,
-      code
-    });
+    try {
+      const code = editorRef.getValue();
+      const result = await services.executionService.submit({
+        problemId,
+        language: currentLanguage,
+        code
+      });
 
-    const snapshot: SubmitSnapshot = {
-      id: services.generateId(),
-      problemId,
-      language: currentLanguage,
-      code,
-      result,
-      timestamp: Date.now()
-    };
+      const snapshot: SubmitSnapshot = {
+        id: services.generateId(),
+        problemId,
+        language: currentLanguage,
+        code,
+        result,
+        timestamp: Date.now()
+      };
 
-    await services.submissionStorage.addSubmission(snapshot);
-    latestSubmit = snapshot;
-    // Refresh accepted submissions for the dropdown only if this one was accepted
-    if (snapshot.result.verdict === 'accepted') {
-      submissions = await services.submissionStorage.getSubmissions(problemId);
+      latestSubmit = snapshot;
+      await services.submissionStorage.addSubmission(snapshot).catch(() => {});
+      if (snapshot.result.verdict === 'accepted') {
+        submissions = await services.submissionStorage.getSubmissions(problemId).catch(() => submissions);
+      }
+    } finally {
+      isSubmitting = false;
     }
-
-    isSubmitting = false;
   }
 
   // ── Difficulty badge ──────────────────────────────────────────────────
@@ -245,6 +289,14 @@
   };
 </script>
 
+{#if isReading}
+  <ReadingView
+    {track}
+    {problem}
+    {prevProblem}
+    {nextProblem}
+  />
+{:else}
 <!-- Full-height shell: header + split pane -->
 <div class="page-shell">
   <Header
@@ -494,6 +546,7 @@
     </SplitPane>
   </div>
 </div>
+{/if}
 
 <style>
   .page-shell {

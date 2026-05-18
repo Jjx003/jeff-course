@@ -14,9 +14,56 @@
 
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { writeFileSync, unlinkSync, existsSync } from 'node:fs';
+import { writeFileSync, unlinkSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+
+// ── CUDA detection ────────────────────────────────────────────────────────
+//
+// Probe for an NVIDIA GPU once at module load time so we don't re-run
+// nvidia-smi on every execution request.  The result is used to pick
+// the right PyTorch wheel index when a requirements.txt includes torch.
+//
+// Index strategy:
+//   CUDA present  → primary index = pytorch.org/whl/cu124
+//                   extra index   = pypi.org/simple  (for non-torch deps)
+//   CPU only      → primary index = pytorch.org/whl/cpu
+//                   extra index   = pypi.org/simple
+//
+// Using pytorch.org as the PRIMARY index ensures the CUDA (or CPU) variant
+// wins over the CPU-only wheel on pypi.org (which uv would otherwise prefer
+// because it has no local-version suffix like +cu124).
+
+const PYTORCH_CPU_INDEX  = 'https://download.pytorch.org/whl/cpu';
+const PYTORCH_CUDA_INDEX = 'https://download.pytorch.org/whl/cu124';
+const PYPI_EXTRA_INDEX   = 'https://pypi.org/simple';
+
+// Allow explicit override via env var (e.g. for a different CUDA version).
+const TORCH_INDEX_URL: string | null = process.env.TORCH_INDEX_URL ?? null;
+
+async function detectCudaIndex(): Promise<string> {
+  if (TORCH_INDEX_URL) return TORCH_INDEX_URL;
+  return new Promise((resolve) => {
+    const proc = spawn('nvidia-smi', ['--query-gpu=name', '--format=csv,noheader'], {
+      stdio: ['ignore', 'pipe', 'ignore']
+    });
+    proc.on('close', (code) => resolve(code === 0 ? PYTORCH_CUDA_INDEX : PYTORCH_CPU_INDEX));
+    proc.on('error', () => resolve(PYTORCH_CPU_INDEX));
+  });
+}
+
+// Resolved once; all runPython calls await this.
+const torchIndexPromise: Promise<string> = detectCudaIndex();
+
+/** Return true if a requirements file lists torch as a dependency. */
+function requirementsUsesTorchIndex(reqPath: string): boolean {
+  try {
+    const content = readFileSync(reqPath, 'utf-8');
+    return /^\s*torch[>=<!,\s]/m.test(content);
+  } catch {
+    return false;
+  }
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -163,7 +210,7 @@ export async function submitCode(
   const actual = normalizeOutput(result.stdout);
   const expected = normalizeOutput(expectedOutput);
 
-  if (actual === expected) {
+  if (actual === expected || fuzzyMatch(expected, actual)) {
     return {
       passed: true,
       stdout: result.stdout,
@@ -192,19 +239,33 @@ async function runPython(
   writeFileSync(tmpFile, code, 'utf-8');
 
   try {
-    let cmd: string;
     let args: string[];
 
     if (requirementsPath) {
-      // uv run with specific requirements file — UV caches envs by requirements hash
-      cmd = 'uv';
-      args = ['run', '--python', '3.11', '-r', requirementsPath, 'python3', tmpFile];
+      if (requirementsUsesTorchIndex(requirementsPath)) {
+        // Route torch through the right wheel server (CUDA or CPU) so uv
+        // installs the GPU-enabled build when an NVIDIA GPU is present.
+        // --index-strategy unsafe-best-match is required because torch exists
+        // on both pypi.org (cpu-only) and the pytorch wheel server (+cu124);
+        // without it uv stops at the first index that has the package (PyPI)
+        // and never sees the CUDA build.
+        const torchIndex = await torchIndexPromise;
+        args = [
+          'run', '--python', '3.11',
+          '--index-url', torchIndex,
+          '--extra-index-url', PYPI_EXTRA_INDEX,
+          '--index-strategy', 'unsafe-best-match',
+          '--with-requirements', requirementsPath,
+          'python', tmpFile
+        ];
+      } else {
+        args = ['run', '--python', '3.11', '--with-requirements', requirementsPath, 'python', tmpFile];
+      }
     } else {
-      cmd = 'uv';
-      args = ['run', 'python3', tmpFile];
+      args = ['run', 'python', tmpFile];
     }
 
-    return await spawnAsync(cmd, args, {}, timeoutMs);
+    return await spawnAsync('uv', args, {}, timeoutMs);
   } finally {
     tryUnlink(tmpFile);
   }
@@ -251,6 +312,66 @@ function normalizeOutput(s: string): string {
     .map((line) => line.trimEnd())
     .join('\n')
     .trim();
+}
+
+// Matches integers and floating-point numbers (with optional exponent).
+const NUM_RE = /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g;
+
+/**
+ * Compare two output strings with fuzzy numeric tolerance.
+ *
+ * Rules:
+ *  - Non-numeric tokens must match exactly (same text, same position).
+ *  - Numeric tokens are compared as floats; they pass if
+ *    |actual - expected| <= epsilon  OR  |actual - expected| / |expected| <= epsilon
+ *    (absolute OR relative tolerance — mirrors numpy.allclose behaviour).
+ *  - Line count must be identical.
+ */
+function fuzzyMatch(expected: string, actual: string, epsilon = 1e-3): boolean {
+  const expLines = expected.split('\n');
+  const actLines = actual.split('\n');
+  if (expLines.length !== actLines.length) return false;
+
+  for (let i = 0; i < expLines.length; i++) {
+    const eLine = expLines[i];
+    const aLine = actLines[i];
+    if (eLine === aLine) continue;
+
+    // Tokenise both lines into alternating [text, number, text, number, ...] chunks.
+    const eTokens = tokenizeLine(eLine);
+    const aTokens = tokenizeLine(aLine);
+    if (eTokens.length !== aTokens.length) return false;
+
+    for (let j = 0; j < eTokens.length; j++) {
+      const et = eTokens[j];
+      const at = aTokens[j];
+      if (et.isNum && at.isNum) {
+        const ev = et.num!;
+        const av = at.num!;
+        const absDiff = Math.abs(av - ev);
+        const relDiff = Math.abs(ev) > 1e-10 ? absDiff / Math.abs(ev) : absDiff;
+        if (absDiff > epsilon && relDiff > epsilon) return false;
+      } else {
+        if (et.text !== at.text) return false;
+      }
+    }
+  }
+  return true;
+}
+
+interface Token { isNum: boolean; text: string; num?: number }
+
+function tokenizeLine(line: string): Token[] {
+  const tokens: Token[] = [];
+  let last = 0;
+  for (const m of line.matchAll(new RegExp(NUM_RE.source, 'g'))) {
+    const start = m.index!;
+    if (start > last) tokens.push({ isNum: false, text: line.slice(last, start) });
+    tokens.push({ isNum: true, text: m[0], num: parseFloat(m[0]) });
+    last = start + m[0].length;
+  }
+  if (last < line.length) tokens.push({ isNum: false, text: line.slice(last) });
+  return tokens;
 }
 
 /**

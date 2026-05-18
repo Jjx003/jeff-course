@@ -1,0 +1,8 @@
+title: "Frontier structure prediction and design (2024–2026)"
+slug: "frontier-structure-and-design"
+description: "AlphaFold3's Pairformer + diffusion module, the open AF3-class models (Boltz-2, Chai-1), LigandMPNN and SolubleMPNN, RFdiffusion3, and the now-published CRADLE-1 lead-optimisation paper."
+order: 24
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [alphafold3, boltz, ligandmpnn, rfdiffusion, cradle, frontier]
+type: reading

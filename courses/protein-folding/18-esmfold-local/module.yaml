@@ -1,0 +1,10 @@
+title: "Running ESMFold locally on a short protein"
+slug: "esmfold-local"
+description: "Load ESMFold via HuggingFace transformers, fold a short peptide on a desktop GPU, and inspect the predicted PDB plus pLDDT confidence."
+order: 18
+difficulty: advanced
+estimatedMinutes: 40
+tags: [esmfold, structure-prediction, gpu]
+type: coding
+languages: [python]
+defaultLanguage: python

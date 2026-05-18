@@ -1,0 +1,15 @@
+RMSD computation
+  Atoms compared: 5
+  Per-residue distances (A): [0.000, 0.000, 1.000, 1.000, 0.000]
+  RMSD: 0.6325 A
+
+TM-score-like metric (d_0 = 2.000)
+  Score: 0.9200
+
+pLDDT analysis
+  Residues: 5
+  Mean pLDDT: 79.60
+  Min pLDDT:  62.00
+  Max pLDDT:  92.00
+  Fraction with pLDDT > 70: 0.80 (4/5)
+  Fraction with pLDDT > 90: 0.20 (1/5)

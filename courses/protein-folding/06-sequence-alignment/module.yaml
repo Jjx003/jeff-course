@@ -1,0 +1,10 @@
+title: "Pairwise alignment and edit distance"
+slug: "sequence-alignment"
+description: "Align two real protein sequences with Biopython's PairwiseAligner and connect alignment to fuzzy string matching."
+order: 6
+difficulty: beginner
+estimatedMinutes: 30
+tags: [biopython, alignment]
+type: coding
+languages: [python]
+defaultLanguage: python

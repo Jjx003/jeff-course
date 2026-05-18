@@ -1,0 +1,10 @@
+title: "ESM-2 at scale: model sizes and quality trade-offs"
+slug: "esm2-scale"
+description: "Compare ESM-2 model sizes (8M to 15B), time forward passes, and watch prediction quality sharpen as parameters grow."
+order: 13
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [esm2, scaling, gpu]
+type: coding
+languages: [python]
+defaultLanguage: python
