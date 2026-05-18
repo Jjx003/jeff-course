@@ -24,6 +24,8 @@
   import ProblemNav from '$lib/components/ProblemNav.svelte';
   import ReadingView from '$lib/components/ReadingView.svelte';
   import RewardToast from '$lib/components/RewardToast.svelte';
+  import StudyTimeTracker from '$lib/components/StudyTimeTracker.svelte';
+  import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 
   import type { Language } from '$lib/types/course.js';
   import type { RunSnapshot, SubmitSnapshot } from '$lib/types/execution.js';
@@ -66,6 +68,22 @@
 
   // ── Submissions dropdown ──────────────────────────────────────────────
   let showSubmissions = $state(false);
+
+  // ── Reset starter-code confirmation ───────────────────────────────────
+  let showResetConfirm = $state(false);
+
+  function openResetConfirm() {
+    showResetConfirm = true;
+  }
+
+  async function performReset() {
+    if (!editorRef) return;
+    const starter = problem.starterCode[currentLanguage] ?? '';
+    editorRef.setValue(starter);
+    if (services) {
+      await services.draftStorage.saveDraft(problemId, currentLanguage, starter);
+    }
+  }
 
   // ── Running / submitting state ────────────────────────────────────────
   let isRunning = $state(false);
@@ -365,6 +383,14 @@
 
 <RewardToast bind:this={toastRef} />
 
+<!-- Study-time tracker. Keyed on problemId so navigating between problems
+     ends the current session and starts a fresh one. Works for both
+     coding and reading paths since the component renders nothing on
+     screen (other than the idle-prompt modal). -->
+{#key problemId}
+  <StudyTimeTracker {problemId} />
+{/key}
+
 {#if isReading}
   <ReadingView
     {track}
@@ -516,6 +542,15 @@
               >+</button>
             </div>
             <div class="flex items-center gap-2 ml-auto">
+              <!-- Reset to starter code -->
+              <button
+                class="btn-ghost text-xs"
+                onclick={openResetConfirm}
+                title="Reset editor to the starter code for this problem"
+              >
+                Reset
+              </button>
+
               <!-- Submissions dropdown -->
               <div class="relative">
                 <button
@@ -630,6 +665,16 @@
       {/snippet}
     </SplitPane>
   </div>
+
+  <ConfirmDialog
+    bind:open={showResetConfirm}
+    title="Reset to starter code?"
+    body="Your current code will be replaced with the original starter for this problem. This cannot be undone."
+    confirmLabel="Reset"
+    cancelLabel="Cancel"
+    tone="danger"
+    onConfirm={performReset}
+  />
 </div>
 {/if}
 

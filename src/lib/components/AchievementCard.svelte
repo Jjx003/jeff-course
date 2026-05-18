@@ -25,7 +25,13 @@
     'polyglot':       'M3 4h7v7H3z M14 4h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',                        // four squares
     'persistent':     'M12 2v6 M12 2l3 3 M12 2l-3 3 M4 12a8 8 0 1 0 16 0 8 8 0 1 0-16 0z',            // refresh-like
     'theorist':       'M4 6h16 M4 12h16 M4 18h10',                                                   // lines (book)
-    'well-rounded':   'M12 22a10 10 0 1 0 0-20 10 10 0 1 0 0 20z M2 12h20 M12 2c3 4 3 16 0 20 M12 2c-3 4-3 16 0 20'
+    'well-rounded':   'M12 22a10 10 0 1 0 0-20 10 10 0 1 0 0 20z M2 12h20 M12 2c3 4 3 16 0 20 M12 2c-3 4-3 16 0 20',
+    // Time-based achievements: a family of clock variants that get more
+    // "earned" looking as the threshold climbs.
+    'hours-1':        'M12 22a10 10 0 1 0 0-20 10 10 0 1 0 0 20z M12 7v5l3 2',                       // simple clock
+    'hours-10':       'M12 22a10 10 0 1 0 0-20 10 10 0 1 0 0 20z M12 7v5l3.5 2 M12 2v2 M12 20v2 M2 12h2 M20 12h2', // clock w/ tick marks
+    'hours-50':       'M6 3h12 M6 21h12 M7 3c0 5 10 7 10 9 M17 3c0 5-10 7-10 9 M7 21c0-5 10-7 10-9 M17 21c0-5-10-7-10-9', // hourglass
+    'hours-100':      'M9 2h6 M12 22a8 8 0 1 0 0-16 8 8 0 1 0 0 16z M12 14v-4 M19 5l2 2'              // stopwatch
   };
 
   const icon = $derived(ICONS[achievement.id] ?? 'M12 2v20 M2 12h20');

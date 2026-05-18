@@ -20,14 +20,18 @@ export type AchievementId =
   | 'polyglot'
   | 'persistent'
   | 'theorist'
-  | 'well-rounded';
+  | 'well-rounded'
+  | 'hours-1'
+  | 'hours-10'
+  | 'hours-50'
+  | 'hours-100';
 
 export interface AchievementDef {
   id: AchievementId;
   title: string;
   description: string;
   /** Optional grouping for the UI. */
-  category: 'milestone' | 'consistency' | 'depth';
+  category: 'milestone' | 'consistency' | 'depth' | 'time';
 }
 
 export interface Achievement extends AchievementDef {
@@ -82,6 +86,10 @@ export interface StatsSummary {
   readingsCompleted: number;
   /** Total submission attempts (across all problems). */
   totalSubmissions: number;
+  /** Total active study time in milliseconds (sum of all session counters). */
+  totalActiveMs: number;
+  /** Active study time accumulated for today's local date. */
+  activeMsToday: number;
   achievements: Achievement[];
   trackProgress: TrackProgress[];
   /** One year of activity, oldest first. */

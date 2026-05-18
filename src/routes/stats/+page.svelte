@@ -40,8 +40,36 @@
     });
   }
 
+  /** Compact "Xh Ym" / "Xm" rendering for a duration in milliseconds. */
+  function formatHours(ms: number): string {
+    if (!ms || ms <= 0) return '0m';
+    const totalMin = Math.floor(ms / 60_000);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    if (h === 0) return `${m}m`;
+    return `${h}h ${m}m`;
+  }
+
+  function formatMinutesShort(ms: number): string {
+    if (!ms || ms <= 0) return '0m';
+    const totalMin = Math.floor(ms / 60_000);
+    if (totalMin < 60) return `${totalMin}m`;
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return m === 0 ? `${h}h` : `${h}h ${m}m`;
+  }
+
   // Hero stats are derived for nicer display.
-  let heroCards = $derived([
+  let heroCards = $derived<
+    Array<{
+      key: string;
+      label: string;
+      value: string | number;
+      unit: string;
+      hint: string;
+      tone: 'warm' | 'cool' | 'muted';
+    }>
+  >([
     {
       key: 'streak',
       label: 'Current Streak',
@@ -65,6 +93,17 @@
       unit: stats.problemsSolved === 1 ? 'unique' : 'unique',
       hint: `${stats.totalSubmissions} submission${stats.totalSubmissions === 1 ? '' : 's'} total`,
       tone: stats.problemsSolved > 0 ? 'cool' : 'muted'
+    },
+    {
+      key: 'time',
+      label: 'Time Invested',
+      value: formatHours(stats.totalActiveMs),
+      unit: '',
+      hint:
+        stats.activeMsToday > 0
+          ? `${formatMinutesShort(stats.activeMsToday)} today`
+          : 'No time logged today yet',
+      tone: stats.totalActiveMs > 0 ? 'cool' : 'muted'
     },
     {
       key: 'achievements',

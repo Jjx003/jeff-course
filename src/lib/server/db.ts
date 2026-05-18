@@ -112,4 +112,19 @@ export const dbReady: Promise<void> = (async () => {
       unlocked_at BIGINT  NOT NULL
     )
   `);
+
+  // Study sessions track active engagement time per problem visit. The
+  // client owns `active_ms` as a running counter (it pauses on idle / hidden
+  // tab); each heartbeat overwrites the row's `active_ms`, never appends to
+  // it. `started_at` is fixed at session creation and is what we bucket by
+  // for "time today" calculations.
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS study_sessions (
+      id                VARCHAR PRIMARY KEY,
+      problem_id        VARCHAR NOT NULL,
+      started_at        BIGINT  NOT NULL,
+      active_ms         BIGINT  NOT NULL,
+      last_heartbeat_at BIGINT  NOT NULL
+    )
+  `);
 })();

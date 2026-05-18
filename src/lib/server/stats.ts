@@ -18,6 +18,7 @@
  */
 
 import { dbReady, dbAll, dbRun } from './db.js';
+import { getTotalActiveMs, getActiveMsForDateKey } from './studyTime.js';
 import { loadAllTracks } from '$lib/content/courseLoader.js';
 import type { Difficulty, ModuleType, Track } from '$lib/types/course.js';
 import type {
@@ -57,13 +58,17 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: 'polyglot',       title: 'Polyglot',        description: 'Solve a problem in both Python and C++.',   category: 'depth'       },
   { id: 'persistent',     title: 'Persistent',      description: 'Solve a problem after 3+ submission tries.', category: 'depth'      },
   { id: 'theorist',       title: 'Theorist',        description: 'Complete 5 reading modules.',               category: 'depth'       },
-  { id: 'well-rounded',   title: 'Well-Rounded',    description: 'Be active across 3 different tracks.',      category: 'depth'       }
+  { id: 'well-rounded',   title: 'Well-Rounded',    description: 'Be active across 3 different tracks.',      category: 'depth'       },
+  { id: 'hours-1',        title: 'Warm-up',         description: 'Spend 1 hour learning.',                    category: 'time'        },
+  { id: 'hours-10',       title: 'Focused Time',    description: 'Spend 10 hours learning.',                  category: 'time'        },
+  { id: 'hours-50',       title: 'Deep Practice',   description: 'Spend 50 hours learning.',                  category: 'time'        },
+  { id: 'hours-100',      title: 'Centurion',       description: 'Spend 100 hours learning.',                 category: 'time'        }
 ];
 
 // ── Date helpers (local timezone) ────────────────────────────────────────
 
 /** YYYY-MM-DD in the server's local timezone for the given epoch ms. */
-function toLocalDateKey(epochMs: number): string {
+export function toLocalDateKey(epochMs: number): string {
   const d = new Date(epochMs);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -260,6 +265,8 @@ interface AchievementContext {
   longestStreak: number;
   problemsSolved: number;
   readingsCompleted: number;
+  /** Total active study time in ms (orphan-filtered). */
+  totalActiveMs: number;
 }
 
 interface AchievementEval {
@@ -353,7 +360,31 @@ function evalAchievement(id: AchievementId, ctx: AchievementContext): Achievemen
       const n = tracksTouched.size;
       return ratio(n, 3, `${Math.min(n, 3)} / 3 tracks`);
     }
+    case 'hours-1':
+      return hoursRatio(ctx.totalActiveMs, 1);
+    case 'hours-10':
+      return hoursRatio(ctx.totalActiveMs, 10);
+    case 'hours-50':
+      return hoursRatio(ctx.totalActiveMs, 50);
+    case 'hours-100':
+      return hoursRatio(ctx.totalActiveMs, 100);
   }
+}
+
+/**
+ * Hours-based ratio used by the time-based achievements. Renders e.g.
+ * "12.3 / 50 hours" with a tenth precision so progress feels live without
+ * being noisy.
+ */
+function hoursRatio(activeMs: number, targetHours: number): AchievementEval {
+  const hours = activeMs / 3_600_000;
+  const shown = Math.min(hours, targetHours);
+  const label = `${shown.toFixed(1)} / ${targetHours} hours`;
+  return {
+    unlocked: hours >= targetHours,
+    progress: targetHours === 0 ? 1 : Math.min(hours / targetHours, 1),
+    progressLabel: label
+  };
 }
 
 function ratio(current: number, target: number, label: string): AchievementEval {
@@ -489,6 +520,15 @@ export async function getStatsSummary(): Promise<StatsSummary> {
   }
   const totalPoints = computePoints(tracks, facts);
 
+  // Study time — totals + today's bucket. Orphan-filtered against current
+  // course content inside the helpers, so renamed problems don't inflate
+  // numbers.
+  const todayKey = dateKeyDaysAgo(0);
+  const [totalActiveMs, activeMsToday] = await Promise.all([
+    getTotalActiveMs(),
+    getActiveMsForDateKey(todayKey)
+  ]);
+
   // Achievements — evaluate, persist new unlocks, then return enriched list.
   const persisted = await loadUnlockedAchievements();
   const ctx: AchievementContext = {
@@ -497,7 +537,8 @@ export async function getStatsSummary(): Promise<StatsSummary> {
     currentStreak: streak.current,
     longestStreak: streak.longest,
     problemsSolved,
-    readingsCompleted
+    readingsCompleted,
+    totalActiveMs
   };
 
   const newlyUnlocked: AchievementId[] = [];
@@ -539,6 +580,8 @@ export async function getStatsSummary(): Promise<StatsSummary> {
     problemsSolved,
     readingsCompleted,
     totalSubmissions: facts.totalSubmissions,
+    totalActiveMs,
+    activeMsToday,
     achievements,
     trackProgress,
     activity: heatmap,
