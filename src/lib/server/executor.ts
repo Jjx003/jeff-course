@@ -12,11 +12,100 @@
  * SERVER-SIDE ONLY — never import this from client-side code or components.
  */
 
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { writeFileSync, unlinkSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+
+const IS_WINDOWS = process.platform === 'win32';
+
+// ── Process-tree management ──────────────────────────────────────────────
+//
+// Why this exists:
+//   `child.kill('SIGKILL')` only signals the IMMEDIATE child. The
+//   `uv run python script.py` chain spawns a real python subprocess; on a
+//   plain SIGKILL the python grandchild is orphaned and keeps burning
+//   CPU/GPU until the user kills it manually. This caused leaked python
+//   processes on Windows (zombie vite-style) every time a long-running
+//   inference job timed out or was cancelled.
+//
+//   The cross-platform fix:
+//     - POSIX: spawn the child with `detached: true` so it leads a new
+//       process group; `process.kill(-pid, 'SIGKILL')` then signals the
+//       whole group (parent + grandchildren).
+//     - Windows: `taskkill /F /T /PID <pid>` walks the tree and kills it.
+//       Node has no native tree-kill on Windows.
+
+function treeKill(child: ChildProcess): void {
+  if (!child.pid || child.exitCode !== null) return;
+  if (IS_WINDOWS) {
+    try {
+      spawn('taskkill', ['/F', '/T', '/PID', String(child.pid)], {
+        stdio: 'ignore',
+        windowsHide: true
+      });
+    } catch {
+      try {
+        child.kill('SIGKILL');
+      } catch {
+        // Best effort; ignore.
+      }
+    }
+  } else {
+    try {
+      // Negative pid = whole group (we spawned with detached: true).
+      process.kill(-child.pid, 'SIGKILL');
+    } catch {
+      try {
+        child.kill('SIGKILL');
+      } catch {
+        // Best effort; ignore.
+      }
+    }
+  }
+}
+
+// ── Live-child registry ──────────────────────────────────────────────────
+//
+// Every spawn registers itself here and unregisters on close. The map lives
+// on globalThis so Vite HMR (which re-evaluates this module on save) doesn't
+// orphan tracked children across reloads.
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const g = globalThis as any;
+const RUNNING: Map<string, ChildProcess> =
+  g.__executorRunning ?? (g.__executorRunning = new Map<string, ChildProcess>());
+
+function installShutdownHandlersOnce(): void {
+  if (g.__executorShutdownInstalled) return;
+  g.__executorShutdownInstalled = true;
+
+  const cleanup = () => {
+    for (const child of RUNNING.values()) {
+      treeKill(child);
+    }
+    RUNNING.clear();
+  };
+
+  // 'exit' fires synchronously on normal Node shutdown.
+  process.on('exit', cleanup);
+  // SIGINT/SIGTERM: clean up, then re-exit with the conventional code.
+  process.once('SIGINT', () => {
+    cleanup();
+    process.exit(130);
+  });
+  process.once('SIGTERM', () => {
+    cleanup();
+    process.exit(143);
+  });
+}
+installShutdownHandlersOnce();
+
+/** How many user code processes are currently alive. For diagnostics. */
+export function runningProcessCount(): number {
+  return RUNNING.size;
+}
 
 // ── CUDA detection ────────────────────────────────────────────────────────
 //
@@ -44,11 +133,34 @@ const TORCH_INDEX_URL: string | null = process.env.TORCH_INDEX_URL ?? null;
 async function detectCudaIndex(): Promise<string> {
   if (TORCH_INDEX_URL) return TORCH_INDEX_URL;
   return new Promise((resolve) => {
+    let settled = false;
+    const finish = (idx: string) => {
+      if (settled) return;
+      settled = true;
+      resolve(idx);
+    };
+
     const proc = spawn('nvidia-smi', ['--query-gpu=name', '--format=csv,noheader'], {
-      stdio: ['ignore', 'pipe', 'ignore']
+      stdio: ['ignore', 'pipe', 'ignore'],
+      windowsHide: true
     });
-    proc.on('close', (code) => resolve(code === 0 ? PYTORCH_CUDA_INDEX : PYTORCH_CPU_INDEX));
-    proc.on('error', () => resolve(PYTORCH_CPU_INDEX));
+
+    // Guard against a hung nvidia-smi (driver weirdness, GPU stuck). Without
+    // this timeout, every torch-indexed run would block forever on
+    // `await torchIndexPromise`. Two seconds is plenty for a healthy probe.
+    const timer = setTimeout(() => {
+      try { proc.kill('SIGKILL'); } catch { /* ignore */ }
+      finish(PYTORCH_CPU_INDEX);
+    }, 2_000);
+
+    proc.on('close', (code) => {
+      clearTimeout(timer);
+      finish(code === 0 ? PYTORCH_CUDA_INDEX : PYTORCH_CPU_INDEX);
+    });
+    proc.on('error', () => {
+      clearTimeout(timer);
+      finish(PYTORCH_CPU_INDEX);
+    });
   });
 }
 
@@ -58,7 +170,10 @@ const torchIndexPromise: Promise<string> = detectCudaIndex();
 /** Return true if a requirements file lists torch as a dependency. */
 function requirementsUsesTorchIndex(reqPath: string): boolean {
   try {
-    const content = readFileSync(reqPath, 'utf-8');
+    // Strip a UTF-8 BOM if present — otherwise the leading \uFEFF on the
+    // first line prevents `^\s*torch` from matching when torch is the
+    // first dependency, and we silently fall back to the non-CUDA path.
+    const content = readFileSync(reqPath, 'utf-8').replace(/^\uFEFF/, '');
     return /^\s*torch[>=<!,\s]/m.test(content);
   } catch {
     return false;
@@ -72,6 +187,8 @@ export interface SpawnResult {
   stderr: string;
   exitCode: number | null;
   timedOut: boolean;
+  /** True if the caller's AbortSignal fired before the process finished. */
+  aborted: boolean;
   durationMs: number;
 }
 
@@ -80,6 +197,7 @@ export interface RunResult {
   stderr: string;
   exitCode: number | null;
   timedOut: boolean;
+  aborted: boolean;
   durationMs: number;
 }
 
@@ -89,6 +207,18 @@ export interface SubmitResult {
   stderr: string;
   diff?: string;
   durationMs: number;
+  aborted: boolean;
+}
+
+export interface RunOptions {
+  /**
+   * Fires the AbortSignal → server immediately tree-kills the child.
+   * Typically wired from `RequestEvent.request.signal` so client navigation
+   * (which closes the HTTP connection) automatically cancels execution.
+   */
+  signal?: AbortSignal;
+  /** Optional stable ID for the live-child registry (defaults to a UUID). */
+  executionId?: string;
 }
 
 // ── Core spawn wrapper ────────────────────────────────────────────────────
@@ -106,42 +236,77 @@ function spawnAsync(
   cmd: string,
   args: string[],
   opts: { cwd?: string; env?: NodeJS.ProcessEnv },
-  timeoutMs: number
+  timeoutMs: number,
+  runOpts: RunOptions = {}
 ): Promise<SpawnResult> {
   return new Promise((resolve) => {
-    const proc = spawn(cmd, args, { ...opts, stdio: ['ignore', 'pipe', 'pipe'] });
+    const executionId = runOpts.executionId ?? randomUUID();
+    const start = Date.now();
+
+    // Caller aborted before we even started; short-circuit.
+    if (runOpts.signal?.aborted) {
+      resolve({
+        stdout: '',
+        stderr: 'Aborted before start',
+        exitCode: null,
+        timedOut: false,
+        aborted: true,
+        durationMs: 0
+      });
+      return;
+    }
+
+    // On POSIX, `detached: true` puts the child in its own process group so
+    // we can tree-kill via `kill(-pid)`. On Windows `detached: true` would
+    // open a separate console window; we explicitly avoid that and rely on
+    // `taskkill /T` for tree-kill instead.
+    const proc = spawn(cmd, args, {
+      ...opts,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: !IS_WINDOWS,
+      windowsHide: true
+    });
+    RUNNING.set(executionId, proc);
+
     let stdout = '';
     let stderr = '';
     let timedOut = false;
-    const start = Date.now();
+    let aborted = false;
 
-    proc.stdout.on('data', (chunk: Buffer) => {
+    proc.stdout?.on('data', (chunk: Buffer) => {
       stdout += chunk.toString();
     });
-    proc.stderr.on('data', (chunk: Buffer) => {
+    proc.stderr?.on('data', (chunk: Buffer) => {
       stderr += chunk.toString();
     });
 
     const timer = setTimeout(() => {
       timedOut = true;
-      proc.kill('SIGKILL');
+      treeKill(proc);
     }, timeoutMs);
 
-    proc.on('close', (exitCode) => {
-      clearTimeout(timer);
-      resolve({ stdout, stderr, exitCode, timedOut, durationMs: Date.now() - start });
-    });
+    const onAbort = () => {
+      aborted = true;
+      treeKill(proc);
+    };
+    runOpts.signal?.addEventListener('abort', onAbort, { once: true });
 
-    proc.on('error', (err) => {
+    const finish = (exitCode: number | null, errorMessage?: string) => {
       clearTimeout(timer);
+      runOpts.signal?.removeEventListener('abort', onAbort);
+      RUNNING.delete(executionId);
       resolve({
         stdout,
-        stderr: err.message,
-        exitCode: null,
-        timedOut: false,
+        stderr: errorMessage ?? stderr,
+        exitCode,
+        timedOut,
+        aborted,
         durationMs: Date.now() - start
       });
-    });
+    };
+
+    proc.on('close', (exitCode) => finish(exitCode));
+    proc.on('error', (err) => finish(null, err.message));
   });
 }
 
@@ -159,19 +324,21 @@ export async function runCode(
   language: 'python' | 'cpp',
   code: string,
   requirementsPath?: string,
-  timeoutMs = 10_000
+  timeoutMs = 10_000,
+  runOpts: RunOptions = {}
 ): Promise<RunResult> {
   if (language === 'python') {
-    return runPython(code, requirementsPath, timeoutMs);
+    return runPython(code, requirementsPath, timeoutMs, runOpts);
   }
   if (language === 'cpp') {
-    return runCpp(code, timeoutMs);
+    return runCpp(code, timeoutMs, runOpts);
   }
   return {
     stdout: '',
     stderr: `Unsupported language: ${language}`,
     exitCode: 1,
     timedOut: false,
+    aborted: false,
     durationMs: 0
   };
 }
@@ -185,16 +352,28 @@ export async function submitCode(
   code: string,
   expectedOutput: string,
   requirementsPath?: string,
-  timeoutMs = 10_000
+  timeoutMs = 10_000,
+  runOpts: RunOptions = {}
 ): Promise<SubmitResult> {
-  const result = await runCode(language, code, requirementsPath, timeoutMs);
+  const result = await runCode(language, code, requirementsPath, timeoutMs, runOpts);
+
+  if (result.aborted) {
+    return {
+      passed: false,
+      stdout: result.stdout,
+      stderr: 'Execution cancelled',
+      durationMs: result.durationMs,
+      aborted: true
+    };
+  }
 
   if (result.timedOut) {
     return {
       passed: false,
       stdout: result.stdout,
       stderr: 'Execution timed out',
-      durationMs: result.durationMs
+      durationMs: result.durationMs,
+      aborted: false
     };
   }
 
@@ -203,7 +382,8 @@ export async function submitCode(
       passed: false,
       stdout: result.stdout,
       stderr: result.stderr || `Process exited with code ${result.exitCode}`,
-      durationMs: result.durationMs
+      durationMs: result.durationMs,
+      aborted: false
     };
   }
 
@@ -215,7 +395,8 @@ export async function submitCode(
       passed: true,
       stdout: result.stdout,
       stderr: result.stderr,
-      durationMs: result.durationMs
+      durationMs: result.durationMs,
+      aborted: false
     };
   }
 
@@ -224,7 +405,8 @@ export async function submitCode(
     stdout: result.stdout,
     stderr: result.stderr,
     diff: buildDiff(expected, actual),
-    durationMs: result.durationMs
+    durationMs: result.durationMs,
+    aborted: false
   };
 }
 
@@ -233,7 +415,8 @@ export async function submitCode(
 async function runPython(
   code: string,
   requirementsPath: string | undefined,
-  timeoutMs: number
+  timeoutMs: number,
+  runOpts: RunOptions
 ): Promise<RunResult> {
   const tmpFile = path.join(tmpdir(), `${randomUUID()}.py`);
   writeFileSync(tmpFile, code, 'utf-8');
@@ -265,33 +448,49 @@ async function runPython(
       args = ['run', 'python', tmpFile];
     }
 
-    return await spawnAsync('uv', args, {}, timeoutMs);
+    return await spawnAsync('uv', args, {}, timeoutMs, runOpts);
   } finally {
     tryUnlink(tmpFile);
   }
 }
 
-async function runCpp(code: string, timeoutMs: number): Promise<RunResult> {
+async function runCpp(
+  code: string,
+  timeoutMs: number,
+  runOpts: RunOptions
+): Promise<RunResult> {
   const id = randomUUID();
   const tmpSrc = path.join(tmpdir(), `${id}.cpp`);
-  const tmpBin = path.join(tmpdir(), id);
+  // Windows refuses to launch a binary without an .exe extension; on POSIX
+  // an extension is harmless. Always use a platform-appropriate suffix.
+  const tmpBin = path.join(tmpdir(), IS_WINDOWS ? `${id}.exe` : id);
   writeFileSync(tmpSrc, code, 'utf-8');
 
   try {
     // Compile step
-    const compileResult = await spawnAsync('g++', ['-std=c++17', '-O2', '-o', tmpBin, tmpSrc], {}, 30_000);
+    const compileResult = await spawnAsync(
+      'g++',
+      ['-std=c++17', '-O2', '-o', tmpBin, tmpSrc],
+      {},
+      30_000,
+      runOpts
+    );
+    if (compileResult.aborted) {
+      return { ...compileResult, stderr: 'Cancelled during compilation' };
+    }
     if (compileResult.exitCode !== 0) {
       return {
         stdout: '',
         stderr: compileResult.stderr || 'Compilation failed',
         exitCode: compileResult.exitCode,
         timedOut: false,
+        aborted: false,
         durationMs: compileResult.durationMs
       };
     }
 
     // Run step
-    const runResult = await spawnAsync(tmpBin, [], {}, timeoutMs);
+    const runResult = await spawnAsync(tmpBin, [], {}, timeoutMs, runOpts);
     return {
       ...runResult,
       // Add compile time to total duration

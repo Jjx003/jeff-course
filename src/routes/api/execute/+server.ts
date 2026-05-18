@@ -65,15 +65,27 @@ export const POST: RequestHandler = async ({ request }) => {
 
   const requirementsPath = problem.requirementsPath;
 
+  // `request.signal` fires when the client disconnects (navigation, tab
+  // close, explicit AbortController). Threading it into the executor lets
+  // it tree-kill the spawned uv/python/g++ process and any grandchildren
+  // immediately, instead of leaking them until the timeout expires.
+  const runOpts = { signal: request.signal };
+
   if (action === 'run') {
-    const result = await runCode(lang, code, requirementsPath);
+    const result = await runCode(lang, code, requirementsPath, undefined, runOpts);
 
     const runResult: RunResult = {
       stdout: result.stdout,
-      stderr: result.stderr,
+      stderr: result.aborted ? 'Cancelled' : result.stderr,
       durationMs: result.durationMs,
-      success: result.exitCode === 0 && !result.timedOut,
-      status: result.timedOut ? 'timeout' : result.exitCode === 0 ? 'ok' : 'error'
+      success: result.exitCode === 0 && !result.timedOut && !result.aborted,
+      status: result.aborted
+        ? 'error'
+        : result.timedOut
+          ? 'timeout'
+          : result.exitCode === 0
+            ? 'ok'
+            : 'error'
     };
 
     return json(runResult);
@@ -91,15 +103,23 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(submitResult);
   }
 
-  const result = await submitCode(lang, code, expectedOutput, requirementsPath);
+  const result = await submitCode(lang, code, expectedOutput, requirementsPath, undefined, runOpts);
 
   const submitResult: SubmitResult = {
-    verdict: result.passed ? 'accepted' : result.stderr ? 'error' : 'wrong_answer',
-    message: result.passed
-      ? 'All outputs matched.'
-      : result.stderr
-        ? result.stderr
-        : 'Output did not match expected.',
+    verdict: result.aborted
+      ? 'error'
+      : result.passed
+        ? 'accepted'
+        : result.stderr
+          ? 'error'
+          : 'wrong_answer',
+    message: result.aborted
+      ? 'Submission cancelled.'
+      : result.passed
+        ? 'All outputs matched.'
+        : result.stderr
+          ? result.stderr
+          : 'Output did not match expected.',
     score: result.passed ? 100 : 0,
     testResults: [
       {

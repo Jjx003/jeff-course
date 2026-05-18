@@ -11,10 +11,19 @@
 
 import type { RunRequest, RunResult, SubmitRequest, SubmitResult } from '$lib/types/execution.js';
 
+export interface ExecutionOptions {
+  /**
+   * When this aborts, the in-flight fetch is cancelled, which closes the
+   * HTTP connection to /api/execute. The server observes the disconnect
+   * via `request.signal` and tree-kills the spawned child process.
+   */
+  signal?: AbortSignal;
+}
+
 export interface ExecutionService {
   /** Execute code and return stdout/stderr/status. */
-  run(request: RunRequest): Promise<RunResult>;
+  run(request: RunRequest, opts?: ExecutionOptions): Promise<RunResult>;
 
   /** Submit code for grading and return a verdict. */
-  submit(request: SubmitRequest): Promise<SubmitResult>;
+  submit(request: SubmitRequest, opts?: ExecutionOptions): Promise<SubmitResult>;
 }

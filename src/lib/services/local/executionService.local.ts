@@ -13,7 +13,7 @@
  * CLIENT-SIDE ONLY — uses fetch(), no Node.js APIs.
  */
 
-import type { ExecutionService } from '../executionService.js';
+import type { ExecutionOptions, ExecutionService } from '../executionService.js';
 import type { RunRequest, RunResult, SubmitRequest, SubmitResult } from '$lib/types/execution.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -26,61 +26,94 @@ function generateId(): string {
 // ── Implementation ────────────────────────────────────────────────────────
 
 class ApiExecutionService implements ExecutionService {
-  async run(request: RunRequest): Promise<RunResult> {
+  async run(request: RunRequest, opts?: ExecutionOptions): Promise<RunResult> {
     const [trackSlug, problemSlug] = request.problemId.split('/');
 
-    const response = await fetch('/api/execute', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'run',
-        language: request.language,
-        code: request.code,
-        problemId: `${trackSlug}/${problemSlug}`
-      })
-    });
+    try {
+      const response = await fetch('/api/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'run',
+          language: request.language,
+          code: request.code,
+          problemId: `${trackSlug}/${problemSlug}`
+        }),
+        signal: opts?.signal
+      });
 
-    if (!response.ok) {
-      const text = await response.text().catch(() => response.statusText);
-      return {
-        stdout: '',
-        stderr: `Execution request failed (${response.status}): ${text}`,
-        durationMs: null,
-        success: false,
-        status: 'error'
-      };
+      if (!response.ok) {
+        const text = await response.text().catch(() => response.statusText);
+        return {
+          stdout: '',
+          stderr: `Execution request failed (${response.status}): ${text}`,
+          durationMs: null,
+          success: false,
+          status: 'error'
+        };
+      }
+
+      const result: RunResult = await response.json();
+      return result;
+    } catch (err) {
+      // AbortError is the expected path when the user navigates away or
+      // explicitly cancels — surface it as a synthetic cancelled result so
+      // callers don't need a separate try/catch.
+      if (isAbortError(err)) {
+        return {
+          stdout: '',
+          stderr: 'Cancelled',
+          durationMs: null,
+          success: false,
+          status: 'error'
+        };
+      }
+      throw err;
     }
-
-    const result: RunResult = await response.json();
-    return result;
   }
 
-  async submit(request: SubmitRequest): Promise<SubmitResult> {
+  async submit(request: SubmitRequest, opts?: ExecutionOptions): Promise<SubmitResult> {
     const [trackSlug, problemSlug] = request.problemId.split('/');
 
-    const response = await fetch('/api/execute', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'submit',
-        language: request.language,
-        code: request.code,
-        problemId: `${trackSlug}/${problemSlug}`
-      })
-    });
+    try {
+      const response = await fetch('/api/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'submit',
+          language: request.language,
+          code: request.code,
+          problemId: `${trackSlug}/${problemSlug}`
+        }),
+        signal: opts?.signal
+      });
 
-    if (!response.ok) {
-      const text = await response.text().catch(() => response.statusText);
-      return {
-        verdict: 'error',
-        message: `Submission request failed (${response.status}): ${text}`,
-        score: null
-      };
+      if (!response.ok) {
+        const text = await response.text().catch(() => response.statusText);
+        return {
+          verdict: 'error',
+          message: `Submission request failed (${response.status}): ${text}`,
+          score: null
+        };
+      }
+
+      const result: SubmitResult = await response.json();
+      return result;
+    } catch (err) {
+      if (isAbortError(err)) {
+        return {
+          verdict: 'error',
+          message: 'Cancelled',
+          score: null
+        };
+      }
+      throw err;
     }
-
-    const result: SubmitResult = await response.json();
-    return result;
   }
+}
+
+function isAbortError(err: unknown): boolean {
+  return err instanceof DOMException && err.name === 'AbortError';
 }
 
 export const localExecutionService = new ApiExecutionService();

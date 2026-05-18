@@ -11,8 +11,9 @@
    * All persistence (drafts, run history, submissions) is handled client-side
    * via the service layer. The server only supplies static course content.
    */
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { browser } from '$app/environment';
+  import { beforeNavigate } from '$app/navigation';
 
   import Header from '$lib/components/Header.svelte';
   import SplitPane from '$lib/components/SplitPane.svelte';
@@ -88,6 +89,18 @@
   // ── Running / submitting state ────────────────────────────────────────
   let isRunning = $state(false);
   let isSubmitting = $state(false);
+  /**
+   * AbortController for the in-flight run/submit fetch, if any. Aborting it
+   * closes the HTTP connection to /api/execute, which the server observes
+   * via request.signal and uses to tree-kill the spawned child process.
+   * Cleared back to `null` whenever the request settles, so beforeunload /
+   * beforeNavigate handlers can use it as a "is execution still live?" flag
+   * — finished runs never trigger a warning.
+   */
+  let execController = $state<AbortController | null>(null);
+  function isExecutionLive(): boolean {
+    return execController !== null;
+  }
 
   // ── Reward toast ──────────────────────────────────────────────────────
   let toastRef = $state<RewardToast | undefined>(undefined);
@@ -262,14 +275,23 @@
   async function handleRun() {
     if (!services || !editorRef || isRunning) return;
     isRunning = true;
+    const controller = new AbortController();
+    execController = controller;
 
     try {
       const code = editorRef.getValue();
-      const result = await services.executionService.run({
-        problemId,
-        language: currentLanguage,
-        code
-      });
+      const result = await services.executionService.run(
+        {
+          problemId,
+          language: currentLanguage,
+          code
+        },
+        { signal: controller.signal }
+      );
+
+      // If the abort fired (navigation/unmount), don't persist or display
+      // the synthetic cancelled result — the user is gone.
+      if (controller.signal.aborted) return;
 
       const snapshot: RunSnapshot = {
         id: services.generateId(),
@@ -284,6 +306,7 @@
       await services.runHistoryStorage.addRun(snapshot).catch(() => {});
     } finally {
       isRunning = false;
+      if (execController === controller) execController = null;
     }
   }
 
@@ -302,14 +325,21 @@
   async function handleSubmit() {
     if (!services || !editorRef || isSubmitting) return;
     isSubmitting = true;
+    const controller = new AbortController();
+    execController = controller;
 
     try {
       const code = editorRef.getValue();
-      const result = await services.executionService.submit({
-        problemId,
-        language: currentLanguage,
-        code
-      });
+      const result = await services.executionService.submit(
+        {
+          problemId,
+          language: currentLanguage,
+          code
+        },
+        { signal: controller.signal }
+      );
+
+      if (controller.signal.aborted) return;
 
       const snapshot: SubmitSnapshot = {
         id: services.generateId(),
@@ -341,8 +371,57 @@
       }
     } finally {
       isSubmitting = false;
+      if (execController === controller) execController = null;
     }
   }
+
+  // ── In-flight execution lifecycle ─────────────────────────────────────
+  //
+  // Three scenarios where we need to cancel a running child:
+  //   1. SvelteKit client-side navigation (Prev/Next link, breadcrumb,
+  //      sidebar). beforeNavigate intercepts → confirm → abort.
+  //   2. Tab close, full reload, or external link. beforeunload triggers
+  //      the browser's native "Leave site?" prompt, but only if execution
+  //      is still live.
+  //   3. Component teardown for any other reason (HMR, etc). onDestroy
+  //      fires a silent abort so the server kills its child immediately.
+  //
+  // The "is execution live?" check uses execController, which is non-null
+  // only between fetch start and fetch settle. Already-finished runs do
+  // NOT prompt — matches the UX intent (don't nag about completed work).
+
+  beforeNavigate(({ cancel }) => {
+    if (!isExecutionLive()) return;
+    const ok = browser
+      ? confirm('A code run is still in progress. Cancel it and leave the page?')
+      : true;
+    if (!ok) {
+      cancel();
+      return;
+    }
+    execController?.abort();
+  });
+
+  onDestroy(() => {
+    // Silent — by this point either beforeNavigate already confirmed, or
+    // the component is unmounting for an unrelated reason (HMR, route
+    // tree rebuild). Either way we don't want to leak the child.
+    execController?.abort();
+  });
+
+  $effect(() => {
+    if (!browser) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isExecutionLive()) return;
+      // Browsers ignore custom strings since 2017 and just show a generic
+      // "Leave site?" prompt, but the preventDefault + returnValue dance
+      // is still what triggers it.
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  });
 
   /**
    * Fetch latest stats and surface any achievements unlocked since mount.
