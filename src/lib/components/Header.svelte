@@ -2,8 +2,11 @@
   /**
    * Header
    *
-   * Top navigation bar. Shows the app name and a breadcrumb trail.
+   * Top navigation bar. Shows the app name, a breadcrumb trail, a streak
+   * pill that links to /stats, and a small "Stats" tab.
    */
+  import StreakBadge from './StreakBadge.svelte';
+
   interface Crumb {
     label: string;
     href?: string;
@@ -40,8 +43,23 @@
     </nav>
   {/if}
 
-  <div class="ml-auto flex items-center gap-3 text-xs text-slate-500">
-    <span class="badge badge-blue">Local Mode</span>
-    <!-- EXTENSION POINT: user avatar / auth button goes here in production -->
+  <div class="ml-auto flex items-center gap-3 text-xs">
+    <a href="/stats" class="header-link" title="Your progress">Stats</a>
+    <StreakBadge />
   </div>
 </header>
+
+<style>
+  .header-link {
+    color: #94a3b8;
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: color 0.15s, background 0.15s;
+  }
+  .header-link:hover {
+    color: #e2e8f0;
+    background: #1a1f2e;
+  }
+</style>

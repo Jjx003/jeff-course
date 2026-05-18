@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { localCourseRepository } from '$lib/services/local/courseRepository.local';
+import { isReadingCompleted, isProblemCompleted } from '$lib/server/stats';
 
 export const load: PageServerLoad = async ({ params }) => {
   const [track, problem] = await Promise.all([
@@ -23,5 +24,13 @@ export const load: PageServerLoad = async ({ params }) => {
     ? track.problems.find((p) => p.slug === problem.nextSlug) ?? null
     : null;
 
-  return { track, problem, prevProblem, nextProblem };
+  // Initial completion state. Avoids a flash of the "not completed" UI on
+  // first render. The client re-checks via the API after hydration.
+  const problemId = `${params.trackSlug}/${params.problemSlug}`;
+  const initiallyCompleted =
+    problem.type === 'reading'
+      ? await isReadingCompleted(problemId)
+      : await isProblemCompleted(problemId);
+
+  return { track, problem, prevProblem, nextProblem, initiallyCompleted };
 };

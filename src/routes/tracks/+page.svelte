@@ -9,6 +9,10 @@
     intermediate: 'badge-yellow',
     advanced:     'badge-red'
   };
+
+  function progressOf(slug: string): { completed: number; total: number } {
+    return data.progressBySlug[slug] ?? { completed: 0, total: 0 };
+  }
 </script>
 
 <Header crumbs={[{ label: 'Tracks' }]} />
@@ -28,6 +32,7 @@
   {:else}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
       {#each data.tracks as track}
+        {@const prog = progressOf(track.slug)}
         <a
           href="/tracks/{track.slug}"
           class="group rounded-xl border border-slate-700 bg-surface-900 p-6
@@ -47,8 +52,22 @@
             {track.description}
           </p>
 
-          <div class="flex items-center gap-3 text-xs text-slate-500">
-            <span>{track.problems.length} problem{track.problems.length !== 1 ? 's' : ''}</span>
+          {#if prog.total > 0 && prog.completed > 0}
+            <div class="track-progress-bar" aria-label="track completion">
+              <div class="track-progress-fill" style="width: {(prog.completed / prog.total) * 100}%"></div>
+            </div>
+          {/if}
+
+          <div class="flex items-center gap-3 text-xs text-slate-500 mt-3">
+            <span>
+              {#if prog.total > 0 && prog.completed > 0}
+                <span class="text-slate-300 font-semibold">{prog.completed}</span>
+                <span class="text-slate-600">/</span>
+                {prog.total} done
+              {:else}
+                {track.problems.length} problem{track.problems.length !== 1 ? 's' : ''}
+              {/if}
+            </span>
             {#if track.tags.length > 0}
               <span class="text-slate-700">·</span>
               {#each track.tags.slice(0, 3) as tag}
@@ -61,3 +80,17 @@
     </div>
   {/if}
 </main>
+
+<style>
+  .track-progress-bar {
+    height: 3px;
+    background: #1a1f2e;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .track-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
+    transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+</style>

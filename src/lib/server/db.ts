@@ -92,4 +92,24 @@ export const dbReady: Promise<void> = (async () => {
       timestamp  BIGINT  NOT NULL
     )
   `);
+
+  // ── Gamification ──────────────────────────────────────────────────────
+  // Reading modules don't produce submissions, so we track their completion
+  // explicitly. One row per problem; first mark-complete is preserved.
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS reading_completions (
+      problem_id   VARCHAR PRIMARY KEY,
+      completed_at BIGINT  NOT NULL
+    )
+  `);
+
+  // Achievements are persisted on first unlock so we can show a stable
+  // "earned on" date in the UI. Locked achievements are NOT stored — they
+  // are computed on demand from the static definition list.
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS achievements (
+      id          VARCHAR PRIMARY KEY,
+      unlocked_at BIGINT  NOT NULL
+    )
+  `);
 })();

@@ -23,10 +23,18 @@
   import OutputPanel from '$lib/components/OutputPanel.svelte';
   import ProblemNav from '$lib/components/ProblemNav.svelte';
   import ReadingView from '$lib/components/ReadingView.svelte';
+  import RewardToast from '$lib/components/RewardToast.svelte';
 
   import type { Language } from '$lib/types/course.js';
   import type { RunSnapshot, SubmitSnapshot } from '$lib/types/execution.js';
+  import type { Achievement } from '$lib/types/gamification.js';
   import type { PageData } from './$types';
+
+  const POINTS_BY_DIFFICULTY: Record<string, number> = {
+    beginner: 10,
+    intermediate: 20,
+    advanced: 35
+  };
 
   let { data }: { data: PageData } = $props();
 
@@ -62,6 +70,14 @@
   // ── Running / submitting state ────────────────────────────────────────
   let isRunning = $state(false);
   let isSubmitting = $state(false);
+
+  // ── Reward toast ──────────────────────────────────────────────────────
+  let toastRef = $state<RewardToast | undefined>(undefined);
+  /** Whether this problem was already solved when the page loaded. Seeded
+   *  from SSR so re-submits never trigger the first-solve toast. */
+  let wasAlreadySolved = $state(false);
+  /** Snapshot of unlocked achievement IDs taken on mount; used to detect new unlocks. */
+  let knownAchievementIds = $state<Set<string>>(new Set());
 
   // ── Editor font size ──────────────────────────────────────────────────
   const FONT_SIZE_MIN = 10;
@@ -119,10 +135,23 @@
   let services: typeof import('$lib/services/index.js') | null = null;
 
   onMount(async () => {
-    // Reading modules have no editor, runner, or drafts — skip all of that.
-    if (isReading) return;
+    // Seed first-solve guard from SSR before any user interaction.
+    wasAlreadySolved = data.initiallyCompleted ?? false;
 
     services = await import('$lib/services/index.js');
+
+    // Snapshot current achievements (used by both reading & coding views).
+    try {
+      const summary = await services.statsService.getSummary();
+      knownAchievementIds = new Set(
+        summary.achievements.filter((a) => a.unlockedAt !== null).map((a) => a.id)
+      );
+    } catch {
+      // non-fatal — toasts just won't show
+    }
+
+    // Reading modules have no editor, runner, or drafts — stop here.
+    if (isReading) return;
 
     // Restore output panel size/state
     const savedH = localStorage.getItem('output-panel-height');
@@ -138,6 +167,7 @@
     latestRun = savedRuns[0] ?? null;
     submissions = savedSubmissions;
     latestSubmit = savedSubmissions[0] ?? null;
+    wasAlreadySolved = savedSubmissions.length > 0;
 
     // Load saved draft for the default language
     await loadDraftIntoEditor(problem.defaultLanguage);
@@ -172,6 +202,7 @@
       latestRun = savedRuns[0] ?? null;
       submissions = savedSubmissions;
       latestSubmit = savedSubmissions[0] ?? null;
+      wasAlreadySolved = savedSubmissions.length > 0;
       await loadDraftIntoEditor(problem.defaultLanguage);
     })();
   });
@@ -274,10 +305,53 @@
       latestSubmit = snapshot;
       await services.submissionStorage.addSubmission(snapshot).catch(() => {});
       if (snapshot.result.verdict === 'accepted') {
+        const isFirstSolve = !wasAlreadySolved;
         submissions = await services.submissionStorage.getSubmissions(problemId).catch(() => submissions);
+        wasAlreadySolved = true;
+
+        if (isFirstSolve) {
+          const pts = POINTS_BY_DIFFICULTY[problem.difficulty] ?? 10;
+          toastRef?.show({
+            kind: 'points',
+            title: `+${pts} pts`,
+            subtitle: 'First solve'
+          });
+          // After the points toast, look for newly unlocked achievements and
+          // queue them with a gentle delay so they don't pile up at once.
+          void checkForNewAchievements(1400);
+        }
       }
     } finally {
       isSubmitting = false;
+    }
+  }
+
+  /**
+   * Fetch latest stats and surface any achievements unlocked since mount.
+   * The server persists the unlock on first GET, so the second time we
+   * fetch this same achievement set won't trigger again.
+   */
+  async function checkForNewAchievements(delayMs: number) {
+    if (!services) return;
+    await new Promise((r) => setTimeout(r, delayMs));
+    try {
+      const summary = await services.statsService.getSummary();
+      const newOnes: Achievement[] = summary.achievements.filter(
+        (a) => a.unlockedAt !== null && !knownAchievementIds.has(a.id)
+      );
+      // Stagger toasts so each one has a moment in the spotlight.
+      for (let i = 0; i < newOnes.length; i++) {
+        const a = newOnes[i];
+        knownAchievementIds.add(a.id);
+        await new Promise((r) => setTimeout(r, i === 0 ? 0 : 3500));
+        toastRef?.show({
+          kind: 'achievement',
+          title: a.title,
+          subtitle: a.description
+        });
+      }
+    } catch {
+      // non-fatal
     }
   }
 
@@ -289,12 +363,23 @@
   };
 </script>
 
+<RewardToast bind:this={toastRef} />
+
 {#if isReading}
   <ReadingView
     {track}
     {problem}
     {prevProblem}
     {nextProblem}
+    initiallyCompleted={data.initiallyCompleted}
+    onMarkedComplete={() => {
+      toastRef?.show({
+        kind: 'points',
+        title: '+5 pts',
+        subtitle: 'Reading complete'
+      });
+      void checkForNewAchievements(1400);
+    }}
   />
 {:else}
 <!-- Full-height shell: header + split pane -->

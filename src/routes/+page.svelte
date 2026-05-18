@@ -13,11 +13,16 @@
     and filesystem-driven course content.
   </p>
 
-  <a href="/tracks" class="btn-primary text-base px-6 py-2.5">
-    Browse Tracks →
-  </a>
+  <div class="flex items-center gap-3">
+    <a href="/tracks" class="btn-primary text-base px-6 py-2.5">
+      Browse Tracks →
+    </a>
+    <a href="/stats" class="btn-ghost text-base px-5 py-2.5">
+      View Progress
+    </a>
+  </div>
 
-  <div class="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl w-full text-left">
+  <div class="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl w-full text-left">
     {#each features as f}
       <div class="rounded-xl border border-slate-700 bg-surface-900 p-5">
         <div class="text-2xl mb-3">{f.icon}</div>
@@ -44,6 +49,11 @@
       icon: '⚡',
       title: 'Monaco editor',
       desc: 'Full IDE-quality editor with Python and C++ syntax highlighting.'
+    },
+    {
+      icon: '🔥',
+      title: 'Consistency over intensity',
+      desc: 'A streak, points, and a year-long activity heatmap to keep you showing up.'
     }
   ];
 </script>

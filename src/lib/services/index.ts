@@ -20,6 +20,10 @@ export { apiDraftStorage as draftStorage } from './api/draftStorage.api.js';
 export { apiRunHistoryStorage as runHistoryStorage } from './api/runHistoryStorage.api.js';
 export { apiSubmissionStorage as submissionStorage } from './api/submissionStorage.api.js';
 
+// Gamification services
+export { apiStatsService as statsService } from './api/statsService.api.js';
+export { apiReadingProgressService as readingProgressService } from './api/readingProgressService.api.js';
+
 // Execution service
 export { localExecutionService as executionService } from './local/executionService.local.js';
 export { generateId } from './local/executionService.local.js';
