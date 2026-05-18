@@ -526,17 +526,17 @@
     await new Promise<void>((resolve) => {
       const unsub = services!.sessionsService.subscribe(sessionId, async (chunk: LogChunk) => {
         if (chunk.kind === 'stdout') {
-          snapshot.result.stdout += chunk.data;
+          latestRun!.result.stdout += chunk.data;
         } else if (chunk.kind === 'stderr') {
-          snapshot.result.stderr += chunk.data;
+          latestRun!.result.stderr += chunk.data;
         } else if (chunk.kind === 'status') {
           liveStatus = chunk.status;
         } else if (chunk.kind === 'exit') {
           const rec = await services!.sessionsService.get(sessionId).catch(() => null);
           const finalStatus = rec?.status ?? 'completed';
-          snapshot.result.durationMs = chunk.durationMs;
-          snapshot.result.status = statusToRunStatus(finalStatus, chunk.exitCode);
-          snapshot.result.success = finalStatus === 'completed' && chunk.exitCode === 0;
+          latestRun!.result.durationMs = chunk.durationMs;
+          latestRun!.result.status = statusToRunStatus(finalStatus, chunk.exitCode);
+          latestRun!.result.success = finalStatus === 'completed' && chunk.exitCode === 0;
           resolve();
         }
       });
@@ -630,17 +630,17 @@
     await new Promise<void>((resolve) => {
       const unsub = services!.sessionsService.subscribe(sessionId, async (chunk: LogChunk) => {
         if (chunk.kind === 'stdout') {
-          runSnapshot.result.stdout += chunk.data;
+          latestRun!.result.stdout += chunk.data;
         } else if (chunk.kind === 'stderr') {
-          runSnapshot.result.stderr += chunk.data;
+          latestRun!.result.stderr += chunk.data;
         } else if (chunk.kind === 'status') {
           liveStatus = chunk.status;
         } else if (chunk.kind === 'exit') {
           finalRecordRef.value = await services!.sessionsService.get(sessionId).catch(() => null);
-          runSnapshot.result.durationMs = chunk.durationMs;
+          latestRun!.result.durationMs = chunk.durationMs;
           const fStatus = finalRecordRef.value?.status ?? 'completed';
-          runSnapshot.result.status = statusToRunStatus(fStatus, chunk.exitCode);
-          runSnapshot.result.success = fStatus === 'completed' && chunk.exitCode === 0;
+          latestRun!.result.status = statusToRunStatus(fStatus, chunk.exitCode);
+          latestRun!.result.success = fStatus === 'completed' && chunk.exitCode === 0;
           resolve();
         }
       });

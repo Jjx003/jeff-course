@@ -1,12 +1,3 @@
-# jeff-course Python + CUDA sandbox image.
-#
-# Used by the "Container + GPU" run mode. The base image ships the CUDA
-# runtime libraries needed for PyTorch / JAX wheels to talk to the host
-# NVIDIA driver via NVIDIA Container Toolkit.
-#
-# Python 3.11 + uv mirror the CPU image so the runtime entrypoint code in
-# src/lib/server/sandbox/runtime/docker.ts works identically against both.
-
 FROM nvidia/cuda:12.4.0-base-ubuntu22.04
 
 LABEL org.opencontainers.image.title="jeff-course-python-cuda"
@@ -37,9 +28,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/* \
  && ln -sf /usr/bin/python3.11 /usr/local/bin/python \
  && ln -sf /usr/bin/python3.11 /usr/local/bin/python3 \
- && python3.11 -m pip install --no-cache-dir --break-system-packages uv
+ && curl -LsSf https://astral.sh/uv/install.sh | sh
 
-ENV PATH="/usr/local/bin:${PATH}"
+ENV PATH="/root/.local/bin:/usr/local/bin:${PATH}"
 
 WORKDIR /workspace
 

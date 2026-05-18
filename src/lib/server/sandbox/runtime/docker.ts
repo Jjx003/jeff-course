@@ -22,7 +22,7 @@
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdirSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, unlinkSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 import * as registry from '../registry.js';
@@ -42,29 +42,52 @@ export const IMAGE_PYTHON_CUDA = 'jeff-course/python-cuda:1';
 export const IMAGE_PYTHON_CPU = 'jeff-course/python:1';
 
 // ── Cache directories on the host ────────────────────────────────────────
+//
+// uv and pip caches use named Docker volumes (not bind mounts) so they
+// live inside the Docker/WSL2 VM filesystem. Bind-mounting Windows
+// directories for these caches causes "Permission denied" on atomic
+// cross-directory renames that uv performs when populating its cache
+// (DrvFs/9p does not support that operation). Named volumes are opaque
+// to the Windows host but work correctly and persist across runs.
+//
+// Huggingface stays as a bind mount because we inspect it from the host
+// to decide whether to allow network access (cold-cache check).
+
+const UV_CACHE_VOLUME  = 'jeff-course-uv-cache';
+const PIP_CACHE_VOLUME = 'jeff-course-pip-cache';
 
 function hostCacheRoot(): string {
   return path.join(process.cwd(), 'data', 'cache');
 }
 
-function ensureCacheDirs(): { uv: string; pip: string; huggingface: string } {
+function ensureCacheDirs(): { huggingface: string } {
   const root = hostCacheRoot();
-  const uv = path.join(root, 'uv');
-  const pip = path.join(root, 'pip');
   const huggingface = path.join(root, 'huggingface');
-  for (const d of [uv, pip, huggingface]) {
-    mkdirSync(d, { recursive: true });
-  }
-  return { uv, pip, huggingface };
+  mkdirSync(huggingface, { recursive: true });
+  return { huggingface };
 }
 
 function hfCacheIsCold(huggingfaceDir: string): boolean {
   try {
-    // Use existence of the hub/models snapshot directory as a "warm" signal.
-    // Either it doesn't exist (cold) or it exists but only contains the
-    // .locks subdir — we treat both as cold for safety.
+    // No hub directory at all → definitely cold.
     const hub = path.join(huggingfaceDir, 'hub');
     if (!existsSync(hub)) return true;
+
+    // Any *.incomplete blob means a prior download was interrupted.
+    // Treat as cold so the container gets network access to resume it.
+    const hasIncomplete = (dir: string): boolean => {
+      try {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+          if (entry.isDirectory()) {
+            if (hasIncomplete(path.join(dir, entry.name))) return true;
+          } else if (entry.name.endsWith('.incomplete')) {
+            return true;
+          }
+        }
+      } catch { /* ignore permission errors */ }
+      return false;
+    };
+    if (hasIncomplete(hub)) return true;
   } catch { /* fall through */ }
   return false;
 }
@@ -137,7 +160,7 @@ export async function runDocker(opts: DockerRunOpts): Promise<DockerOutcome> {
   const hostSrc = path.join(workDir, fileName);
   writeFileSync(hostSrc, code, 'utf-8');
 
-  const { uv, pip, huggingface } = ensureCacheDirs();
+  const { huggingface } = ensureCacheDirs();
   const cold = hfCacheIsCold(huggingface);
 
   const containerName = `jeff-course-${record.id}`;
@@ -158,8 +181,9 @@ export async function runDocker(opts: DockerRunOpts): Promise<DockerOutcome> {
     // Mounts
     '-v', `${hostSrc}:/workspace/${fileName}:ro`,
     ...(requirementsPath ? ['-v', `${requirementsPath}:/workspace/requirements.txt:ro`] : []),
-    '-v', `${uv}:/root/.cache/uv`,
-    '-v', `${pip}:/root/.cache/pip`,
+    // Named volumes for uv/pip: avoids Windows bind-mount rename failures.
+    '--mount', `type=volume,source=${UV_CACHE_VOLUME},target=/root/.cache/uv`,
+    '--mount', `type=volume,source=${PIP_CACHE_VOLUME},target=/root/.cache/pip`,
     '-v', `${huggingface}:/root/.cache/huggingface`,
     '--tmpfs', '/tmp',
     image,
