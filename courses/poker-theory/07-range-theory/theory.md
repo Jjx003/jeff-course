@@ -1,6 +1,8 @@
 # Theory Reference: Range Construction and Combinatorics
 
-<img src="/images/poker-theory/hand-matrix.svg" alt="Hand Matrix" style="float: right; width: 250px; margin-left: 20px;" />
+<p align="center">
+  <img src="/images/poker-theory/hand-matrix.svg" alt="Starting Hand Matrix" />
+</p>
 
 ## Total Combos from a 52-Card Deck
 

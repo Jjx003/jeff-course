@@ -1,33 +1,359 @@
-<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-  <rect width="400" height="400" fill="#fff" />
-  <text x="200" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#333">Starting Hand Matrix</text>
-  
-  <!-- 13x13 Grid -->
-  <g transform="translate(40, 50)">
-    <!-- Placeholder for grid cells -->
-    <!-- We'll just draw a few to represent the concept -->
-    <rect x="0" y="0" width="20" height="20" fill="#ffcccc" stroke="#fff" /> <!-- AA -->
-    <rect x="22" y="0" width="20" height="20" fill="#e2f0d9" stroke="#fff" /> <!-- AKs -->
-    <rect x="44" y="0" width="20" height="20" fill="#e2f0d9" stroke="#fff" /> <!-- AQs -->
-    
-    <rect x="0" y="22" width="20" height="20" fill="#d9e1f2" stroke="#fff" /> <!-- AKo -->
-    <rect x="22" y="22" width="20" height="20" fill="#ffcccc" stroke="#fff" /> <!-- KK -->
-    <rect x="44" y="22" width="20" height="20" fill="#e2f0d9" stroke="#fff" /> <!-- KQs -->
-    
-    <rect x="0" y="44" width="20" height="20" fill="#d9e1f2" stroke="#fff" /> <!-- AQo -->
-    <rect x="22" y="44" width="20" height="20" fill="#d9e1f2" stroke="#fff" /> <!-- KQo -->
-    <rect x="44" y="44" width="20" height="20" fill="#ffcccc" stroke="#fff" /> <!-- QQ -->
-    
-    <!-- Legend -->
-    <g transform="translate(0, 300)">
-      <rect x="0" y="0" width="20" height="20" fill="#ffcccc" />
-      <text x="30" y="15" font-family="Arial, sans-serif" font-size="14" fill="#333">Pairs</text>
-      
-      <rect x="100" y="0" width="20" height="20" fill="#e2f0d9" />
-      <text x="130" y="15" font-family="Arial, sans-serif" font-size="14" fill="#333">Suited</text>
-      
-      <rect x="200" y="0" width="20" height="20" fill="#d9e1f2" />
-      <text x="230" y="15" font-family="Arial, sans-serif" font-size="14" fill="#333">Offsuit</text>
-    </g>
-  </g>
+<svg width="718" height="758" viewBox="0 0 718 758" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<style>
+.cell { stroke: #ffffff; stroke-width: 3px; transition: all 0.2s; }
+.cell:hover { opacity: 0.9; }
+.text { font-family: system-ui, -apple-system, sans-serif; font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.title { font-family: system-ui, -apple-system, sans-serif; font-size: 28px; font-weight: 800; fill: #0f172a; }
+.subtitle { font-family: system-ui, -apple-system, sans-serif; font-size: 15px; fill: #64748b; }
+.legend-text { font-family: system-ui, -apple-system, sans-serif; font-size: 15px; font-weight: 600; fill: #334155; dominant-baseline: central; }
+</style>
+</defs>
+<rect width="718" height="758" rx="24" fill="#f8fafc" />
+<text x="60" y="45" class="title">Complete Starting Hand Matrix</text>
+<text x="60" y="70" class="subtitle">169 distinct hand categories representing all 1,326 combos</text>
+<rect x="60" y="100" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="83.0" y="124.0" class="text" fill="#ffffff">AA</text>
+<rect x="106" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="129.0" y="124.0" class="text" fill="#022c22">AKs</text>
+<rect x="152" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="175.0" y="124.0" class="text" fill="#022c22">AQs</text>
+<rect x="198" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="221.0" y="124.0" class="text" fill="#022c22">AJs</text>
+<rect x="244" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="267.0" y="124.0" class="text" fill="#022c22">ATs</text>
+<rect x="290" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="313.0" y="124.0" class="text" fill="#022c22">A9s</text>
+<rect x="336" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="359.0" y="124.0" class="text" fill="#022c22">A8s</text>
+<rect x="382" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="405.0" y="124.0" class="text" fill="#022c22">A7s</text>
+<rect x="428" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="451.0" y="124.0" class="text" fill="#022c22">A6s</text>
+<rect x="474" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="497.0" y="124.0" class="text" fill="#022c22">A5s</text>
+<rect x="520" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="124.0" class="text" fill="#022c22">A4s</text>
+<rect x="566" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="124.0" class="text" fill="#022c22">A3s</text>
+<rect x="612" y="100" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="124.0" class="text" fill="#022c22">A2s</text>
+<rect x="60" y="146" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="170.0" class="text" fill="#1e293b">AKo</text>
+<rect x="106" y="146" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="129.0" y="170.0" class="text" fill="#ffffff">KK</text>
+<rect x="152" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="175.0" y="170.0" class="text" fill="#022c22">KQs</text>
+<rect x="198" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="221.0" y="170.0" class="text" fill="#022c22">KJs</text>
+<rect x="244" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="267.0" y="170.0" class="text" fill="#022c22">KTs</text>
+<rect x="290" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="313.0" y="170.0" class="text" fill="#022c22">K9s</text>
+<rect x="336" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="359.0" y="170.0" class="text" fill="#022c22">K8s</text>
+<rect x="382" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="405.0" y="170.0" class="text" fill="#022c22">K7s</text>
+<rect x="428" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="451.0" y="170.0" class="text" fill="#022c22">K6s</text>
+<rect x="474" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="497.0" y="170.0" class="text" fill="#022c22">K5s</text>
+<rect x="520" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="170.0" class="text" fill="#022c22">K4s</text>
+<rect x="566" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="170.0" class="text" fill="#022c22">K3s</text>
+<rect x="612" y="146" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="170.0" class="text" fill="#022c22">K2s</text>
+<rect x="60" y="192" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="216.0" class="text" fill="#1e293b">AQo</text>
+<rect x="106" y="192" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="216.0" class="text" fill="#1e293b">KQo</text>
+<rect x="152" y="192" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="175.0" y="216.0" class="text" fill="#ffffff">QQ</text>
+<rect x="198" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="221.0" y="216.0" class="text" fill="#022c22">QJs</text>
+<rect x="244" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="267.0" y="216.0" class="text" fill="#022c22">QTs</text>
+<rect x="290" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="313.0" y="216.0" class="text" fill="#022c22">Q9s</text>
+<rect x="336" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="359.0" y="216.0" class="text" fill="#022c22">Q8s</text>
+<rect x="382" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="405.0" y="216.0" class="text" fill="#022c22">Q7s</text>
+<rect x="428" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="451.0" y="216.0" class="text" fill="#022c22">Q6s</text>
+<rect x="474" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="497.0" y="216.0" class="text" fill="#022c22">Q5s</text>
+<rect x="520" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="216.0" class="text" fill="#022c22">Q4s</text>
+<rect x="566" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="216.0" class="text" fill="#022c22">Q3s</text>
+<rect x="612" y="192" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="216.0" class="text" fill="#022c22">Q2s</text>
+<rect x="60" y="238" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="262.0" class="text" fill="#1e293b">AJo</text>
+<rect x="106" y="238" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="262.0" class="text" fill="#1e293b">KJo</text>
+<rect x="152" y="238" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="262.0" class="text" fill="#1e293b">QJo</text>
+<rect x="198" y="238" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="221.0" y="262.0" class="text" fill="#ffffff">JJ</text>
+<rect x="244" y="238" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="267.0" y="262.0" class="text" fill="#022c22">JTs</text>
+<rect x="290" y="238" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="313.0" y="262.0" class="text" fill="#022c22">J9s</text>
+<rect x="336" y="238" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="359.0" y="262.0" class="text" fill="#022c22">J8s</text>
+<rect x="382" y="238" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="405.0" y="262.0" class="text" fill="#022c22">J7s</text>
+<rect x="428" y="238" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="451.0" y="262.0" class="text" fill="#022c22">J6s</text>
+<rect x="474" y="238" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="497.0" y="262.0" class="text" fill="#022c22">J5s</text>
+<rect x="520" y="238" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="262.0" class="text" fill="#022c22">J4s</text>
+<rect x="566" y="238" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="262.0" class="text" fill="#022c22">J3s</text>
+<rect x="612" y="238" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="262.0" class="text" fill="#022c22">J2s</text>
+<rect x="60" y="284" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="308.0" class="text" fill="#1e293b">ATo</text>
+<rect x="106" y="284" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="308.0" class="text" fill="#1e293b">KTo</text>
+<rect x="152" y="284" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="308.0" class="text" fill="#1e293b">QTo</text>
+<rect x="198" y="284" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="221.0" y="308.0" class="text" fill="#1e293b">JTo</text>
+<rect x="244" y="284" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="267.0" y="308.0" class="text" fill="#ffffff">TT</text>
+<rect x="290" y="284" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="313.0" y="308.0" class="text" fill="#022c22">T9s</text>
+<rect x="336" y="284" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="359.0" y="308.0" class="text" fill="#022c22">T8s</text>
+<rect x="382" y="284" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="405.0" y="308.0" class="text" fill="#022c22">T7s</text>
+<rect x="428" y="284" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="451.0" y="308.0" class="text" fill="#022c22">T6s</text>
+<rect x="474" y="284" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="497.0" y="308.0" class="text" fill="#022c22">T5s</text>
+<rect x="520" y="284" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="308.0" class="text" fill="#022c22">T4s</text>
+<rect x="566" y="284" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="308.0" class="text" fill="#022c22">T3s</text>
+<rect x="612" y="284" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="308.0" class="text" fill="#022c22">T2s</text>
+<rect x="60" y="330" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="354.0" class="text" fill="#1e293b">A9o</text>
+<rect x="106" y="330" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="354.0" class="text" fill="#1e293b">K9o</text>
+<rect x="152" y="330" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="354.0" class="text" fill="#1e293b">Q9o</text>
+<rect x="198" y="330" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="221.0" y="354.0" class="text" fill="#1e293b">J9o</text>
+<rect x="244" y="330" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="267.0" y="354.0" class="text" fill="#1e293b">T9o</text>
+<rect x="290" y="330" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="313.0" y="354.0" class="text" fill="#ffffff">99</text>
+<rect x="336" y="330" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="359.0" y="354.0" class="text" fill="#022c22">98s</text>
+<rect x="382" y="330" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="405.0" y="354.0" class="text" fill="#022c22">97s</text>
+<rect x="428" y="330" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="451.0" y="354.0" class="text" fill="#022c22">96s</text>
+<rect x="474" y="330" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="497.0" y="354.0" class="text" fill="#022c22">95s</text>
+<rect x="520" y="330" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="354.0" class="text" fill="#022c22">94s</text>
+<rect x="566" y="330" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="354.0" class="text" fill="#022c22">93s</text>
+<rect x="612" y="330" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="354.0" class="text" fill="#022c22">92s</text>
+<rect x="60" y="376" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="400.0" class="text" fill="#1e293b">A8o</text>
+<rect x="106" y="376" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="400.0" class="text" fill="#1e293b">K8o</text>
+<rect x="152" y="376" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="400.0" class="text" fill="#1e293b">Q8o</text>
+<rect x="198" y="376" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="221.0" y="400.0" class="text" fill="#1e293b">J8o</text>
+<rect x="244" y="376" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="267.0" y="400.0" class="text" fill="#1e293b">T8o</text>
+<rect x="290" y="376" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="313.0" y="400.0" class="text" fill="#1e293b">98o</text>
+<rect x="336" y="376" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="359.0" y="400.0" class="text" fill="#ffffff">88</text>
+<rect x="382" y="376" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="405.0" y="400.0" class="text" fill="#022c22">87s</text>
+<rect x="428" y="376" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="451.0" y="400.0" class="text" fill="#022c22">86s</text>
+<rect x="474" y="376" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="497.0" y="400.0" class="text" fill="#022c22">85s</text>
+<rect x="520" y="376" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="400.0" class="text" fill="#022c22">84s</text>
+<rect x="566" y="376" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="400.0" class="text" fill="#022c22">83s</text>
+<rect x="612" y="376" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="400.0" class="text" fill="#022c22">82s</text>
+<rect x="60" y="422" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="446.0" class="text" fill="#1e293b">A7o</text>
+<rect x="106" y="422" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="446.0" class="text" fill="#1e293b">K7o</text>
+<rect x="152" y="422" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="446.0" class="text" fill="#1e293b">Q7o</text>
+<rect x="198" y="422" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="221.0" y="446.0" class="text" fill="#1e293b">J7o</text>
+<rect x="244" y="422" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="267.0" y="446.0" class="text" fill="#1e293b">T7o</text>
+<rect x="290" y="422" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="313.0" y="446.0" class="text" fill="#1e293b">97o</text>
+<rect x="336" y="422" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="359.0" y="446.0" class="text" fill="#1e293b">87o</text>
+<rect x="382" y="422" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="405.0" y="446.0" class="text" fill="#ffffff">77</text>
+<rect x="428" y="422" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="451.0" y="446.0" class="text" fill="#022c22">76s</text>
+<rect x="474" y="422" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="497.0" y="446.0" class="text" fill="#022c22">75s</text>
+<rect x="520" y="422" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="446.0" class="text" fill="#022c22">74s</text>
+<rect x="566" y="422" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="446.0" class="text" fill="#022c22">73s</text>
+<rect x="612" y="422" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="446.0" class="text" fill="#022c22">72s</text>
+<rect x="60" y="468" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="492.0" class="text" fill="#1e293b">A6o</text>
+<rect x="106" y="468" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="492.0" class="text" fill="#1e293b">K6o</text>
+<rect x="152" y="468" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="492.0" class="text" fill="#1e293b">Q6o</text>
+<rect x="198" y="468" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="221.0" y="492.0" class="text" fill="#1e293b">J6o</text>
+<rect x="244" y="468" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="267.0" y="492.0" class="text" fill="#1e293b">T6o</text>
+<rect x="290" y="468" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="313.0" y="492.0" class="text" fill="#1e293b">96o</text>
+<rect x="336" y="468" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="359.0" y="492.0" class="text" fill="#1e293b">86o</text>
+<rect x="382" y="468" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="405.0" y="492.0" class="text" fill="#1e293b">76o</text>
+<rect x="428" y="468" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="451.0" y="492.0" class="text" fill="#ffffff">66</text>
+<rect x="474" y="468" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="497.0" y="492.0" class="text" fill="#022c22">65s</text>
+<rect x="520" y="468" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="492.0" class="text" fill="#022c22">64s</text>
+<rect x="566" y="468" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="492.0" class="text" fill="#022c22">63s</text>
+<rect x="612" y="468" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="492.0" class="text" fill="#022c22">62s</text>
+<rect x="60" y="514" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="538.0" class="text" fill="#1e293b">A5o</text>
+<rect x="106" y="514" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="538.0" class="text" fill="#1e293b">K5o</text>
+<rect x="152" y="514" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="538.0" class="text" fill="#1e293b">Q5o</text>
+<rect x="198" y="514" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="221.0" y="538.0" class="text" fill="#1e293b">J5o</text>
+<rect x="244" y="514" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="267.0" y="538.0" class="text" fill="#1e293b">T5o</text>
+<rect x="290" y="514" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="313.0" y="538.0" class="text" fill="#1e293b">95o</text>
+<rect x="336" y="514" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="359.0" y="538.0" class="text" fill="#1e293b">85o</text>
+<rect x="382" y="514" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="405.0" y="538.0" class="text" fill="#1e293b">75o</text>
+<rect x="428" y="514" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="451.0" y="538.0" class="text" fill="#1e293b">65o</text>
+<rect x="474" y="514" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="497.0" y="538.0" class="text" fill="#ffffff">55</text>
+<rect x="520" y="514" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="543.0" y="538.0" class="text" fill="#022c22">54s</text>
+<rect x="566" y="514" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="538.0" class="text" fill="#022c22">53s</text>
+<rect x="612" y="514" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="538.0" class="text" fill="#022c22">52s</text>
+<rect x="60" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="584.0" class="text" fill="#1e293b">A4o</text>
+<rect x="106" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="584.0" class="text" fill="#1e293b">K4o</text>
+<rect x="152" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="584.0" class="text" fill="#1e293b">Q4o</text>
+<rect x="198" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="221.0" y="584.0" class="text" fill="#1e293b">J4o</text>
+<rect x="244" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="267.0" y="584.0" class="text" fill="#1e293b">T4o</text>
+<rect x="290" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="313.0" y="584.0" class="text" fill="#1e293b">94o</text>
+<rect x="336" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="359.0" y="584.0" class="text" fill="#1e293b">84o</text>
+<rect x="382" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="405.0" y="584.0" class="text" fill="#1e293b">74o</text>
+<rect x="428" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="451.0" y="584.0" class="text" fill="#1e293b">64o</text>
+<rect x="474" y="560" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="497.0" y="584.0" class="text" fill="#1e293b">54o</text>
+<rect x="520" y="560" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="543.0" y="584.0" class="text" fill="#ffffff">44</text>
+<rect x="566" y="560" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="589.0" y="584.0" class="text" fill="#022c22">43s</text>
+<rect x="612" y="560" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="584.0" class="text" fill="#022c22">42s</text>
+<rect x="60" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="630.0" class="text" fill="#1e293b">A3o</text>
+<rect x="106" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="630.0" class="text" fill="#1e293b">K3o</text>
+<rect x="152" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="630.0" class="text" fill="#1e293b">Q3o</text>
+<rect x="198" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="221.0" y="630.0" class="text" fill="#1e293b">J3o</text>
+<rect x="244" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="267.0" y="630.0" class="text" fill="#1e293b">T3o</text>
+<rect x="290" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="313.0" y="630.0" class="text" fill="#1e293b">93o</text>
+<rect x="336" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="359.0" y="630.0" class="text" fill="#1e293b">83o</text>
+<rect x="382" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="405.0" y="630.0" class="text" fill="#1e293b">73o</text>
+<rect x="428" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="451.0" y="630.0" class="text" fill="#1e293b">63o</text>
+<rect x="474" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="497.0" y="630.0" class="text" fill="#1e293b">53o</text>
+<rect x="520" y="606" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="543.0" y="630.0" class="text" fill="#1e293b">43o</text>
+<rect x="566" y="606" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="589.0" y="630.0" class="text" fill="#ffffff">33</text>
+<rect x="612" y="606" width="46" height="46" rx="8" class="cell" fill="#34d399"/>
+<text x="635.0" y="630.0" class="text" fill="#022c22">32s</text>
+<rect x="60" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="83.0" y="676.0" class="text" fill="#1e293b">A2o</text>
+<rect x="106" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="129.0" y="676.0" class="text" fill="#1e293b">K2o</text>
+<rect x="152" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="175.0" y="676.0" class="text" fill="#1e293b">Q2o</text>
+<rect x="198" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="221.0" y="676.0" class="text" fill="#1e293b">J2o</text>
+<rect x="244" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="267.0" y="676.0" class="text" fill="#1e293b">T2o</text>
+<rect x="290" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="313.0" y="676.0" class="text" fill="#1e293b">92o</text>
+<rect x="336" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="359.0" y="676.0" class="text" fill="#1e293b">82o</text>
+<rect x="382" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="405.0" y="676.0" class="text" fill="#1e293b">72o</text>
+<rect x="428" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="451.0" y="676.0" class="text" fill="#1e293b">62o</text>
+<rect x="474" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="497.0" y="676.0" class="text" fill="#1e293b">52o</text>
+<rect x="520" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="543.0" y="676.0" class="text" fill="#1e293b">42o</text>
+<rect x="566" y="652" width="46" height="46" rx="8" class="cell" fill="#cbd5e1"/>
+<text x="589.0" y="676.0" class="text" fill="#1e293b">32o</text>
+<rect x="612" y="652" width="46" height="46" rx="8" class="cell" fill="#8b5cf6"/>
+<text x="635.0" y="676.0" class="text" fill="#ffffff">22</text>
+<rect x="60" y="738" width="24" height="24" rx="6" fill="#8b5cf6"/>
+<text x="96" y="751" class="legend-text">Pocket Pairs (6 combos)</text>
+<rect x="300" y="738" width="24" height="24" rx="6" fill="#34d399"/>
+<text x="336" y="751" class="legend-text">Suited (4 combos)</text>
+<rect x="520" y="738" width="24" height="24" rx="6" fill="#cbd5e1"/>
+<text x="556" y="751" class="legend-text">Offsuit (12 combos)</text>
 </svg>
