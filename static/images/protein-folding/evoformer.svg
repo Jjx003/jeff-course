@@ -1,0 +1,31 @@
+<svg width="500" height="350" viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#f8fafc"/></linearGradient>
+</defs>
+<rect width="500" height="350" rx="16" fill="url(#bg)" stroke="#e2e8f0" stroke-width="1"/>
+<text x="250" y="40" font-family="system-ui" font-size="20" font-weight="700" fill="#0f172a" text-anchor="middle">Evoformer Block Architecture</text>
+<g transform="translate(50, 80)">
+<rect width="160" height="180" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+<text x="80" y="30" font-family="system-ui" font-size="16" font-weight="700" fill="#1d4ed8" text-anchor="middle">MSA Representation</text>
+<rect x="20" y="50" width="120" height="30" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+<text x="80" y="70" font-family="system-ui" font-size="12" fill="#1e3a8a" text-anchor="middle">Row Attention</text>
+<rect x="20" y="90" width="120" height="30" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+<text x="80" y="110" font-family="system-ui" font-size="12" fill="#1e3a8a" text-anchor="middle">Column Attention</text>
+<rect x="20" y="130" width="120" height="30" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+<text x="80" y="150" font-family="system-ui" font-size="12" fill="#1e3a8a" text-anchor="middle">Transition (FFN)</text>
+</g>
+<g transform="translate(290, 80)">
+<rect width="160" height="180" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+<text x="80" y="30" font-family="system-ui" font-size="16" font-weight="700" fill="#047857" text-anchor="middle">Pair Representation</text>
+<rect x="20" y="50" width="120" height="30" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+<text x="80" y="70" font-family="system-ui" font-size="12" fill="#064e3b" text-anchor="middle">Triangle Update</text>
+<rect x="20" y="90" width="120" height="30" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+<text x="80" y="110" font-family="system-ui" font-size="12" fill="#064e3b" text-anchor="middle">Triangle Attention</text>
+<rect x="20" y="130" width="120" height="30" rx="4" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+<text x="80" y="150" font-family="system-ui" font-size="12" fill="#064e3b" text-anchor="middle">Transition (FFN)</text>
+</g>
+<path d="M 130 260 L 130 280 L 370 280 L 370 260" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4"/>
+<text x="250" y="300" font-family="system-ui" font-size="12" fill="#64748b" text-anchor="middle">Information Exchange (Outer Product / Bias)</text>
+<path d="M 210 130 Q 250 110 290 130" fill="none" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 290 170 Q 250 190 210 170" fill="none" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>

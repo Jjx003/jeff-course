@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="/images/protein-folding/amino-acid.svg" alt="General Amino Acid Structure" />
+</p>
+
 ## The full amino-acid lookup table
 
 The one-letter codes, three-letter codes, full names, and approximate

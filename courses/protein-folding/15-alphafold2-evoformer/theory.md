@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="/images/protein-folding/evoformer.svg" alt="Evoformer Block Architecture" />
+</p>
+
 ## Gated attention, in detail
 
 AlphaFold2 uses gated attention everywhere. The gate is a learned,
