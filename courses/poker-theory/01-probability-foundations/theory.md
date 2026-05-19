@@ -40,6 +40,10 @@ For small $x$ the $x^2$ term is negligible, and $93/2{,}162 \approx 0.043$, whic
 | 12 | 48% | 45.0% |
 | 15 | 60% | 54.1% |
 
+<p align="center">
+  <img src="/images/poker-theory/equity-chart.svg" alt="Rule of 4 vs Exact Equity Chart" />
+</p>
+
 For draws with ≤ 12 outs the error is at most 3 percentage points — far smaller than the typical uncertainty in opponent hand-reading.
 
 ## Counting Total Starting Hand Combos
@@ -79,3 +83,4 @@ For a flush draw with $x=9$, $N=47$, $n=2$ (turn + river combined), the probabil
 $$1 - P(X=0) = 1 - \frac{\binom{9}{0}\binom{38}{2}}{\binom{47}{2}} = 1 - \frac{703}{1{,}081} \approx 34.97\%$$
 
 This is the exact number we computed earlier by the sequential approach — both methods agree.
+methods agree.

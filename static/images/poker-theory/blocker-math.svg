@@ -1,0 +1,28 @@
+<svg width="400" height="150" viewBox="0 0 400 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="150" fill="#f0f2f5" rx="8" />
+  <text x="20" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333">Blocker Effect: Pocket Aces</text>
+  
+  <!-- Case 1: No blockers -->
+  <g transform="translate(20, 50)">
+    <text x="0" y="20" font-family="Arial, sans-serif" font-size="14" fill="#666">No blockers:</text>
+    <text x="0" y="45" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#28a745">6 Combos</text>
+    <circle cx="150" cy="30" r="10" fill="#000" />
+    <circle cx="175" cy="30" r="10" fill="#000" />
+    <circle cx="200" cy="30" r="10" fill="#000" />
+    <circle cx="225" cy="30" r="10" fill="#000" />
+    <circle cx="250" cy="30" r="10" fill="#000" />
+    <circle cx="275" cy="30" r="10" fill="#000" />
+  </g>
+  
+  <!-- Case 2: You hold one Ace -->
+  <g transform="translate(20, 100)">
+    <text x="0" y="20" font-family="Arial, sans-serif" font-size="14" fill="#666">You hold one A:</text>
+    <text x="0" y="45" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#dc3545">3 Combos</text>
+    <circle cx="150" cy="30" r="10" fill="#000" />
+    <circle cx="175" cy="30" r="10" fill="#000" />
+    <circle cx="200" cy="30" r="10" fill="#000" />
+    <circle cx="225" cy="30" r="10" fill="#ccc" />
+    <circle cx="250" cy="30" r="10" fill="#ccc" />
+    <circle cx="275" cy="30" r="10" fill="#ccc" />
+  </g>
+</svg>

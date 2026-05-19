@@ -1,5 +1,9 @@
 # Board Texture: The Mathematics of Range Interaction
 
+<p align="center">
+  <img src="/images/poker-theory/board-texture.svg" alt="Board Texture and Bet Sizing" />
+</p>
+
 ## Combo Counting as a Texture Metric
 
 The formal basis of board texture analysis is **combo counting**: for any board, count how many combinations in each player's range reach specific strength tiers. Define:

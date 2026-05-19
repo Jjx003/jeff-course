@@ -1,5 +1,9 @@
 # Pot Odds and Equity — Theory & Derivations
 
+<p align="center">
+  <img src="/images/poker-theory/poker-chips.svg" alt="Poker Chips" />
+</p>
+
 ## Why Break-Even Equity Equals Pot Odds
 
 Let $C$ be the call amount, $P$ be the pot before our call (including the opponent's bet), and $q$ be our equity. The final pot after calling is $P + C$.

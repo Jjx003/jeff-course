@@ -1,5 +1,7 @@
 # Theory Reference: Range Construction and Combinatorics
 
+<img src="/images/poker-theory/hand-matrix.svg" alt="Hand Matrix" style="float: right; width: 250px; margin-left: 20px;" />
+
 ## Total Combos from a 52-Card Deck
 
 The number of two-card starting hands in a 52-card deck:

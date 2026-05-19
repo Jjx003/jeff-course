@@ -1,0 +1,33 @@
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" fill="#fff" />
+  <text x="200" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#333">Starting Hand Matrix</text>
+  
+  <!-- 13x13 Grid -->
+  <g transform="translate(40, 50)">
+    <!-- Placeholder for grid cells -->
+    <!-- We'll just draw a few to represent the concept -->
+    <rect x="0" y="0" width="20" height="20" fill="#ffcccc" stroke="#fff" /> <!-- AA -->
+    <rect x="22" y="0" width="20" height="20" fill="#e2f0d9" stroke="#fff" /> <!-- AKs -->
+    <rect x="44" y="0" width="20" height="20" fill="#e2f0d9" stroke="#fff" /> <!-- AQs -->
+    
+    <rect x="0" y="22" width="20" height="20" fill="#d9e1f2" stroke="#fff" /> <!-- AKo -->
+    <rect x="22" y="22" width="20" height="20" fill="#ffcccc" stroke="#fff" /> <!-- KK -->
+    <rect x="44" y="22" width="20" height="20" fill="#e2f0d9" stroke="#fff" /> <!-- KQs -->
+    
+    <rect x="0" y="44" width="20" height="20" fill="#d9e1f2" stroke="#fff" /> <!-- AQo -->
+    <rect x="22" y="44" width="20" height="20" fill="#d9e1f2" stroke="#fff" /> <!-- KQo -->
+    <rect x="44" y="44" width="20" height="20" fill="#ffcccc" stroke="#fff" /> <!-- QQ -->
+    
+    <!-- Legend -->
+    <g transform="translate(0, 300)">
+      <rect x="0" y="0" width="20" height="20" fill="#ffcccc" />
+      <text x="30" y="15" font-family="Arial, sans-serif" font-size="14" fill="#333">Pairs</text>
+      
+      <rect x="100" y="0" width="20" height="20" fill="#e2f0d9" />
+      <text x="130" y="15" font-family="Arial, sans-serif" font-size="14" fill="#333">Suited</text>
+      
+      <rect x="200" y="0" width="20" height="20" fill="#d9e1f2" />
+      <text x="230" y="15" font-family="Arial, sans-serif" font-size="14" fill="#333">Offsuit</text>
+    </g>
+  </g>
+</svg>
