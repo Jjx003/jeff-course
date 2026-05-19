@@ -1,0 +1,8 @@
+title: "Pell's Equation"
+slug: "pells-equation"
+description: "Discover the theory behind Pell's Equation and how continued fractions hold the key to its infinitely many solutions."
+order: 24
+difficulty: intermediate
+estimatedMinutes: 20
+tags: [diophantine-equations, continued-fractions]
+type: reading

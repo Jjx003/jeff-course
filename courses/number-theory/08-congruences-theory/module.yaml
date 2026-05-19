@@ -1,0 +1,8 @@
+title: "Theory of Congruences"
+slug: "congruences-theory"
+description: "An introduction to modular arithmetic and formal congruence relations."
+order: 8
+difficulty: intermediate
+estimatedMinutes: 25
+tags: [modular-arithmetic, congruences, number-theory]
+type: reading

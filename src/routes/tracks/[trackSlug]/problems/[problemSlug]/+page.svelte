@@ -865,11 +865,11 @@
             {#snippet tabContent({ activeId }: { activeId: string })}
               <div class="tab-scroll">
                 {#if activeId === 'problem'}
-                  <MarkdownRenderer content={problem.tabs.problem} />
+                  <MarkdownRenderer content={problem.tabs.problem} variant="study" />
                 {:else if activeId === 'theory'}
-                  <MarkdownRenderer content={problem.tabs.theory} />
+                  <MarkdownRenderer content={problem.tabs.theory} variant="study" />
                 {:else if activeId === 'tips'}
-                  <MarkdownRenderer content={problem.tabs.tips} />
+                  <MarkdownRenderer content={problem.tabs.tips} variant="study" />
                 {:else if activeId === 'solution'}
                   {#if !solutionRevealed}
                     <!-- Confirm gate -->
@@ -899,7 +899,7 @@
                     </div>
                   {:else}
                     <!-- Solution content -->
-                    <MarkdownRenderer content={problem.tabs.solution ?? ''} />
+                    <MarkdownRenderer content={problem.tabs.solution ?? ''} variant="study" />
                     {#if problem.solutionCode}
                       <div class="solution-code-section">
                         <h3 class="solution-code-title">Solution Code</h3>
@@ -1208,12 +1208,15 @@
   .page-shell {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 0;
+    height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .content-area {
     flex: 1;
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -1235,6 +1238,7 @@
 
   .tab-area {
     flex: 1;
+    min-height: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -1242,6 +1246,7 @@
 
   .tab-scroll {
     overflow-y: auto;
+    overscroll-behavior: contain;
     height: 100%;
   }
 

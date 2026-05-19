@@ -1,0 +1,8 @@
+title: "Hensel's Lemma"
+slug: "hensels-lemma"
+description: "Learn how to lift roots of polynomials modulo p to roots modulo higher powers of p."
+order: 11
+difficulty: advanced
+estimatedMinutes: 40
+tags: [polynomials, modular-arithmetic, roots]
+type: reading

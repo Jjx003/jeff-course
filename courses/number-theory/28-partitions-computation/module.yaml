@@ -1,0 +1,10 @@
+title: "Computing Partitions"
+slug: "partitions-computation"
+description: "Implement Euler's Pentagonal Number recurrence to compute p(n) efficiently."
+order: 28
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [algorithms, recursion, dynamic-programming]
+type: coding
+languages: [python]
+defaultLanguage: python

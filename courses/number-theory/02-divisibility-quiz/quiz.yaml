@@ -1,0 +1,46 @@
+questions:
+  - id: div_def
+    type: true_false
+    stem: "If $a \\mid b$, then $a = bk$ for some integer $k$."
+    correct: false
+    explanation: "False. The definition is $b = ak$, meaning $b$ is a multiple of $a$."
+
+  - id: div_zero
+    type: multiple_choice
+    stem: "Which of the following is true for any non-zero integer $a$?"
+    options: 
+      - "$0 \\mid a$"
+      - "$a \\mid 0$"
+      - "$a \\mid a$"
+      - "Both B and C"
+    correct: 3
+    explanation: "Both B and C are true. $a \\mid 0$ because $0 = a \\cdot 0$. $a \\mid a$ because $a = a \\cdot 1$. However, $0 \\mid a$ is false, as $a = 0 \\cdot k$ implies $a = 0$, but $a$ is non-zero."
+
+  - id: div_algo_rem
+    type: parametric
+    stem_template: "By the Division Algorithm, when we divide $b = {{b_val}}$ by $a = {{a_val}}$, what is the remainder $r$?"
+    params:
+      a_val: { min: 5, max: 15, step: 1 }
+      b_val: { min: 20, max: 100, step: 1 }
+    correct_formula: "b_val % a_val"
+    distractor_formulas:
+      - "Math.floor(b_val / a_val)"
+      - "a_val - (b_val % a_val)"
+      - "(b_val % a_val) + 1"
+    answer_suffix: ""
+    explanation_template: "We find that ${{b_val}} = {{a_val}} \\cdot {{Math.floor(b_val / a_val)}} + {{b_val % a_val}}$. Thus, the remainder $r = {{b_val % a_val}}$."
+
+  - id: linear_combo
+    type: multiple_choice
+    stem: "Suppose $a \\mid (3x + 4y)$ and $a \\mid (2x + 3y)$. Which of the following must $a$ also divide?"
+    options:
+      - "$x$"
+      - "$y$"
+      - "$x$ and $y$"
+      - "Neither $x$ nor $y$"
+    correct: 2
+    explanation: >-
+      By the linear combinations theorem, $a$ divides any linear combination of $(3x+4y)$ and $(2x+3y)$.
+      Note that $3(3x+4y) - 4(2x+3y) = 9x + 12y - 8x - 12y = x$, so $a \\mid x$.
+      Similarly, $-2(3x+4y) + 3(2x+3y) = -6x - 8y + 6x + 9y = y$, so $a \\mid y$. 
+      Therefore, $a$ divides both $x$ and $y$.

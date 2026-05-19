@@ -29,6 +29,7 @@ import remarkMath from 'remark-math';
 import remarkRehype from 'remark-rehype';
 import rehypeKatex from 'rehype-katex';
 import rehypeStringify from 'rehype-stringify';
+import { rehypeProofBlocks } from './proofBlocks.js';
 
 // Build the processor once — unified processors are reusable and thread-safe.
 const processor = unified()
@@ -42,7 +43,23 @@ const processor = unified()
     strict: false,
     trust: false
   })
+  .use(rehypeProofBlocks)
   .use(rehypeStringify, { allowDangerousHtml: true });
+
+function normalizeMathBlockSyntax(markdown: string): string {
+  const chunks = markdown.split(/(```[\s\S]*?```)/g);
+  return chunks
+    .map((chunk) => {
+      if (chunk.startsWith('```')) return chunk;
+      return chunk
+        .replace(/\$\$[ \t]+([\s\S]*?)[ \t]+\$\$/g, (_match, body: string) => {
+          return `$$\n${body.trim()}\n$$`;
+        })
+        .replace(/\\begin\{align\*?\}/g, '\\begin{aligned}')
+        .replace(/\\end\{align\*?\}/g, '\\end{aligned}');
+    })
+    .join('');
+}
 
 /**
  * Render a Markdown string (optionally containing LaTeX) to an HTML string.
@@ -52,7 +69,7 @@ const processor = unified()
  */
 export async function renderMarkdown(markdown: string): Promise<string> {
   if (!markdown.trim()) return '';
-  const result = await processor.process(markdown);
+  const result = await processor.process(normalizeMathBlockSyntax(markdown));
   return String(result);
 }
 
@@ -62,6 +79,6 @@ export async function renderMarkdown(markdown: string): Promise<string> {
  */
 export function renderMarkdownSync(markdown: string): string {
   if (!markdown.trim()) return '';
-  const result = processor.processSync(markdown);
+  const result = processor.processSync(normalizeMathBlockSyntax(markdown));
   return String(result);
 }

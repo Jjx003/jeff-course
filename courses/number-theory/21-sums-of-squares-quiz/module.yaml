@@ -1,0 +1,8 @@
+title: "Quiz: Sums of Squares"
+slug: "sums-of-squares-quiz"
+description: "Test your understanding of Fermat's two-square theorem and Lagrange's four-square theorem."
+order: 21
+difficulty: intermediate
+estimatedMinutes: 10
+tags: [number-theory, quadratic-forms]
+type: quiz

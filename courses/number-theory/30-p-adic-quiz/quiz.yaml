@@ -1,0 +1,38 @@
+questions:
+  - id: v_p_val
+    type: parametric
+    stem_template: "What is the $p$-adic valuation $v_{{p}}({{{num}}}/{{{den}}})$ for $p = {{p}}$?"
+    params:
+      p: { min: 2, max: 7, step: 1 } # Filter to primes manually if needed, but 2,3,5,7 are common
+      num: { min: 1, max: 50, step: 1 }
+      den: { min: 1, max: 50, step: 1 }
+    # Note: p might not be prime in random gen, so I'll restrict p to a set of primes in logic if possible
+    # But since I can't easily do sets, I'll use multiple choice for primes
+    correct_formula: "((n, d, p) => { let v = 0; let x_n = n; while(x_n % p === 0 && x_n !== 0) { v++; x_n /= p; }; let x_d = d; while(x_d % p === 0 && x_d !== 0) { v--; x_d /= p; }; return v; })(num, den, p)"
+    explanation_template: "We write the fraction as $p^v \cdot a/b$. Factoring out $p={{p}}$ from {{num}}/{{den}} gives valuation {{((n, d, p) => { let v = 0; let x_n = n; while(x_n % p === 0 && x_n !== 0) { v++; x_n /= p; }; let x_d = d; while(x_d % p === 0 && x_d !== 0) { v--; x_d /= p; }; return v; })(num, den, p)}}."
+
+  - id: norm_p
+    type: multiple_choice
+    stem: "In $\\mathbb{Q}_5$, which of the following numbers has the smallest norm (is 'closest to zero')?"
+    options: ["$5$", "$25$", "$1/5$", "$125$"]
+    correct: 3
+    explanation: "In $\\mathbb{Q}_p$, $|x|_p = p^{-v_p(x)}$. Thus, higher powers of $p$ result in smaller norms. $|125|_5 = 5^{-3} = 1/125$, which is the smallest among the choices."
+
+  - id: ultrametric
+    type: true_false
+    stem: "The ultrametric inequality states that $|x + y|_p \\le \\max(|x|_p, |y|_p)$. If $|x|_p \\neq |y|_p$, then it must be that $|x + y|_p = \\max(|x|_p, |y|_p)$."
+    correct: true
+    explanation: "This is a key property of non-Archimedean norms. If the norms are unequal, the sum is dominated by the larger term, and the equality holds."
+
+  - id: convergence
+    type: multiple_choice
+    stem: "A series $\\sum_{n=0}^{\\infty} a_n$ converges in $\\mathbb{Q}_p$ if and only if:"
+    options: ["$\\sum |a_n|_p$ converges", "$a_n \\to 0$ as $n \\to \\infty$", "The sequence of partial sums is bounded", "It converges in $\\mathbb{R}$"]
+    correct: 1
+    explanation: "Due to the ultrametric inequality, the condition for convergence in $\\mathbb{Q}_p$ is simply that the terms must go to zero. This is much stronger than the condition in $\\mathbb{R}$."
+
+  - id: isosceles
+    type: true_false
+    stem: "In $p$-adic geometry, every triangle is isosceles."
+    correct: true
+    explanation: "True. Given three points $x, y, z$, the distances between them are $d(x,y) = |x-y|_p$, $d(y,z) = |y-z|_p$, and $d(x,z) = |x-z|_p$. By the ultrametric inequality, at least two of these must be equal (and the third less than or equal to them)."

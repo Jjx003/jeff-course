@@ -1,0 +1,8 @@
+title: "The p-adic Numbers"
+slug: "p-adic-numbers"
+description: "An introduction to the p-adic norm, completions of Q, and the topology of Qp."
+order: 29
+difficulty: advanced
+estimatedMinutes: 45
+tags: [p-adic, analysis, topology]
+type: reading

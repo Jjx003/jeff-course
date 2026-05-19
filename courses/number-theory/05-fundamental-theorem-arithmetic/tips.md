@@ -1,0 +1,5 @@
+## Going Deeper
+
+- **Bezout's Identity:** Notice how Euclid's Lemma crucially depends on Bezout's Identity, which is a direct consequence of the Euclidean Algorithm you implemented in module 04. This shows the deep interconnectedness of number-theoretic concepts!
+- **Constructive vs. Non-Constructive Proofs:** Euclid's proof of infinite primes is a classic example of a proof by contradiction. Note that it does *not* necessarily mean that $p_1 p_2 \cdots p_k + 1$ is always prime itself. For example, $2 \cdot 3 \cdot 5 \cdot 7 \cdot 11 \cdot 13 + 1 = 30031 = 59 \cdot 509$. It just guarantees that *some* new prime exists that divides this number.
+- **Rings and Unique Factorization Domains (UFDs):** The integers $\mathbb{Z}$ form a UFD. Interestingly, not all number systems have unique factorization. For example, in the ring $\mathbb{Z}[\sqrt{-5}]$, the number 6 can be factored in two distinct ways: $6 = 2 \cdot 3$ and $6 = (1 + \sqrt{-5})(1 - \sqrt{-5})$. Exploring why $\mathbb{Z}$ has unique factorization and other rings don't is a major theme in algebraic number theory.

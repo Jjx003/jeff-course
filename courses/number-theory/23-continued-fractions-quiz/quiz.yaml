@@ -1,0 +1,46 @@
+questions:
+  - id: q1
+    type: true_false
+    stem: "Every rational number has an infinite continued fraction expansion."
+    correct: false
+    explanation: "Rational numbers always have a **finite** continued fraction expansion. The process of generating their continued fraction is equivalent to the Euclidean algorithm, which must eventually terminate with a remainder of zero."
+
+  - id: q2
+    type: multiple_choice
+    stem: "Let $p_n/q_n$ be the $n$-th convergent of a continued fraction. Which of the following is true about $p_n q_{n-1} - p_{n-1} q_n$?"
+    options:
+      - "It is always $1$."
+      - "It is always $-1$."
+      - "It alternates between $1$ and $-1$."
+      - "It is $0$."
+    correct: 2
+    explanation: "The fundamental identity states that $p_n q_{n-1} - p_{n-1} q_n = (-1)^{n-1}$. Therefore, it alternates between $1$ and $-1$, which implies that the fractions $p_n/q_n$ are always in lowest terms (since their gcd divides $\pm 1$)."
+
+  - id: q_recurrence
+    type: parametric
+    stem_template: "You are given a continued fraction with $a_{{n}} = {{an}}$, and you know the previous convergents' numerators are $p_{{n-1}} = {{p1}}$ and $p_{{n-2}} = {{p2}}$. What is the value of $p_{{n}}$?"
+    params:
+      n: { min: 2, max: 5, step: 1 }
+      an: { min: 2, max: 7, step: 1 }
+      p1: { min: 5, max: 20, step: 1 }
+      p2: { min: 1, max: 10, step: 1 }
+    correct_formula: "an * p1 + p2"
+    distractor_formulas:
+      - "an * p2 + p1"
+      - "p1 + p2"
+      - "an * (p1 + p2)"
+    answer_suffix: ""
+    explanation_template: >-
+      The recurrence relation for the numerator of a convergent is $p_n = a_n p_{n-1} + p_{n-2}$.
+      Substituting the given values, we get $p_{{n}} = ({{an}} \times {{p1}}) + {{p2}} = {{an * p1 + p2}}$.
+
+  - id: q4
+    type: multiple_choice
+    stem: "The sequence of convergents $C_0, C_1, C_2, \dots$ for a real number $x$ has which of the following properties?"
+    options:
+      - "The convergents are strictly increasing towards $x$."
+      - "The convergents are strictly decreasing towards $x$."
+      - "The even-indexed convergents $C_0, C_2, C_4, \dots$ are strictly increasing towards $x$."
+      - "The distance $|C_n - C_{n-1}|$ is always exactly $1/q_n$."
+    correct: 2
+    explanation: "The convergents alternate around $x$. The even convergents $C_0, C_2, C_4, \dots$ are strictly increasing and all less than $x$, while the odd convergents $C_1, C_3, C_5, \dots$ are strictly decreasing and all greater than $x$."

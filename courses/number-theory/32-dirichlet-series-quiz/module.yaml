@@ -1,0 +1,8 @@
+title: "Quiz: Dirichlet and Multiplicative Functions"
+slug: "dirichlet-series-quiz"
+description: "Final assessment on arithmetic functions, convolution, and Dirichlet series."
+order: 32
+difficulty: advanced
+estimatedMinutes: 20
+tags: [number-theory, analysis, quiz]
+type: quiz

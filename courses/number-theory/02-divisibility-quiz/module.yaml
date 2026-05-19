@@ -1,0 +1,8 @@
+title: "Quiz: Divisibility and Proofs"
+slug: "divisibility-quiz"
+description: "Test your understanding of divisibility axioms, transitivity, and the Division Algorithm."
+order: 2
+difficulty: beginner
+estimatedMinutes: 10
+tags: [number-theory, quiz, divisibility]
+type: quiz

@@ -1,0 +1,8 @@
+title: "Partitions and Pentagons"
+slug: "partitions-quiz"
+description: "Test your understanding of partition generating functions and Euler's Pentagonal Number Theorem."
+order: 27
+difficulty: intermediate
+estimatedMinutes: 10
+tags: [combinatorics, generating-functions]
+type: quiz

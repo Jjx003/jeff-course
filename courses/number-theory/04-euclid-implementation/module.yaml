@@ -1,0 +1,10 @@
+title: "Divisibility and Euclid's Algorithm"
+slug: "euclid-implementation"
+description: "Implement the Euclidean algorithm to find the Greatest Common Divisor (GCD) of two integers."
+order: 4
+difficulty: beginner
+estimatedMinutes: 20
+tags: [number-theory, gcd, algorithm]
+type: coding
+languages: [python]
+defaultLanguage: python

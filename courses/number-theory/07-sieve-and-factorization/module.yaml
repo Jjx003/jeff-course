@@ -1,0 +1,10 @@
+title: "Primes and Factorization"
+slug: "sieve-and-factorization"
+description: "Implement trial division for factoring integers and the Sieve of Eratosthenes for finding primes."
+order: 7
+difficulty: intermediate
+estimatedMinutes: 25
+tags: [number-theory, primes, sieve]
+type: coding
+languages: [python]
+defaultLanguage: python

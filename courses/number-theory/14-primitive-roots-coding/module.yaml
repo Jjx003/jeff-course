@@ -1,0 +1,10 @@
+title: "Finding a Primitive Root"
+slug: "primitive-roots-coding"
+description: "Write an algorithm to find the smallest primitive root modulo a prime p."
+order: 14
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [primitive-roots, algorithm, modular-arithmetic]
+type: coding
+languages: [python]
+defaultLanguage: python

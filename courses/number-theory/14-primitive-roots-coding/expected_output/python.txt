@@ -1,0 +1,7 @@
+Primitive root of 7 is 3
+Primitive root of 11 is 2
+Primitive root of 13 is 2
+Primitive root of 17 is 3
+Primitive root of 23 is 5
+Primitive root of 71 is 7
+Primitive root of 1000000007 is 5

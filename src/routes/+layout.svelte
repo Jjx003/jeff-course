@@ -16,7 +16,10 @@
   .app-shell {
     display: flex;
     flex-direction: column;
+    min-height: 0;
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
+    overscroll-behavior: none;
   }
 </style>

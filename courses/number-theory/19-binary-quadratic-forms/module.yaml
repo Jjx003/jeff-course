@@ -1,0 +1,8 @@
+title: "Binary Quadratic Forms"
+slug: "binary-quadratic-forms"
+description: "Study expressions of the form ax² + bxy + cy² and their profound connection to primes and class groups."
+order: 19
+difficulty: advanced
+estimatedMinutes: 25
+tags: [number-theory, quadratic-forms]
+type: reading

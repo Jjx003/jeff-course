@@ -1,0 +1,8 @@
+title: "Quiz: p-adic Foundations"
+slug: "p-adic-quiz"
+description: "Test your understanding of p-adic valuation, norms, and the ultrametric inequality."
+order: 30
+difficulty: advanced
+estimatedMinutes: 15
+tags: [p-adic, analysis, quiz]
+type: quiz

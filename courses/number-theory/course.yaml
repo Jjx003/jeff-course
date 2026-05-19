@@ -1,0 +1,6 @@
+title: "Number Theory"
+slug: "number-theory"
+description: "A deep, proof-heavy journey through the theory of numbers. From divisibility and congruences to quadratic reciprocity, continued fractions, and p-adic numbers."
+tags: [math, number-theory, proofs, cryptography]
+difficulty: advanced
+order: 4

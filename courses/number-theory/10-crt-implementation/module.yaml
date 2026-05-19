@@ -1,0 +1,10 @@
+title: "Implementing the CRT"
+slug: "crt-implementation"
+description: "Write code to solve a system of congruences using the Chinese Remainder Theorem."
+order: 10
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [crt, algorithms, python]
+type: coding
+languages: [python]
+defaultLanguage: python

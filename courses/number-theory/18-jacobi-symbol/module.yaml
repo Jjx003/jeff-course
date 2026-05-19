@@ -1,0 +1,10 @@
+title: "The Jacobi Symbol"
+slug: "jacobi-symbol"
+description: "Calculate the Jacobi symbol efficiently using the law of quadratic reciprocity."
+order: 18
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [number-theory, modular-arithmetic]
+type: coding
+languages: [python]
+defaultLanguage: python

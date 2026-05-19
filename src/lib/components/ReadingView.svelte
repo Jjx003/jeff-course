@@ -134,14 +134,14 @@
 
       <!-- Main body (problem.md) -->
       <section class="reading-body">
-        <MarkdownRenderer content={problem.tabs.problem} />
+        <MarkdownRenderer content={problem.tabs.problem} variant="reading" />
       </section>
 
       <!-- Optional theory.md as a deep-dive appendix -->
       {#if hasTheory}
         <section class="reading-section">
           <h2 class="reading-section-title">Deep dive</h2>
-          <MarkdownRenderer content={problem.tabs.theory} />
+          <MarkdownRenderer content={problem.tabs.theory} variant="reading" />
         </section>
       {/if}
 
@@ -149,7 +149,7 @@
       {#if hasFurther}
         <section class="reading-section">
           <h2 class="reading-section-title">Further reading</h2>
-          <MarkdownRenderer content={problem.tabs.tips} />
+          <MarkdownRenderer content={problem.tabs.tips} variant="reading" />
         </section>
       {/if}
 
@@ -200,19 +200,23 @@
   .reading-shell {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 0;
+    height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;
     background: #0f1117;
   }
 
   .reading-main {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 2rem 1.5rem 4rem;
   }
 
   .reading-article {
-    max-width: 760px;
+    max-width: 820px;
     margin: 0 auto;
   }
 

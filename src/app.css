@@ -10,6 +10,12 @@
   html, body {
     @apply h-full bg-surface-950 text-slate-200 antialiased;
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  main {
+    min-height: 0;
   }
 
   /* Smooth scrollbar in the left pane */
@@ -77,6 +83,91 @@
 /* ── KaTeX display-mode centering ─────────────────────────────────────── */
 .katex-display {
   @apply my-4 overflow-x-auto;
+}
+
+/* Proof-aware math prose. The markdown renderer upgrades paragraphs beginning
+   with labels like **Theorem:** and **Proof:** into these classes. */
+.prose .math-statement,
+.prose .math-proof {
+  @apply my-5 rounded-lg border px-4 py-3;
+}
+
+.prose .math-statement {
+  @apply border-sky-500/30 bg-sky-950/25 text-slate-200;
+}
+
+.prose .math-statement-definition {
+  @apply border-emerald-500/30 bg-emerald-950/20;
+}
+
+.prose .math-statement-example {
+  @apply border-amber-500/30 bg-amber-950/20;
+}
+
+.prose .math-proof {
+  @apply relative border-slate-600/70 bg-slate-900/45 text-slate-300;
+}
+
+.prose .math-statement > :first-child,
+.prose .math-proof > :first-child {
+  @apply mt-0;
+}
+
+.prose .math-statement > :last-child,
+.prose .math-proof > :last-child {
+  @apply mb-0;
+}
+
+.prose .math-statement strong:first-child,
+.prose .math-proof strong:first-child {
+  @apply text-slate-50;
+}
+
+.prose .math-proof::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  width: 3px;
+  border-radius: 999px;
+  background: #38bdf8;
+}
+
+.prose.markdown-reading {
+  @apply text-slate-300 leading-8;
+}
+
+.prose.markdown-reading p,
+.prose.markdown-reading li {
+  @apply leading-8;
+}
+
+.prose.markdown-reading .katex-display {
+  @apply my-6 rounded-lg bg-slate-950/40 px-3 py-2;
+}
+
+.prose.markdown-reading .math-statement,
+.prose.markdown-reading .math-proof {
+  @apply my-6;
+}
+
+.prose.markdown-study {
+  @apply text-slate-300 leading-7;
+}
+
+.prose.markdown-study p,
+.prose.markdown-study li {
+  @apply leading-7;
+}
+
+.prose.markdown-study .katex-display {
+  @apply my-5 rounded-lg bg-slate-950/35 px-3 py-2;
+}
+
+.prose.markdown-study .math-statement,
+.prose.markdown-study .math-proof {
+  @apply my-5;
 }
 
 /* ── Split pane divider ────────────────────────────────────────────────── */

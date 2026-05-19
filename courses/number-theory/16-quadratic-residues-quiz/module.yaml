@@ -1,0 +1,8 @@
+title: "Quiz: Quadratic Residues"
+slug: "quadratic-residues-quiz"
+description: "Test your understanding of quadratic residues, the Legendre symbol, and Euler's Criterion."
+order: 16
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [number-theory, modular-arithmetic, quadratic-residues, quiz]
+type: quiz

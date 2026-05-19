@@ -1,0 +1,5 @@
+## Going Deeper
+
+- **Residue Classes:** Congruence modulo $m$ partitions the integers into $m$ distinct sets, called residue classes. When we write $a \pmod{m}$, we are often referring to the entire set of integers $\{ \ldots, a - 2m, a - m, a, a + m, a + 2m, \ldots \}$. 
+- **Rings and Fields:** The set of residue classes modulo $m$ is denoted as $\mathbb{Z}/m\mathbb{Z}$ or $\mathbb{Z}_m$. Under addition and multiplication, it forms a commutative ring. If $m$ is a prime number $p$, then every non-zero element has a multiplicative inverse, which makes $\mathbb{Z}_p$ a **finite field**. This algebraic structure is the foundation for much of modern cryptography!
+- **Fast Modular Exponentiation:** Because $a^k \equiv b^k \pmod{m}$, we can compute $x^N \pmod{m}$ for huge values of $N$ without ever computing the full integer $x^N$. We simply take the remainder modulo $m$ at each step of the multiplication. This is typically done via "exponentiation by squaring."

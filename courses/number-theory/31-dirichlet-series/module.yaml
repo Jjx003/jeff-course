@@ -1,0 +1,8 @@
+title: "Dirichlet Series and L-functions"
+slug: "dirichlet-series"
+description: "Master the algebra of arithmetic functions and the analytic power of Dirichlet series."
+order: 31
+difficulty: advanced
+estimatedMinutes: 40
+tags: [number-theory, analysis, dirichlet, zeta]
+type: reading

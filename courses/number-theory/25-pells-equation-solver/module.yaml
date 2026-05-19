@@ -1,0 +1,10 @@
+title: "Solving Pell's Equation"
+slug: "pells-equation-solver"
+description: "Implement an algorithm to find the fundamental solution to Pell's equation using continued fractions."
+order: 25
+difficulty: advanced
+estimatedMinutes: 45
+tags: [algorithms, continued-fractions]
+type: coding
+languages: [python]
+defaultLanguage: python

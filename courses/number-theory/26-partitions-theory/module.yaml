@@ -1,0 +1,8 @@
+title: "Integer Partitions"
+slug: "partitions-theory"
+description: "An introduction to the theory of integer partitions, generating functions, and Euler's Pentagonal Number Theorem."
+order: 26
+difficulty: intermediate
+estimatedMinutes: 20
+tags: [combinatorics, generating-functions]
+type: reading

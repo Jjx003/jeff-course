@@ -1,0 +1,8 @@
+title: "Quadratic Residues and Euler's Criterion"
+slug: "quadratic-residues"
+description: "Understand perfect squares modulo p and learn how to compute the Legendre symbol."
+order: 15
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [number-theory, modular-arithmetic, quadratic-residues]
+type: reading

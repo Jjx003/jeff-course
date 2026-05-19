@@ -1,0 +1,39 @@
+questions:
+  - id: q_infinite_primes_proof
+    type: true_false
+    stem: "In Euclid's proof that there are infinitely many primes, the number $N = p_1 p_2 \cdots p_k + 1$ is always guaranteed to be a prime number itself."
+    correct: false
+    explanation: "False. The proof only guarantees that $N$ has *some* prime factor not in the list $p_1, \ldots, p_k$. $N$ itself might be composite (e.g., $2 \\cdot 3 \\cdot 5 \\cdot 7 \\cdot 11 \\cdot 13 + 1 = 30031 = 59 \\cdot 509$)."
+
+  - id: q_euclids_lemma
+    type: multiple_choice
+    stem: "Suppose $p$ is a prime number and $p$ divides the product $ab$. According to Euclid's Lemma, which of the following MUST be true?"
+    options:
+      - "$p$ divides both $a$ and $b$."
+      - "$p$ divides either $a$ or $b$ (or both)."
+      - "$p$ divides $a + b$."
+      - "Neither $a$ nor $b$ can be prime."
+    correct: 1
+    explanation: "Euclid's Lemma states that if a prime $p$ divides a product $ab$, then $p$ must divide at least one of the factors, $a$ or $b$."
+
+  - id: q_ufd
+    type: true_false
+    stem: "The Fundamental Theorem of Arithmetic implies that the prime factorization of a number is unique, regardless of the order in which the prime factors are written."
+    correct: true
+    explanation: "Correct. The theorem guarantees uniqueness *up to the ordering of the factors*."
+
+  - id: q_parametric_factors
+    type: parametric
+    stem_template: "Suppose a number $N$ has exactly two distinct prime factors, $p$ and $q$, such that $N = p^{ {{exp1}} } \\cdot q^{ {{exp2}} }$. How many positive divisors does $N$ have in total?"
+    params:
+      exp1: { min: 2, max: 6, step: 1 }
+      exp2: { min: 2, max: 5, step: 1 }
+    correct_formula: "(exp1 + 1) * (exp2 + 1)"
+    distractor_formulas:
+      - "exp1 * exp2"
+      - "exp1 + exp2"
+      - "(exp1 + 1) * exp2"
+    answer_suffix: " divisors"
+    explanation_template: >-
+      To find the total number of divisors of $N = p^{a} q^{b}$, we multiply the exponents increased by one: $(a + 1)(b + 1)$. 
+      Here, $({{exp1}} + 1) \\times ({{exp2}} + 1) = {{exp1 + 1}} \\times {{exp2 + 1}} = {{(exp1 + 1) * (exp2 + 1)}}$.

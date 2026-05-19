@@ -1,0 +1,8 @@
+title: "Primes and Factorization Quiz"
+slug: "primes-quiz"
+description: "Test your understanding of prime numbers and unique factorization."
+order: 6
+difficulty: intermediate
+estimatedMinutes: 10
+tags: [primes, quiz]
+type: quiz

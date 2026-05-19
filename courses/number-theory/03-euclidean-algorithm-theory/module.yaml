@@ -1,0 +1,8 @@
+title: "The Euclidean Algorithm"
+slug: "euclidean-algorithm-theory"
+description: "Understanding the Greatest Common Divisor (GCD) and the formal proof of the Euclidean Algorithm."
+order: 3
+difficulty: intermediate
+estimatedMinutes: 25
+tags: [number-theory, gcd, euclidean-algorithm]
+type: reading

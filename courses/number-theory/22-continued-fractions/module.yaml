@@ -1,0 +1,8 @@
+title: "Continued Fractions"
+slug: "continued-fractions"
+description: "Discover how continued fractions provide the best rational approximations to real numbers."
+order: 22
+difficulty: advanced
+estimatedMinutes: 30
+tags: [number-theory, approximation]
+type: reading

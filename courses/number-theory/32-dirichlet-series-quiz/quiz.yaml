@@ -1,0 +1,42 @@
+questions:
+  - id: conv_val
+    type: multiple_choice
+    stem: "Let $f(n) = n$ and $g(n) = 1$ for all $n$. What is the value of the Dirichlet convolution $(f * g)(6)$?"
+    options: ["$6$", "$12$", "$1+2+3+6 = 12$", "$1 \\cdot 6 + 2 \\cdot 3 = 12$"]
+    correct: 2
+    explanation: "$(f * g)(n) = \\sum_{d|n} f(d)g(n/d) = \\sum_{d|n} d \\cdot 1 = \\sigma(n)$. For $n=6$, the divisors are 1, 2, 3, 6, so the sum is $1+2+3+6=12$."
+
+  - id: mult_property
+    type: true_false
+    stem: "If $f$ and $g$ are both multiplicative arithmetic functions, then their Dirichlet convolution $f * g$ is also multiplicative."
+    correct: true
+    explanation: "This is a fundamental property of Dirichlet convolution. The set of multiplicative functions forms a subgroup of the group of arithmetic functions under convolution."
+
+  - id: mobius_zeta
+    type: multiple_choice
+    stem: "Which Dirichlet series corresponds to the Möbius function $\\mu(n)$?"
+    options: ["$\\zeta(s)$", "$\\zeta(s)^2$", "$1/\\zeta(s)$", "$\\zeta(s-1)$"]
+    correct: 2
+    explanation: "Since $\\mu * \\mathbf{1} = \\epsilon$, the product of their Dirichlet series must be the identity series $1$. Thus $M(s) \\zeta(s) = 1$, so $M(s) = 1/\\zeta(s)$."
+
+  - id: euler_prod_cond
+    type: true_false
+    stem: "A Dirichlet series has an Euler product expansion if and only if the underlying arithmetic function is multiplicative."
+    correct: true
+    explanation: "The Euler product formula $\\sum f(n)n^{-s} = \\prod_p (1 + f(p)p^{-s} + f(p^2)p^{-2s} + \\dots)$ relies exactly on the property that $f(n) = f(p_1^{a_1}) \\dots f(p_k^{a_k})$."
+
+  - id: totient_conv
+    type: multiple_choice
+    stem: "The identity $\\sum_{d|n} \\phi(d) = n$ can be expressed in terms of Dirichlet convolution as:"
+    options: ["$\\phi * \\mu = \\text{Id}$", "$\\phi * \\mathbf{1} = \\text{Id}$", "$\\phi * \\text{Id} = \\mathbf{1}$", "$\\phi * \\mathbf{1} = \\mu$"]
+    correct: 1
+    explanation: "The sum $\\sum_{d|n} \\phi(d)$ is exactly $(\\phi * \\mathbf{1})(n)$. The identity states this equals $n$, which is $\\text{Id}(n)$. Thus $\\phi * \\mathbf{1} = \\text{Id}$."
+
+  - id: convolution_inverse
+    type: parametric
+    stem_template: "If $f(1) = {{f1}}$ and we want to find $f^{-1}(1)$, what is it?"
+    params:
+      f1: { min: 1, max: 10, step: 1 }
+    correct_formula: "1 / f1"
+    answer_suffix: ""
+    explanation_template: "For any $f$ in the group of arithmetic functions, the inverse must satisfy $(f * f^{-1})(1) = 1$, which implies $f(1)f^{-1}(1) = 1$, so $f^{-1}(1) = 1/f(1)$."

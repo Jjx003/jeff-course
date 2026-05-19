@@ -266,6 +266,10 @@ All three Markdown files (`problem.md`, `theory.md`, `tips.md`) support:
 - Block LaTeX: `$$\text{stride}_i = \prod_{j=i+1}^{k-1} d_j$$`
 - Mermaid diagrams in ` ```mermaid ` fences — rendered to inline SVG client-side via the `mermaid` package. The renderer fails gracefully (renders as a code block) if the package fails to load, so old browsers don't break the page.
 
+Proof-heavy mathematical prose has first-class rendering support. Paragraphs that begin with bold labels such as `**Theorem:**`, `**Lemma:**`, `**Corollary:**`, `**Proposition:**`, `**Definition:**`, `**Claim:**`, `**Example:**`, `**Proof:**`, `**Proof Strategy:**`, `**Proof of Existence:**`, or `**Proof of Uniqueness:**` are upgraded by `src/lib/markdown/proofBlocks.ts` into styled callouts. Prefer those labels over ad hoc blockquotes or raw HTML when authoring number theory-style content. Keep LaTeX in Markdown as normal backslashes, but remember YAML quiz strings still need escaped backslashes.
+
+Markdown rendering has three presentation variants: `reading` for full-width reading modules, `study` for exercise tabs and quiz intros, and `compact` for dense embedded content such as quiz stems and explanations. The renderer also normalizes common authoring forms like one-line `$$ ... $$` display blocks and converts `align` / `align*` environments to KaTeX-compatible `aligned` blocks outside fenced code.
+
 Mermaid syntax notes when authoring: no spaces in node IDs, quote labels containing parentheses or special characters, and avoid `style` / `classDef` directives (they don't reliably render with our default theme). See `courses/protein-folding/02-protein-structure/problem.md` and `04-folding-problem/problem.md` for examples.
 
 ### Figure convention

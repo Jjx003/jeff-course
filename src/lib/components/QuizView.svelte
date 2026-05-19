@@ -479,7 +479,7 @@
       {:else if phase === 'intro'}
         {#if problem.tabs.problem.trim()}
           <section class="quiz-intro-body">
-            <MarkdownRenderer content={problem.tabs.problem} />
+            <MarkdownRenderer content={problem.tabs.problem} variant="study" />
           </section>
         {/if}
 
@@ -568,7 +568,7 @@
           </div>
 
           <div class="question-stem">
-            <MarkdownRenderer content={currentQuestion.stem} />
+            <MarkdownRenderer content={currentQuestion.stem} variant="compact" />
           </div>
 
           {#if currentQuestion.type === 'multiple_choice'}
@@ -636,7 +636,7 @@
                 {correct ? 'Correct!' : 'Not quite.'}
               </div>
               <div class="explanation-body">
-                <MarkdownRenderer content={currentQuestion.explanation} />
+                <MarkdownRenderer content={currentQuestion.explanation} variant="compact" />
               </div>
             </div>
 
@@ -791,7 +791,7 @@
               {#if isOpen}
                 <div class="review-body">
                   <div class="review-stem">
-                    <MarkdownRenderer content={q.stem} />
+                    <MarkdownRenderer content={q.stem} variant="compact" />
                   </div>
 
                   <div class="review-answers">
@@ -818,7 +818,7 @@
                   {#if q.explanation.trim()}
                     <div class="review-explanation">
                       <div class="review-explanation-label">Explanation</div>
-                      <MarkdownRenderer content={q.explanation} />
+                      <MarkdownRenderer content={q.explanation} variant="compact" />
                     </div>
                   {/if}
                 </div>
@@ -844,14 +844,18 @@
   .quiz-shell {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 0;
+    height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;
     background: #0f1117;
   }
 
   .quiz-main {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 2rem 1.5rem 4rem;
   }
 

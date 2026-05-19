@@ -1,0 +1,8 @@
+title: "The Chinese Remainder Theorem"
+slug: "chinese-remainder-theorem"
+description: "Discover how to solve systems of simultaneous congruences using the Chinese Remainder Theorem."
+order: 9
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [congruences, crt, modular-arithmetic]
+type: reading

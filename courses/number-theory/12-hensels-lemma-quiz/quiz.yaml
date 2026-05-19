@@ -1,0 +1,48 @@
+questions:
+  - id: hensels_condition
+    type: true_false
+    stem: "Hensel's Lemma can always lift a root $r$ of $f(x) \\pmod{p^k}$ to a unique root modulo $p^{k+1}$, regardless of the derivative $f'(r)$."
+    correct: false
+    explanation: "False. Hensel's Lemma guarantees a unique lift only if the derivative $f'(r) \\not\\equiv 0 \\pmod p$. If $f'(r) \\equiv 0 \\pmod p$, there might be no lifts or multiple lifts, depending on whether $f(r) \\equiv 0 \\pmod{p^{k+1}}$."
+
+  - id: hensels_derivative_mod
+    type: multiple_choice
+    stem: "When using Hensel's Lemma to lift a root from modulo $p^k$ to modulo $p^{k+1}$, the inverse of the derivative, $[f'(r)]^{-1}$, is computed modulo what?"
+    options: ["Modulo $p$", "Modulo $p^k$", "Modulo $p^{k+1}$", "Modulo $f(r)$"]
+    correct: 0
+    explanation: "The formula for $t$ is evaluated modulo $p$. Therefore, we compute the modular inverse of $f'(r)$ modulo $p$."
+
+  - id: hensels_lift_shape
+    type: multiple_choice
+    stem: "If $r$ is a root modulo $p^k$, which form do we use for a candidate lift modulo $p^{k+1}$?"
+    options: ["$r + t p^k$ with $t \\in \\{0,1,\\ldots,p-1\\}$", "$r + tp$ with arbitrary integer $t$", "$rp + t$", "$r^p + t$"]
+    correct: 0
+    explanation: "Every residue modulo $p^{k+1}$ that reduces to $r$ modulo $p^k$ has the form $r + t p^k$, where $t$ is determined modulo $p$."
+
+  - id: hensels_failure_mode
+    type: true_false
+    stem: "If $f'(r) \\equiv 0 \\pmod p$, the simple version of Hensel's Lemma no longer guarantees a unique lift."
+    correct: true
+    explanation: "Correct. A zero derivative modulo $p$ is the singular case. A lift may still exist, but the simple inverse-derivative formula does not apply, and uniqueness can fail."
+
+  - id: hensels_calculation
+    type: parametric
+    stem_template: "Consider the polynomial $f(x) = x^2 - {{n}}$. We want to find a root modulo $7^2 = 49$. We know that $r = {{root}}$ is a root modulo 7, because ${{root}}^2 = {{root * root}} \\equiv {{n}} \\pmod 7$. What is the lifted root $s$ modulo 49 (where $s \\in [0, 48]$)?"
+    params:
+      n: { min: 2, max: 2, step: 1 }   # Fixed to n=2 for simplicity. 3^2 = 9 = 2 mod 7.
+      root: { min: 3, max: 3, step: 1 }
+    correct_formula: "(3 + ((-((3*3 - 2) / 7) * 6) % 7 + 7) % 7 * 7) % 49" # (9-2)/7 = 1. f'(3) = 6. 6^-1 mod 7 = 6. -1 * 6 = -6 = 1 mod 7. t=1. s = 3 + 1*7 = 10. 10^2 = 100 = 2 mod 49.
+    distractor_formulas:
+      - "17"
+      - "24"
+      - "38"
+    answer_suffix: ""
+    explanation_template: >-
+      Let's use Hensel's Lemma. We have $f(x) = x^2 - {{n}}$, $p = 7$, $k = 1$, and $r = {{root}}$.
+      First, find $f(r) = {{root}}^2 - {{n}} = {{root*root - n}}$.
+      Compute $C = f(r) / p^k = {{root*root - n}} / 7 = {{(root*root - n) / 7}}$.
+      Next, find the derivative $f'(x) = 2x$. Evaluate it at $r$: $f'(r) = 2({{root}}) = {{2*root}}$.
+      We need $[f'(r)]^{-1} \\pmod 7$. Since ${{2*root}} \\equiv 6 \\pmod 7$, its inverse is 6.
+      Now compute $t \\equiv -C \\cdot [f'(r)]^{-1} \\equiv -{{(root*root - n) / 7}} \\cdot 6 \\equiv -6 \\equiv 1 \\pmod 7$.
+      Finally, the lifted root is $s = r + t p^k = {{root}} + 1 \\cdot 7 = {{root + 7}}$.
+      You can check: ${{root + 7}}^2 = {{(root+7)*(root+7)}} \\equiv {{n}} \\pmod{49}$.

@@ -1,0 +1,8 @@
+title: "Sums of Squares"
+slug: "sums-of-squares"
+description: "Fermat's Theorem on Sums of Two Squares and Lagrange's Four-Square Theorem."
+order: 20
+difficulty: advanced
+estimatedMinutes: 30
+tags: [number-theory, proofs, quadratic-forms]
+type: reading

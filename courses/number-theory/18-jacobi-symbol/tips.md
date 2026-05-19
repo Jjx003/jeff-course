@@ -1,0 +1,5 @@
+- **Modulo Reduction:** The first step inside your loop or recursion should always be `a = a % n`.
+- **Extracting 2s:** Count how many times you can divide `a` by $2$ without a remainder. If this count is odd, you need to multiply your result by $\left(\frac{2}{n}\right)$. 
+- **The Mod 8 Check:** You only need to multiply your result by $-1$ when you pull out an *odd* number of $2$s AND $n \pmod 8$ is $3$ or $5$.
+- **The Mod 4 Check:** When flipping $a$ and $n$ using quadratic reciprocity, you multiply your result by $-1$ if and only if $a \pmod 4 == 3$ AND $n \pmod 4 == 3$. 
+- **Recursion vs Iteration:** You can write this recursively or iteratively. Iteration avoids deep call stacks in Python, though the numbers reduce very quickly (logarithmically) so recursion depth is rarely an issue.

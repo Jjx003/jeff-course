@@ -1,0 +1,166 @@
+track: number-theory
+story_notes: >-
+  A deep dive into the theory of numbers, moving from foundational divisibility and primes, through congruences and quadratic reciprocity, all the way to advanced topics like continued fractions, integer partitions, and p-adic numbers. This course emphasizes rigorous mathematical proofs paired with computational exercises.
+created_at: "2026-05-18T12:00:00Z"
+reviewed_at: "2026-05-18T15:00:00Z"
+modules:
+  - nn: "01"
+    slug: divisibility-and-proofs
+    type: reading
+    depends_on: []
+    status: done
+  - nn: "02"
+    slug: divisibility-quiz
+    type: quiz
+    depends_on: ["divisibility-and-proofs"]
+    status: done
+  - nn: "03"
+    slug: euclidean-algorithm-theory
+    type: reading
+    depends_on: ["divisibility-and-proofs"]
+    status: done
+  - nn: "04"
+    slug: euclid-implementation
+    type: coding
+    depends_on: ["euclidean-algorithm-theory"]
+    status: done
+  - nn: "05"
+    slug: fundamental-theorem-arithmetic
+    type: reading
+    depends_on: ["euclidean-algorithm-theory"]
+    status: done
+  - nn: "06"
+    slug: primes-quiz
+    type: quiz
+    depends_on: ["fundamental-theorem-arithmetic"]
+    status: done
+  - nn: "07"
+    slug: sieve-and-factorization
+    type: coding
+    depends_on: ["fundamental-theorem-arithmetic"]
+    status: done
+  - nn: "08"
+    slug: congruences-theory
+    type: reading
+    depends_on: ["divisibility-and-proofs"]
+    status: done
+  - nn: "09"
+    slug: chinese-remainder-theorem
+    type: reading
+    depends_on: ["congruences-theory"]
+    status: done
+  - nn: "10"
+    slug: crt-implementation
+    type: coding
+    depends_on: ["chinese-remainder-theorem"]
+    status: done
+  - nn: "11"
+    slug: hensels-lemma
+    type: reading
+    depends_on: ["congruences-theory"]
+    status: done
+  - nn: "12"
+    slug: hensels-lemma-quiz
+    type: quiz
+    depends_on: ["hensels-lemma"]
+    status: done
+  - nn: "13"
+    slug: primitive-roots
+    type: reading
+    depends_on: ["congruences-theory"]
+    status: done
+  - nn: "14"
+    slug: primitive-roots-coding
+    type: coding
+    depends_on: ["primitive-roots"]
+    status: done
+  - nn: "15"
+    slug: quadratic-residues
+    type: reading
+    depends_on: ["primitive-roots"]
+    status: done
+  - nn: "16"
+    slug: quadratic-residues-quiz
+    type: quiz
+    depends_on: ["quadratic-residues"]
+    status: done
+  - nn: "17"
+    slug: law-of-quadratic-reciprocity
+    type: reading
+    depends_on: ["quadratic-residues"]
+    status: done
+  - nn: "18"
+    slug: jacobi-symbol
+    type: coding
+    depends_on: ["law-of-quadratic-reciprocity"]
+    status: done
+  - nn: "19"
+    slug: binary-quadratic-forms
+    type: reading
+    depends_on: ["law-of-quadratic-reciprocity"]
+    status: done
+  - nn: "20"
+    slug: sums-of-squares
+    type: reading
+    depends_on: ["binary-quadratic-forms"]
+    status: done
+  - nn: "21"
+    slug: sums-of-squares-quiz
+    type: quiz
+    depends_on: ["sums-of-squares"]
+    status: done
+  - nn: "22"
+    slug: continued-fractions
+    type: reading
+    depends_on: ["euclidean-algorithm-theory"]
+    status: done
+  - nn: "23"
+    slug: continued-fractions-quiz
+    type: quiz
+    depends_on: ["continued-fractions"]
+    status: done
+  - nn: "24"
+    slug: pells-equation
+    type: reading
+    depends_on: ["continued-fractions"]
+    status: done
+  - nn: "25"
+    slug: pells-equation-solver
+    type: coding
+    depends_on: ["pells-equation"]
+    status: done
+  - nn: "26"
+    slug: partitions-theory
+    type: reading
+    depends_on: ["fundamental-theorem-arithmetic"]
+    status: done
+  - nn: "27"
+    slug: partitions-quiz
+    type: quiz
+    depends_on: ["partitions-theory"]
+    status: done
+  - nn: "28"
+    slug: partitions-computation
+    type: coding
+    depends_on: ["partitions-theory"]
+    status: done
+  - nn: "29"
+    slug: p-adic-numbers
+    type: reading
+    depends_on: ["hensels-lemma"]
+    status: done
+  - nn: "30"
+    slug: p-adic-quiz
+    type: quiz
+    depends_on: ["p-adic-numbers"]
+    status: done
+  - nn: "31"
+    slug: dirichlet-series
+    type: reading
+    depends_on: ["fundamental-theorem-arithmetic"]
+    status: done
+  - nn: "32"
+    slug: dirichlet-series-quiz
+    type: quiz
+    depends_on: ["dirichlet-series"]
+    status: done

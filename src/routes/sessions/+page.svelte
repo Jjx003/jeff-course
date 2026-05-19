@@ -520,13 +520,17 @@
   .page-shell {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 0;
+    height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .page-body {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 1.5rem 2rem 2rem;
     max-width: 1400px;
     width: 100%;

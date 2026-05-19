@@ -1,0 +1,8 @@
+title: "Primitive Roots"
+slug: "primitive-roots"
+description: "Understand the concept of primitive roots and the order of elements modulo n."
+order: 13
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [modular-arithmetic, primitive-roots, generators]
+type: reading

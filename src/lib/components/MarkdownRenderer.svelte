@@ -18,20 +18,21 @@
 
   interface Props {
     content: string;
+    variant?: 'default' | 'reading' | 'study' | 'compact';
   }
 
-  let { content }: Props = $props();
+  let { content, variant = 'default' }: Props = $props();
 
   let html = $state('');
   let loading = $state(true);
-  let container: HTMLDivElement;
+  let container = $state<HTMLDivElement>();
 
   /**
    * Find every <pre><code class="language-mermaid">…</code></pre> in the
    * container and replace it with the SVG produced by mermaid.render().
    * Each diagram gets a unique id so concurrent renders don't collide.
    */
-  async function upgradeMermaidBlocks(root: HTMLElement | null) {
+  async function upgradeMermaidBlocks(root: HTMLElement | null | undefined) {
     if (!root || !browser) return;
 
     const blocks = root.querySelectorAll<HTMLElement>('pre > code.language-mermaid');
@@ -119,7 +120,11 @@
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
   <div
     bind:this={container}
-    class="prose prose-invert prose-dark max-w-none px-6 py-5 prose-sm
+    class="prose prose-invert prose-dark max-w-none
+              {variant === 'reading' ? 'markdown-reading prose-base px-0 py-5' : ''}
+              {variant === 'study' ? 'markdown-study prose-sm px-6 py-5' : ''}
+              {variant === 'compact' ? 'markdown-compact prose-sm px-0 py-0' : ''}
+              {variant === 'default' ? 'prose-sm px-6 py-5' : ''}
               prose-headings:font-semibold prose-headings:tracking-tight
               prose-a:text-accent-400 prose-a:no-underline hover:prose-a:underline
               prose-code:before:content-none prose-code:after:content-none

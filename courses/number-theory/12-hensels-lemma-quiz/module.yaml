@@ -1,0 +1,8 @@
+title: "Hensel's Lemma Quiz"
+slug: "hensels-lemma-quiz"
+description: "Test your understanding of Hensel's Lemma and root lifting."
+order: 12
+difficulty: advanced
+estimatedMinutes: 15
+tags: [polynomials, modular-arithmetic, roots, quiz]
+type: quiz

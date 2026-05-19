@@ -1,0 +1,8 @@
+title: "The Fundamental Theorem of Arithmetic"
+slug: "fundamental-theorem-arithmetic"
+description: "A rigorous look at prime numbers, unique factorization, and Euclid's proof."
+order: 5
+difficulty: intermediate
+estimatedMinutes: 20
+tags: [primes, number-theory, proofs]
+type: reading

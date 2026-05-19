@@ -1,0 +1,38 @@
+questions:
+  - id: q1_definition
+    type: true_false
+    stem: "If $\\left(\\frac{a}{p}\\right) = -1$, then $x^2 \\equiv a \\pmod p$ has exactly two incongruent solutions."
+    correct: false
+    explanation: "False. A Legendre symbol of $-1$ means that $a$ is a quadratic nonresidue, so the congruence $x^2 \\equiv a \\pmod p$ has **zero** solutions."
+
+  - id: q2_multiplicative
+    type: multiple_choice
+    stem: "Suppose $p$ is an odd prime. If $a$ and $b$ are both quadratic nonresidues modulo $p$, what can we say about their product $ab$?"
+    options: 
+      - "It is a quadratic residue modulo $p$."
+      - "It is a quadratic nonresidue modulo $p$."
+      - "It is congruent to $0$ modulo $p$."
+      - "It depends on the specific values of $a$ and $b$."
+    correct: 0
+    explanation: "Correct! The Legendre symbol is completely multiplicative: $\\left(\\frac{ab}{p}\\right) = \\left(\\frac{a}{p}\\right)\\left(\\frac{b}{p}\\right) = (-1)(-1) = 1$. The product of two nonresidues is always a quadratic residue."
+
+  - id: q3_eulers_criterion
+    type: true_false
+    stem: "According to Euler's Criterion, $\\left(\\frac{a}{p}\\right) \\equiv a^{\\frac{p-1}{2}} \\pmod p$. This means that $a^{\\frac{p-1}{2}}$ is always exactly equal to $1$ or $-1$ as an integer."
+    correct: false
+    explanation: "False. The equivalence is **modulo** $p$. For example, if $p=7$ and $a=2$, Euler's Criterion gives $2^3 = 8 \\equiv 1 \\pmod 7$. As an integer, $2^3$ is $8$, not $1$. It's only congruent to $1$ or $-1$ modulo $p$."
+
+  - id: q4_compute_legendre
+    type: parametric
+    stem_template: "Using Euler's criterion, what is the value of $\\left(\\frac{{{a}}}{11}\\right)$? (Calculate ${{a}}^5 \\pmod{11}$)"
+    params:
+      a: { min: 2, max: 10, step: 1 }
+    correct_formula: "Math.pow(a, 5) % 11 === 1 ? 1 : Math.pow(a, 5) % 11 === 10 ? -1 : (Math.pow(a, 5) % 11 === 0 ? 0 : -1)"
+    distractor_formulas:
+      - "Math.pow(a, 5) % 11 === 1 ? -1 : 1"
+      - "0"
+      - "2"
+    answer_suffix: ""
+    explanation_template: >-
+      By Euler's Criterion, $\left(\frac{a}{11}\right) \equiv a^{\frac{11-1}{2}} = a^5 \pmod{11}$. 
+      Calculating ${{a}}^5 \pmod{11}$ yields {{ Math.pow(a, 5) % 11 }}. Since $10 \equiv -1 \pmod{11}$, the Legendre symbol is {{ Math.pow(a, 5) % 11 === 1 ? 1 : -1 }}.
