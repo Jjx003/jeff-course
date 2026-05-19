@@ -1,0 +1,8 @@
+title: "Bet Sizing Quiz"
+slug: "bet-sizing-quiz"
+description: "Drill geometric sizing calculations, MDF applied to different bet sizes, and range-type sizing decisions with randomised numbers on every attempt."
+order: 14
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [quiz, bet-sizing, geometric-sizing, mdf, polarised, merged]
+type: quiz

@@ -1,0 +1,8 @@
+title: "Pot Odds Quiz"
+slug: "pot-odds-quiz"
+description: "Drill pot odds calculation, break-even equity, and the calling equation with randomised bet sizes and pot sizes."
+order: 4
+difficulty: beginner
+estimatedMinutes: 15
+tags: [quiz, pot-odds, equity, calling]
+type: quiz

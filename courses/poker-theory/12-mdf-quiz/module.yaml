@@ -1,0 +1,8 @@
+title: "MDF & Alpha Quiz"
+slug: "mdf-quiz"
+description: "Drill Minimum Defense Frequency, alpha (break-even fold frequency), and bluff:value ratio calculations with randomised numbers on every attempt."
+order: 12
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [quiz, mdf, alpha, bluffing, defense-frequency]
+type: quiz

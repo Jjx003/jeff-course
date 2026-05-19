@@ -1,0 +1,111 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "You hold the nuts on the river. The pot is \\$200 and you bet \\$100. Your opponent calls 50% of the time. What is the EV of your bet (ignoring the pot you already own)?"
+    options: ["\\$50", "\\$100", "\\$150", "\\$200"]
+    correct: 0
+    explanation: "At 100% equity (the nuts), EV(value bet) = call% × bet = 0.50 × \\$100 = \\$50. You extract \\$50 in extra value from the bet itself; the \\$200 pot is already yours regardless."
+
+  - id: q2
+    type: true_false
+    stem: "A bluff with 0% showdown equity is +EV as long as the opponent folds more often than B/(P+B)."
+    correct: true
+    explanation: "Correct. EV(bluff) = f×P − (1−f)×B. Setting EV > 0 gives f > B/(P+B). The break-even fold frequency depends only on bet/pot ratio, not on your hand strength."
+
+  - id: q3
+    type: multiple_choice
+    stem: "The pot is \\$100 and you are considering a \\$50 bluff. What is the minimum fold frequency needed for this bluff to be +EV?"
+    options: ["25%", "33%", "50%", "67%"]
+    correct: 1
+    explanation: "Break-even fold frequency = B/(P+B) = 50/(100+50) = 50/150 = 33%. If villain folds more than 33% of the time, the bluff profits. Less than 33% and it loses."
+
+  - id: q4
+    type: true_false
+    stem: "Increasing your bluff bet size always increases the EV of a bluff."
+    correct: false
+    explanation: "False. A larger bet requires a higher fold frequency to break even. If your opponent's folding frequency is fixed (they call or fold the same amount regardless of size), overbetting can turn a +EV bluff into a −EV one. Bet sizing must be matched to the opponent's tendencies."
+
+  - id: q5
+    type: multiple_choice
+    stem: "The pot is \\$60. Villain bets \\$60. You have 40% equity. What is the EV of calling?"
+    options: ["−\\$12", "\\$0", "+\\$12", "+\\$24"]
+    correct: 2
+    explanation: "Using EV(call) = q × P − (1 − q) × C where P = \\$120 is the pot already including villain's bet and C = \\$60 is your call: EV = 0.40 × \\$120 − 0.60 × \\$60 = \\$48 − \\$36 = +\\$12. Equivalently, the pot after you call will be \\$180, so EV = 0.40 × \\$180 − \\$60 = \\$72 − \\$60 = +\\$12. The call is profitable: equity (40%) clears the pot-odds threshold of \\$60/\\$180 ≈ 33%."
+
+  - id: q_bluff_ev
+    type: parametric
+    stem_template: "The pot is ${{pot}}. You bet ${{bet}} as a bluff with 0% showdown equity. Villain folds {{fold_pct}}% of the time. What is the EV of your bluff (in whole dollars, positive = profit)?"
+    params:
+      pot: { min: 60, max: 300, step: 30 }
+      bet: { min: 20, max: 150, step: 10 }
+      fold_pct: { min: 20, max: 80, step: 5 }
+    correct_formula: "Math.round(fold_pct/100 * pot - (1 - fold_pct/100) * bet)"
+    distractor_formulas:
+      - "Math.round(fold_pct/100 * pot)"
+      - "Math.round(fold_pct/100 * pot - bet)"
+      - "Math.round(fold_pct/100 * pot + (1 - fold_pct/100) * bet)"
+    answer_suffix: ""
+    explanation_template: >-
+      EV(bluff) = f×P − (1−f)×B where f = {{fold_pct}}% = {{fold_pct/100}}, P = ${{pot}}, B = ${{bet}}.
+      = {{fold_pct/100}} × {{pot}} − {{1 - fold_pct/100}} × {{bet}}
+      = {{Math.round(fold_pct/100 * pot * 100)/100}} − {{Math.round((1-fold_pct/100)*bet*100)/100}}
+      = ${{Math.round(fold_pct/100 * pot - (1 - fold_pct/100) * bet)}}.
+      {{Math.round(fold_pct/100 * pot - (1 - fold_pct/100) * bet) > 0 ? "Positive EV — this bluff is profitable!" : "Negative EV — villain is calling too often. The bluff loses money."}}
+
+  - id: q_break_even_fold
+    type: parametric
+    stem_template: "You are considering a ${{bet}} bluff into a pot of ${{pot}}. What is the minimum fold frequency (as a whole number %) needed for this bluff to break even?"
+    params:
+      pot: { min: 60, max: 300, step: 30 }
+      bet: { min: 20, max: 150, step: 10 }
+    correct_formula: "Math.round(bet / (pot + bet) * 100)"
+    distractor_formulas:
+      - "Math.round(bet / pot * 100)"
+      - "Math.round(pot / (pot + bet) * 100)"
+      - "Math.round(bet / (pot + 2 * bet) * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      Break-even fold frequency = B / (P + B) = {{bet}} / ({{pot}} + {{bet}}) = {{bet}} / {{pot + bet}} = {{Math.round(bet/(pot+bet)*100)}}%.
+      Villain must fold at least {{Math.round(bet/(pot+bet)*100)}}% for the bluff to be +EV.
+      At exactly that frequency, EV = 0.
+
+  - id: q_call_ev
+    type: parametric
+    stem_template: "You have {{equity_pct}}% equity. The pot before your call is ${{pot_before}} (includes villain's bet). You must call ${{call}} to continue. What is the EV of calling (in whole dollars)?"
+    params:
+      equity_pct: { min: 20, max: 65, step: 5 }
+      pot_before: { min: 100, max: 400, step: 50 }
+      call: { min: 20, max: 100, step: 10 }
+    correct_formula: "Math.round(equity_pct/100 * pot_before - (1 - equity_pct/100) * call)"
+    distractor_formulas:
+      - "Math.round(equity_pct/100 * (pot_before + call))"
+      - "Math.round(equity_pct/100 * pot_before - call)"
+      - "Math.round((equity_pct/100 - call/(pot_before + call)) * pot_before)"
+    answer_suffix: ""
+    explanation_template: >-
+      EV(call) = q×P_before − (1−q)×C
+      = {{equity_pct/100}} × {{pot_before}} − {{1 - equity_pct/100}} × {{call}}
+      = {{Math.round(equity_pct/100 * pot_before * 10)/10}} − {{Math.round((1 - equity_pct/100) * call * 10)/10}}
+      = ${{Math.round(equity_pct/100 * pot_before - (1 - equity_pct/100) * call)}}.
+      {{Math.round(equity_pct/100 * pot_before - (1 - equity_pct/100) * call) > 0 ? "Positive EV — profitable call." : "Negative EV — folding is better (EV = \$0)."}}
+
+  - id: q_value_bet_ev
+    type: parametric
+    stem_template: "You value bet ${{bet}} into a pot of ${{pot}}. Villain calls {{call_pct}}% of the time. When called, your equity is {{equity_pct}}%. What is the EV of the bet itself, ignoring the pot you may already own (in whole dollars)?"
+    params:
+      pot: { min: 80, max: 240, step: 40 }
+      bet: { min: 40, max: 160, step: 20 }
+      call_pct: { min: 40, max: 80, step: 10 }
+      equity_pct: { min: 60, max: 95, step: 5 }
+    correct_formula: "Math.round(call_pct/100 * (equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet))"
+    distractor_formulas:
+      - "Math.round(equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet)"
+      - "Math.round(call_pct/100 * equity_pct/100 * pot)"
+      - "Math.round(call_pct/100 * bet)"
+    answer_suffix: ""
+    explanation_template: >-
+      EV(value bet) = c × [q × (P + B) − (1 − q) × B]
+      where c = {{call_pct}}% = {{call_pct/100}}, q = {{equity_pct}}% = {{equity_pct/100}}, P = ${{pot}}, B = ${{bet}}.
+      Inside the brackets: {{equity_pct/100}} × {{pot + bet}} − {{1 - equity_pct/100}} × {{bet}} = ${{Math.round((equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet) * 10)/10}}.
+      Multiplied by call frequency: {{call_pct/100}} × ${{Math.round((equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet) * 10)/10}} = ${{Math.round(call_pct/100 * (equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet))}}.
+      When villain folds you simply win the existing pot — that's already yours, so it contributes \$0 to the *bet's* EV.

@@ -1,0 +1,8 @@
+title: "Probability Foundations"
+slug: "probability-foundations"
+description: "Master the combinatorics of a 52-card deck — combo counting, outs, and the Rule of 2 and 4 — so every equity estimate you make rests on solid math."
+order: 1
+difficulty: beginner
+estimatedMinutes: 30
+tags: [probability, combinatorics, outs, equity]
+type: reading

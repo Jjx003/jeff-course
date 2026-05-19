@@ -24,7 +24,9 @@ export type AchievementId =
   | 'hours-1'
   | 'hours-10'
   | 'hours-50'
-  | 'hours-100';
+  | 'hours-100'
+  | 'quiz-pass'
+  | 'quiz-perfect';
 
 export interface AchievementDef {
   id: AchievementId;

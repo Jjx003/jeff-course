@@ -1,0 +1,8 @@
+title: "Game Theory Optimal Play"
+slug: "game-theory-optimal"
+description: "Nash equilibrium in poker, zero-sum games, balanced strategies, the indifference principle, and when to deviate from GTO for exploitative play."
+order: 9
+difficulty: intermediate
+estimatedMinutes: 45
+tags: [gto, game-theory, nash-equilibrium, strategy]
+type: reading

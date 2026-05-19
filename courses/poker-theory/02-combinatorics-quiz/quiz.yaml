@@ -1,0 +1,100 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "How many combinations does a specific pocket pair (e.g. pocket Aces) have?"
+    options: ["4", "6", "12", "16"]
+    correct: 1
+    explanation: "A pocket pair is formed by choosing 2 suits from 4: $\\binom{4}{2} = 6$ combinations. Order does not matter, so A♠A♥ and A♥A♠ are the same hand."
+
+  - id: q2
+    type: multiple_choice
+    stem: "How many combinations does a specific suited hand (e.g. AKs) have?"
+    options: ["2", "4", "6", "12"]
+    correct: 1
+    explanation: "A suited hand requires both cards to share a suit. There are 4 suits, so there are exactly 4 combos (A♠K♠, A♥K♥, A♦K♦, A♣K♣)."
+
+  - id: q3
+    type: multiple_choice
+    stem: "How many combinations does AK (suited + offsuit combined) have?"
+    options: ["6", "12", "16", "24"]
+    correct: 2
+    explanation: "AKs has 4 combos (one per suit). AKo has 4 × 3 = 12 combos (4 choices for the Ace's suit, 3 remaining for the King's suit). Total: 4 + 12 = 16."
+
+  - id: q4
+    type: true_false
+    stem: "An offsuit hand like AKo has more combinations than a suited hand like AKs."
+    correct: true
+    explanation: "AKo has 12 combos (4 × 3 suit permutations) while AKs has only 4 combos (one per suit). Offsuit hands are three times more frequent than their suited counterpart."
+
+  - id: q5
+    type: multiple_choice
+    stem: "How many total two-card starting-hand combinations exist in a 52-card deck?"
+    options: ["1,225", "1,326", "2,652", "2,704"]
+    correct: 1
+    explanation: "$\\binom{52}{2} = \\frac{52 \\times 51}{2} = 1{,}326$. The 2,652 figure is the ordered count (treating AK and KA as different), which we divide by 2 since order doesn't matter."
+
+  - id: q6
+    type: true_false
+    stem: "The Rule of 4 is used when there is only one card left to come."
+    correct: false
+    explanation: "The Rule of 4 applies when there are **two** cards still to come (i.e. on the flop). When only one card remains (the river decision), use the Rule of 2: equity ≈ outs × 2%."
+
+  - id: q7
+    type: multiple_choice
+    stem: "You have a flush draw on the flop. How many outs do you have?"
+    options: ["4", "6", "8", "9"]
+    correct: 3
+    explanation: "A flush draw needs one more card of your suit. Each suit has 13 cards; you've seen 4 (2 in your hand, 2 on the flop of your suit). So 13 − 4 = 9 outs remain."
+
+  - id: q8
+    type: multiple_choice
+    stem: "You have an open-ended straight draw (OESD) on the turn. Approximately what is your equity to hit the straight by the river?"
+    options: ["8%", "16%", "32%", "36%"]
+    correct: 1
+    explanation: "An OESD has 8 outs. With one card to come (turn → river), use the Rule of 2: 8 × 2 = 16%. (Exact: 8/46 ≈ 17.4%.)"
+
+  - id: q_outs_rule
+    type: parametric
+    stem_template: "You have {{outs}} outs and there are 2 cards still to come. Using the Rule of 4, what is your approximate equity?"
+    params:
+      outs: { min: 4, max: 15, step: 1 }
+    correct_formula: "outs * 4"
+    distractor_formulas:
+      - "outs * 2"
+      - "outs * 3"
+      - "Math.round(outs / 47 * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      Rule of 4: with two cards to come, multiply outs by 4.
+      {{outs}} × 4 = {{outs * 4}}%. (One-card version uses Rule of 2: {{outs}} × 2 = {{outs * 2}}%.)
+
+  - id: q_outs_rule2
+    type: parametric
+    stem_template: "You have {{outs}} outs and there is 1 card still to come (the river). Using the Rule of 2, what is your approximate equity?"
+    params:
+      outs: { min: 3, max: 12, step: 1 }
+    correct_formula: "outs * 2"
+    distractor_formulas:
+      - "outs * 4"
+      - "(outs - 1) * 2"
+      - "outs * 3"
+    answer_suffix: "%"
+    explanation_template: >-
+      Rule of 2: with one card to come, multiply outs by 2.
+      {{outs}} × 2 = {{outs * 2}}%. If two cards were left you'd use Rule of 4: {{outs * 4}}%.
+
+  - id: q_combos_pair
+    type: parametric
+    stem_template: "You hold the A♠. How many combinations of pocket Aces (AA) can your opponent now hold?"
+    params:
+      _dummy: { min: 1, max: 1, step: 1 }
+    correct_formula: "3"
+    distractor_formulas:
+      - "6"
+      - "4"
+      - "1"
+    answer_suffix: ""
+    explanation_template: >-
+      With the A♠ in your hand, only 3 Aces remain (A♥, A♦, A♣).
+      The number of ways to make a pair from 3 cards is C(3,2) = 3.
+      Down from 6 full combos to just 3 — you've blocked half of the opponent's AA range.

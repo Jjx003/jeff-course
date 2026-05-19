@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { localCourseRepository } from '$lib/services/local/courseRepository.local';
-import { isReadingCompleted, isProblemCompleted } from '$lib/server/stats';
+import { isReadingCompleted, isProblemCompleted, getQuizProgress } from '$lib/server/stats';
 
 export const load: PageServerLoad = async ({ params }) => {
   const [track, problem] = await Promise.all([
@@ -28,9 +28,14 @@ export const load: PageServerLoad = async ({ params }) => {
   // first render. The client re-checks via the API after hydration.
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   const initiallyCompleted =
-    problem.type === 'reading'
+    problem.type === 'reading' || problem.type === 'quiz'
       ? await isReadingCompleted(problemId)
       : await isProblemCompleted(problemId);
 
-  return { track, problem, prevProblem, nextProblem, initiallyCompleted };
+  // For quiz modules, also seed the aggregate progress so the intro screen
+  // can show "Best: X/Y" / "Passed" without a fetch on first paint.
+  const initialQuizProgress =
+    problem.type === 'quiz' ? await getQuizProgress(problemId) : null;
+
+  return { track, problem, prevProblem, nextProblem, initiallyCompleted, initialQuizProgress };
 };

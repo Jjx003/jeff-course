@@ -1,0 +1,8 @@
+title: "ICM Quiz"
+slug: "icm-quiz"
+description: "Drill ICM concepts, break-even call equity, ICM-adjusted thresholds, and the key principles of push-fold mathematics and tournament bubble dynamics."
+order: 19
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [quiz, icm, tournament, push-fold, expected-value]
+type: quiz

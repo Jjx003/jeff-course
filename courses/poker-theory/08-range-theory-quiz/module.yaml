@@ -1,0 +1,8 @@
+title: "Range Theory Quiz"
+slug: "range-theory-quiz"
+description: "Drill range construction, combo counting, blocker effects, and range advantage across randomised scenarios."
+order: 8
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [quiz, ranges, combinatorics, blockers]
+type: quiz

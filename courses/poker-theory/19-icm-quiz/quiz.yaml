@@ -1,0 +1,104 @@
+questions:
+  - id: q1
+    type: true_false
+    stem: "In a cash game, chip EV and dollar EV are always equal."
+    correct: true
+    explanation: "Correct. In a cash game your stack is worth exactly its chip denomination in dollars at any moment — you can cash out for face value. Every +cEV decision is automatically +\\$EV. This equivalence breaks down in tournaments because of the prize payout structure."
+
+  - id: q2
+    type: multiple_choice
+    stem: "In a 3-player tournament, the chip leader holds 50% of the chips. Under ICM, their dollar equity relative to chip-proportional expectation is:"
+    options:
+      - "Exactly equal to 50% of the prize pool — chips map linearly to dollars"
+      - "More than 50% of the prize pool — the chip leader wins first place most often"
+      - "Less than 50% of the prize pool — marginal chips are worth less at larger stack sizes"
+      - "Impossible to determine without knowing the exact payout structure"
+    correct: 2
+    explanation: "ICM equity for the chip leader is always less than chip-proportional in a 3+ player tournament. The chip leader's probability of winning first place is proportional to their chips, but they win less-than-proportional second-place equity and face the asymmetry of losing chips that are worth more than the chips they gain. The short stacks below them actually receive above-proportional equity as a survival premium."
+
+  - id: q3
+    type: true_false
+    stem: "ICM pressure is roughly equal at all stages of a tournament."
+    correct: false
+    explanation: "False. ICM pressure varies dramatically by stage. In early levels with similar stacks far from the money, ICM pressure is very low and play should be close to chip EV. Near the money bubble — where the next bust means a significant pay jump — ICM pressure is at its maximum. At the final table with large prize jumps, pressure is again high. In heads-up play, ICM pressure drops to zero since chip EV equals dollar EV with only two payout positions."
+
+  - id: q4
+    type: multiple_choice
+    stem: "You are the chip leader near the money bubble. A medium-stack opponent goes all-in. Compared to a cash game with the same pot odds, how should ICM pressure change your calling decision?"
+    options:
+      - "Call more liberally — as the chip leader you can afford to gamble"
+      - "Call more conservatively — the medium stack faces elimination risk, giving you extra fold equity you can exploit without calling"
+      - "Call more conservatively — even as the chip leader you still face ICM pressure as a caller; the medium stack needs more equity than pot odds to justify calling your shoves, but the same applies in reverse"
+      - "No change — ICM only affects the short stack's decision, not the chip leader's"
+    correct: 2
+    explanation: "Even as chip leader, you face ICM pressure as a caller. If you call and lose, you go from chip leader to a much smaller stack, losing significant ICM equity — more than the chips you stand to gain are worth. The correct exploit is to *shove* wide into medium stacks (they face extreme ICM pressure to fold), but to be more conservative when *calling* their shoves. Calling wide as chip leader is a common ICM leak."
+
+  - id: q5
+    type: true_false
+    stem: "In a 3-player tournament, a chip-neutral 50/50 all-in between two large stacks can reduce the dollar EV of both participants simultaneously."
+    correct: true
+    explanation: "True — this is the ICM chip-flip paradox. If two large stacks flip, the loser busts and receives only the lowest remaining prize. The winner gains chips, but those chips have lower marginal dollar value at the larger stack size. The third player gains ICM equity simply by not being involved. The net effect is that value transfers from both flippers to the uninvolved short stack, making the flip negative-\\$EV for both participants despite being chip-neutral."
+
+  - id: q6
+    type: multiple_choice
+    stem: "Near the money bubble, a short stack is about to blind out in 2–3 hands. You are a medium stack considering a marginal all-in spot against another medium stack. The ICM-correct play is most likely:"
+    options:
+      - "Take the spot — the +cEV edge means you should always play positive chip EV spots"
+      - "Fold — let the short stack blind out first. Surviving to the money increases your guaranteed equity without any risk"
+      - "Shove wide — the short stack's imminent bust means fold equity is maximised right now"
+      - "Call if your equity exceeds pot odds by at least 1%; that is sufficient margin"
+    correct: 1
+    explanation: "Folding to let the short stack blind out is classically correct ICM play near the bubble. Every remaining player's ICM equity increases when the short stack busts. Risking your own elimination in a marginal medium-stack confrontation while the short stack still has chips is an ICM error — you are giving up guaranteed value (the pay jump) for a marginal chip-EV edge. This strategy is sometimes called 'stalling' and is a key final-table and bubble skill."
+
+  - id: q_break_even_call
+    type: parametric
+    stem_template: "Villain shoves all-in. You must call {{call}}bb to win a total pot of {{pot}}bb (after your call). What is your break-even equity (ignoring ICM pressure)?"
+    params:
+      call: { min: 4, max: 16, step: 2 }
+      pot: { min: 20, max: 60, step: 10 }
+    correct_formula: "Math.round(call / pot * 100)"
+    distractor_formulas:
+      - "Math.round((pot - call) / pot * 100)"
+      - "Math.round(call / (pot - call) * 100)"
+      - "Math.round(pot / (pot + call) * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      Break-even equity = call / total pot = {{call}} / {{pot}} = {{Math.round(call / pot * 100)}}%.
+      You must win at least {{Math.round(call / pot * 100)}}% of the time for the call to break even on pure chip EV.
+      In a real tournament spot near the bubble, ICM pressure would require additional equity on top of this threshold.
+
+  - id: q_icm_adjusted_threshold
+    type: parametric
+    stem_template: "Chip-EV analysis says you need {{base_pct}}% equity to call. This is a near-bubble tournament spot with significant ICM pressure, which raises your effective break-even threshold by {{penalty}} percentage points. What is your ICM-adjusted minimum equity needed to call profitably?"
+    params:
+      base_pct: { min: 30, max: 50, step: 5 }
+      penalty: { min: 3, max: 12, step: 3 }
+    correct_formula: "base_pct + penalty"
+    distractor_formulas:
+      - "base_pct - penalty"
+      - "Math.round(base_pct * (1 + penalty / 100))"
+      - "Math.round((base_pct + penalty) / 2)"
+    answer_suffix: "%"
+    explanation_template: >-
+      ICM-adjusted break-even = chip-EV break-even + ICM penalty = {{base_pct}}% + {{penalty}}% = {{base_pct + penalty}}%.
+      You need at least {{base_pct + penalty}}% equity to call profitably under ICM.
+      If your actual equity is below {{base_pct + penalty}}%, folding is correct even though the pure chip-EV calculation at {{base_pct}}% says to call.
+      Near the bubble, ICM penalties of {{penalty}}% are typical and routinely turn chip-EV calls into ICM folds.
+
+  - id: q_push_fold_equity
+    type: parametric
+    stem_template: "A short stack shoves all-in. You must call {{call}}bb more (beyond chips already committed). The total pot after your call will be {{pot}}bb. What is the minimum equity you need to call on pure chip EV (ignoring ICM)?"
+    params:
+      call: { min: 6, max: 18, step: 3 }
+      pot: { min: 24, max: 60, step: 6 }
+    correct_formula: "Math.round(call / pot * 100)"
+    distractor_formulas:
+      - "Math.round((pot - call) / pot * 100)"
+      - "Math.round(call / (pot + call) * 100)"
+      - "Math.round(50 - (pot - 2 * call) / pot * 10)"
+    answer_suffix: "%"
+    explanation_template: >-
+      Break-even equity = call / total pot = {{call}} / {{pot}} = {{Math.round(call / pot * 100)}}%.
+      This {{Math.round(call / pot * 100)}}% is the chip-EV floor.
+      In a tournament context — especially near the bubble — you would need additional equity above this to compensate for ICM pressure before calling is correct.
+      Short stacks shoving wide is rational: their pot-odds offer to callers is often generous ({{Math.round(call / pot * 100)}}% is a reasonable threshold), but ICM raises the bar for callers significantly.

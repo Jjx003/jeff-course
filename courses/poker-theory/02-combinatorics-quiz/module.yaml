@@ -1,0 +1,8 @@
+title: "Combinatorics Quiz"
+slug: "combinatorics-quiz"
+description: "Drill combo counting, outs, and the Rule of 2/4 with fresh randomised numbers on every attempt."
+order: 2
+difficulty: beginner
+estimatedMinutes: 15
+tags: [quiz, combinatorics, outs, probability]
+type: quiz

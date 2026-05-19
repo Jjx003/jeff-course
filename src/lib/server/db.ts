@@ -113,6 +113,25 @@ export const dbReady: Promise<void> = (async () => {
     )
   `);
 
+  // Quiz attempts are append-only. Each row is one completed pass through
+  // a quiz module (the user clicked through every question to "See results").
+  // The "first passing attempt" is what flips `reading_completions` for a
+  // quiz module — it's the moment a quiz is considered complete and grants
+  // its 5 points. Below-threshold attempts are still recorded so the intro
+  // screen can show "Best: X/Y" and the attempt counter.
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS quiz_attempts (
+      id           VARCHAR PRIMARY KEY,
+      problem_id   VARCHAR NOT NULL,
+      total        INTEGER NOT NULL,
+      correct      INTEGER NOT NULL,
+      passed       BOOLEAN NOT NULL,
+      duration_ms  BIGINT  NOT NULL,
+      completed_at BIGINT  NOT NULL
+    )
+  `);
+  await dbRun(`CREATE INDEX IF NOT EXISTS quiz_attempts_problem_idx ON quiz_attempts (problem_id)`);
+
   // Study sessions track active engagement time per problem visit. The
   // client owns `active_ms` as a running counter (it pauses on idle / hidden
   // tab); each heartbeat overwrites the row's `active_ms`, never appends to

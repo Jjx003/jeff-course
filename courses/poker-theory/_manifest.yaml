@@ -1,0 +1,115 @@
+track: poker-theory
+story_notes: >-
+  The student arrives knowing how to play poker but making decisions by feel.
+  They leave with a rigorous mathematical framework for every spot: they can
+  calculate pot odds and equity on the fly, construct balanced ranges, derive
+  the minimum-defense frequency for any bet size, and understand why GTO
+  strategies exist and when to deviate. The narrative thread is EV-maximization
+  — every concept (combinatorics, ranges, GTO, MDF, bet sizing, board texture,
+  ICM) is shown to be a direct consequence of maximising expected value. Eight
+  reading modules anchor the theory; eight interleaved quiz modules drill the
+  calculations with fresh randomised numbers on every attempt; a capstone
+  reading module ties everything into a practical study framework.
+created_at: "2026-05-18T21:55:00Z"
+reviewed_at: "2026-05-18T23:02:00Z"
+modules:
+  - nn: "01"
+    slug: probability-foundations
+    type: reading
+    depends_on: []
+    status: done
+  - nn: "02"
+    slug: combinatorics-quiz
+    type: quiz
+    depends_on: ["probability-foundations"]
+    status: done
+  - nn: "03"
+    slug: pot-odds-and-equity
+    type: reading
+    depends_on: ["probability-foundations"]
+    status: done
+  - nn: "04"
+    slug: pot-odds-quiz
+    type: quiz
+    depends_on: ["pot-odds-and-equity"]
+    status: done
+  - nn: "05"
+    slug: expected-value
+    type: reading
+    depends_on: ["pot-odds-and-equity"]
+    status: done
+  - nn: "06"
+    slug: ev-quiz
+    type: quiz
+    depends_on: ["expected-value"]
+    status: done
+  - nn: "07"
+    slug: range-theory
+    type: reading
+    depends_on: ["expected-value"]
+    status: done
+  - nn: "08"
+    slug: range-theory-quiz
+    type: quiz
+    depends_on: ["range-theory"]
+    status: done
+  - nn: "09"
+    slug: game-theory-optimal
+    type: reading
+    depends_on: ["range-theory"]
+    status: done
+  - nn: "10"
+    slug: gto-quiz
+    type: quiz
+    depends_on: ["game-theory-optimal"]
+    status: done
+  - nn: "11"
+    slug: minimum-defense-frequency
+    type: reading
+    depends_on: ["game-theory-optimal"]
+    status: done
+  - nn: "12"
+    slug: mdf-quiz
+    type: quiz
+    depends_on: ["minimum-defense-frequency"]
+    status: done
+  - nn: "13"
+    slug: bet-sizing-theory
+    type: reading
+    depends_on: ["minimum-defense-frequency"]
+    status: done
+  - nn: "14"
+    slug: bet-sizing-quiz
+    type: quiz
+    depends_on: ["bet-sizing-theory"]
+    status: done
+  - nn: "15"
+    slug: board-texture-analysis
+    type: reading
+    depends_on: ["bet-sizing-theory"]
+    status: done
+  - nn: "16"
+    slug: position-and-initiative
+    type: reading
+    depends_on: ["board-texture-analysis"]
+    status: done
+  - nn: "17"
+    slug: multi-street-planning
+    type: reading
+    depends_on: ["position-and-initiative"]
+    status: done
+  - nn: "18"
+    slug: icm-and-tournament-theory
+    type: reading
+    depends_on: ["expected-value"]
+    status: done
+  - nn: "19"
+    slug: icm-quiz
+    type: quiz
+    depends_on: ["icm-and-tournament-theory"]
+    status: done
+  - nn: "20"
+    slug: putting-it-together
+    type: reading
+    depends_on: ["minimum-defense-frequency", "bet-sizing-theory"]
+    status: done

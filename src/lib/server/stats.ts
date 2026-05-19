@@ -57,8 +57,10 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: 'track-complete', title: 'Track Conqueror', description: 'Complete every problem in a track.',        category: 'milestone'   },
   { id: 'polyglot',       title: 'Polyglot',        description: 'Solve a problem in both Python and C++.',   category: 'depth'       },
   { id: 'persistent',     title: 'Persistent',      description: 'Solve a problem after 3+ submission tries.', category: 'depth'      },
-  { id: 'theorist',       title: 'Theorist',        description: 'Complete 5 reading modules.',               category: 'depth'       },
+  { id: 'theorist',       title: 'Theorist',        description: 'Complete 5 readings or quizzes.',           category: 'depth'       },
   { id: 'well-rounded',   title: 'Well-Rounded',    description: 'Be active across 3 different tracks.',      category: 'depth'       },
+  { id: 'quiz-pass',      title: 'Quiz Conqueror',  description: 'Pass your first quiz.',                     category: 'milestone'   },
+  { id: 'quiz-perfect',   title: 'Perfect Score',   description: 'Get 100% on a quiz.',                       category: 'depth'       },
   { id: 'hours-1',        title: 'Warm-up',         description: 'Spend 1 hour learning.',                    category: 'time'        },
   { id: 'hours-10',       title: 'Focused Time',    description: 'Spend 10 hours learning.',                  category: 'time'        },
   { id: 'hours-50',       title: 'Deep Practice',   description: 'Spend 50 hours learning.',                  category: 'time'        },
@@ -114,6 +116,10 @@ interface ActivityFacts {
   readingCompletedAt: Map<string, number>;
   /** Total submissions across everything (for the dashboard). */
   totalSubmissions: number;
+  /** Distinct quiz problemIds that have at least one passing attempt. */
+  quizzesPassed: Set<string>;
+  /** Whether the user has ever scored 100% on a quiz attempt. */
+  hasPerfectQuiz: boolean;
 }
 
 async function loadActivityFacts(): Promise<ActivityFacts> {
@@ -168,13 +174,39 @@ async function loadActivityFacts(): Promise<ActivityFacts> {
     readingCompletedAt.set(r.problem_id, Number(r.completed_at));
   }
 
+  // Quiz-specific facts. Aggregated in SQL so we don't pay for every row
+  // — only the per-quiz "ever passed?" + global "ever perfect?" booleans
+  // feed the achievement engine.
+  const quizRows = await dbAll<{
+    problem_id: string;
+    passed_any: boolean | number;
+    perfect_any: boolean | number;
+  }>(
+    `SELECT problem_id,
+            MAX(CASE WHEN passed THEN 1 ELSE 0 END)                       AS passed_any,
+            MAX(CASE WHEN total > 0 AND correct = total THEN 1 ELSE 0 END) AS perfect_any
+       FROM quiz_attempts
+      GROUP BY problem_id`,
+    []
+  );
+  const quizzesPassed = new Set<string>();
+  let hasPerfectQuiz = false;
+  for (const row of quizRows) {
+    const passed = typeof row.passed_any === 'boolean' ? row.passed_any : Number(row.passed_any) > 0;
+    const perfect = typeof row.perfect_any === 'boolean' ? row.perfect_any : Number(row.perfect_any) > 0;
+    if (passed) quizzesPassed.add(row.problem_id);
+    if (perfect) hasPerfectQuiz = true;
+  }
+
   return {
     firstSolveAt,
     solveLanguages,
     submissionCount,
     attemptsToSolve,
     readingCompletedAt,
-    totalSubmissions: subs.length
+    totalSubmissions: subs.length,
+    quizzesPassed,
+    hasPerfectQuiz
   };
 }
 
@@ -359,6 +391,21 @@ function evalAchievement(id: AchievementId, ctx: AchievementContext): Achievemen
       }
       const n = tracksTouched.size;
       return ratio(n, 3, `${Math.min(n, 3)} / 3 tracks`);
+    }
+    case 'quiz-pass': {
+      const n = ctx.facts.quizzesPassed.size;
+      return {
+        unlocked: n >= 1,
+        progress: Math.min(n, 1),
+        progressLabel: n >= 1 ? `${n} ${n === 1 ? 'quiz' : 'quizzes'} passed` : 'Pass one quiz'
+      };
+    }
+    case 'quiz-perfect': {
+      return {
+        unlocked: ctx.facts.hasPerfectQuiz,
+        progress: ctx.facts.hasPerfectQuiz ? 1 : 0,
+        progressLabel: ctx.facts.hasPerfectQuiz ? 'Done' : 'Score 100% on a quiz'
+      };
     }
     case 'hours-1':
       return hoursRatio(ctx.totalActiveMs, 1);
@@ -646,4 +693,145 @@ export async function isReadingCompleted(problemId: string): Promise<boolean> {
     [problemId]
   );
   return rows.length > 0;
+}
+
+// ── Quiz progress / attempts ─────────────────────────────────────────────
+
+/**
+ * Pass threshold for a quiz to count as "completed" and grant its 5 points.
+ * Chosen to be lenient enough that one slip doesn't punish the user but
+ * strict enough that random clicking doesn't farm completions.
+ */
+export const QUIZ_PASS_THRESHOLD = 0.7;
+
+type QuizAttemptRow = {
+  problem_id: string;
+  total: number;
+  correct: number;
+  passed: boolean | number;
+  duration_ms: number;
+  completed_at: number;
+};
+
+/**
+ * Record a single quiz attempt. If this is the user's first passing attempt
+ * for the module, the corresponding `reading_completions` row is created as
+ * well (so the module shows the checkmark and grants its 5 points). Returns
+ * whether the completion is *new* so the client can show a reward toast.
+ */
+export async function recordQuizAttempt(args: {
+  id: string;
+  problemId: string;
+  total: number;
+  correct: number;
+  durationMs: number;
+}): Promise<{
+  passed: boolean;
+  bestScore: number;
+  bestTotal: number;
+  attempts: number;
+  wasNewCompletion: boolean;
+}> {
+  await dbReady;
+
+  const safeTotal = Math.max(0, Math.floor(args.total));
+  const safeCorrect = Math.max(0, Math.min(safeTotal, Math.floor(args.correct)));
+  const score = safeTotal === 0 ? 0 : safeCorrect / safeTotal;
+  const passed = safeTotal > 0 && score >= QUIZ_PASS_THRESHOLD;
+  const now = Date.now();
+
+  await dbRun(
+    `INSERT INTO quiz_attempts (id, problem_id, total, correct, passed, duration_ms, completed_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [args.id, args.problemId, safeTotal, safeCorrect, passed, Math.max(0, Math.floor(args.durationMs)), now]
+  );
+
+  let wasNewCompletion = false;
+  if (passed) {
+    const existing = await dbAll<{ problem_id: string }>(
+      'SELECT problem_id FROM reading_completions WHERE problem_id = ?',
+      [args.problemId]
+    );
+    if (existing.length === 0) {
+      await dbRun(
+        'INSERT INTO reading_completions (problem_id, completed_at) VALUES (?, ?)',
+        [args.problemId, now]
+      );
+      wasNewCompletion = true;
+    }
+  }
+
+  const progress = await getQuizProgress(args.problemId);
+  return {
+    passed,
+    bestScore: progress.bestScore ?? safeCorrect,
+    bestTotal: progress.bestTotal ?? safeTotal,
+    attempts: progress.attempts,
+    wasNewCompletion
+  };
+}
+
+/**
+ * Aggregate progress for the intro/results screens. Returns a zeroed
+ * record (no attempts yet) for any module that has never been attempted —
+ * the caller never has to null-check.
+ */
+export async function getQuizProgress(problemId: string): Promise<{
+  problemId: string;
+  attempts: number;
+  bestScore: number | null;
+  bestTotal: number | null;
+  hasPassed: boolean;
+  passedAt: number | null;
+  passThreshold: number;
+}> {
+  await dbReady;
+  const rows = await dbAll<QuizAttemptRow>(
+    `SELECT problem_id, total, correct, passed, duration_ms, completed_at
+       FROM quiz_attempts
+      WHERE problem_id = ?
+      ORDER BY completed_at ASC`,
+    [problemId]
+  );
+
+  if (rows.length === 0) {
+    return {
+      problemId,
+      attempts: 0,
+      bestScore: null,
+      bestTotal: null,
+      hasPassed: false,
+      passedAt: null,
+      passThreshold: QUIZ_PASS_THRESHOLD
+    };
+  }
+
+  let bestScore = -1;
+  let bestTotal = 0;
+  let bestRatio = -1;
+  let passedAt: number | null = null;
+  for (const row of rows) {
+    const total = Number(row.total);
+    const correct = Number(row.correct);
+    const ratio = total === 0 ? 0 : correct / total;
+    if (ratio > bestRatio) {
+      bestRatio = ratio;
+      bestScore = correct;
+      bestTotal = total;
+    }
+    const passedFlag = typeof row.passed === 'boolean' ? row.passed : Number(row.passed) > 0;
+    if (passedFlag && passedAt === null) {
+      passedAt = Number(row.completed_at);
+    }
+  }
+
+  return {
+    problemId,
+    attempts: rows.length,
+    bestScore: bestScore < 0 ? null : bestScore,
+    bestTotal: bestTotal === 0 ? null : bestTotal,
+    hasPassed: passedAt !== null,
+    passedAt,
+    passThreshold: QUIZ_PASS_THRESHOLD
+  };
 }

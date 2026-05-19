@@ -1,0 +1,8 @@
+title: "Expected Value Quiz"
+slug: "ev-quiz"
+description: "Drill EV calculations for bluffs, value bets, and calls with fresh randomised numbers on every attempt."
+order: 6
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [quiz, expected-value, EV, bluffing, value-betting]
+type: quiz

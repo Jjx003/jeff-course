@@ -26,6 +26,8 @@
     'persistent':     'M12 2v6 M12 2l3 3 M12 2l-3 3 M4 12a8 8 0 1 0 16 0 8 8 0 1 0-16 0z',            // refresh-like
     'theorist':       'M4 6h16 M4 12h16 M4 18h10',                                                   // lines (book)
     'well-rounded':   'M12 22a10 10 0 1 0 0-20 10 10 0 1 0 0 20z M2 12h20 M12 2c3 4 3 16 0 20 M12 2c-3 4-3 16 0 20',
+    'quiz-pass':      'M12 22a10 10 0 1 0 0-20 10 10 0 1 0 0 20z M9.5 9.5a2.5 2.5 0 1 1 4 2c-.8.7-1.5 1.3-1.5 2.5 M12 17v0', // question circle
+    'quiz-perfect':   'M12 2l3 7 7 .6-5.3 4.7L18 22l-6-3.5L6 22l1.3-7.7L2 9.6 9 9z', // star
     // Time-based achievements: a family of clock variants that get more
     // "earned" looking as the threshold climbs.
     'hours-1':        'M12 22a10 10 0 1 0 0-20 10 10 0 1 0 0 20z M12 7v5l3 2',                       // simple clock

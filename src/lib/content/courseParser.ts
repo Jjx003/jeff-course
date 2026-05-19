@@ -22,6 +22,8 @@ import type {
   ProblemMeta,
   RawCourseYaml,
   RawModuleYaml,
+  RawQuizYaml,
+  QuizQuestion,
   RuntimeHint,
   Language,
   Difficulty,
@@ -62,7 +64,9 @@ function normalizeLanguages(values: string[] | undefined): Language[] {
 }
 
 function normalizeModuleType(value: string | undefined): ModuleType {
-  return value === 'reading' ? 'reading' : 'coding';
+  if (value === 'reading') return 'reading';
+  if (value === 'quiz') return 'quiz';
+  return 'coding';
 }
 
 const VALID_SANDBOX_MODES: readonly SandboxMode[] = ['baremetal', 'docker', 'docker-gpu'];
@@ -194,6 +198,13 @@ export function parseFullProblem(
   }
   const hasExpectedOutput = Object.keys(expectedOutput).length > 0;
 
+  // Load quiz questions for quiz modules
+  let quizQuestions: QuizQuestion[] | undefined;
+  if (meta.type === 'quiz') {
+    const rawQuiz = readYaml<RawQuizYaml>(path.join(modulePath, 'quiz.yaml'));
+    quizQuestions = rawQuiz?.questions ?? [];
+  }
+
   return {
     ...meta,
     tabs,
@@ -202,7 +213,8 @@ export function parseFullProblem(
     nextSlug,
     ...(requirementsPath ? { requirementsPath } : {}),
     ...(hasExpectedOutput ? { expectedOutput: expectedOutput as Record<Language, string> } : {}),
-    ...(hasSolutionCode ? { solutionCode } : {})
+    ...(hasSolutionCode ? { solutionCode } : {}),
+    ...(quizQuestions !== undefined ? { quizQuestions } : {})
   };
 }
 

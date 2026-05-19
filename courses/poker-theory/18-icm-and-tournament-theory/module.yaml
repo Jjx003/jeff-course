@@ -1,0 +1,8 @@
+title: "ICM & Tournament Theory"
+slug: "icm-and-tournament-theory"
+description: "Learn how the Independent Chip Model converts chip stacks to dollar equity, why chip EV and dollar EV diverge in tournaments, and how push-fold mathematics and final-table ICM pressure change optimal strategy."
+order: 18
+difficulty: intermediate
+estimatedMinutes: 40
+tags: [icm, tournament, expected-value, push-fold]
+type: reading

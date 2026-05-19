@@ -24,6 +24,7 @@
   import OutputPanel from '$lib/components/OutputPanel.svelte';
   import ProblemNav from '$lib/components/ProblemNav.svelte';
   import ReadingView from '$lib/components/ReadingView.svelte';
+  import QuizView from '$lib/components/QuizView.svelte';
   import RewardToast from '$lib/components/RewardToast.svelte';
   import StudyTimeTracker from '$lib/components/StudyTimeTracker.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -54,16 +55,17 @@
   let prevProblem  = $derived(data.prevProblem);
   let nextProblem  = $derived(data.nextProblem);
   let isReading    = $derived(problem.type === 'reading');
+  let isQuiz       = $derived(problem.type === 'quiz');
 
   // ── Problem ID ────────────────────────────────────────────────────────
   let problemId = $derived(`${track.slug}/${problem.slug}`);
 
   // ── Language state ────────────────────────────────────────────────────
   let currentLanguage = $state<Language>('python');
-  // Set proper default once problem is available (skipped for reading modules,
+  // Set proper default once problem is available (skipped for reading/quiz modules,
   // which have no editor and may carry placeholder language values).
   $effect.pre(() => {
-    if (!isReading) currentLanguage = problem.defaultLanguage;
+    if (!isReading && !isQuiz) currentLanguage = problem.defaultLanguage;
   });
 
   // ── Editor ref ────────────────────────────────────────────────────────
@@ -319,8 +321,8 @@
       // non-fatal — toasts just won't show
     }
 
-    // Reading modules have no editor, runner, or drafts — stop here.
-    if (isReading) return;
+    // Reading and quiz modules have no editor, runner, or drafts — stop here.
+    if (isReading || isQuiz) return;
 
     // Restore output panel size/state
     const savedH = localStorage.getItem('output-panel-height');
@@ -412,7 +414,7 @@
     activeTabId = 'problem';
     showSubmissions = false;
 
-    if (isReading || !services) return;
+    if (isReading || isQuiz || !services) return;
 
     const svc = services;
     const pid = problemId;
@@ -805,6 +807,24 @@
         kind: 'points',
         title: '+5 pts',
         subtitle: 'Reading complete'
+      });
+      void checkForNewAchievements(1400);
+    }}
+  />
+{:else if isQuiz}
+  <QuizView
+    {track}
+    {problem}
+    {prevProblem}
+    {nextProblem}
+    quizQuestions={problem.quizQuestions ?? []}
+    initiallyCompleted={data.initiallyCompleted}
+    initialProgress={data.initialQuizProgress}
+    onPassed={(score, total) => {
+      toastRef?.show({
+        kind: 'points',
+        title: '+5 pts',
+        subtitle: `Quiz passed · ${score}/${total}`
       });
       void checkForNewAchievements(1400);
     }}

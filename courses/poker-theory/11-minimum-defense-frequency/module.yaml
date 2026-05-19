@@ -1,0 +1,8 @@
+title: "Minimum Defense Frequency"
+slug: "minimum-defense-frequency"
+description: "Derive the MDF formula from first principles, understand the alpha (break-even fold frequency), and learn how to construct bluff:value ratios for balanced betting ranges."
+order: 11
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [mdf, gto, bluffing, defense-frequency, alpha]
+type: reading

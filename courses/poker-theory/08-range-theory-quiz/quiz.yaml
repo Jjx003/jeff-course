@@ -1,0 +1,104 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "After a UTG open-raise and a BTN call, the flop comes A♠ 7♦ 2♣ (rainbow). Which player typically has **nut advantage** on this board?"
+    options:
+      - "BTN, because they called in position"
+      - "UTG, because their range contains more Ax combos and over-pairs"
+      - "Neither player — nut advantage only applies after the turn"
+      - "BTN, because their suited connectors flopped a gut-shot"
+    correct: 1
+    explanation: "UTG's opening range is loaded with AK, AQ, AJ, AT, and AA — all of which connect strongly with the ace. BTN's flatting range (pairs TT–22, suited connectors, broadway suits) mostly misses A72r. UTG therefore holds nut advantage: more of the best combos on this board."
+
+  - id: q2
+    type: true_false
+    stem: "You look down at A♠ as one of your hole cards. This reduces the number of AA combinations in villain's range from 6 to 3."
+    correct: true
+    explanation: "Without your ace in play, there are $\\binom{4}{2} = 6$ AA combos. Once you hold A♠, only three aces remain (A♥, A♦, A♣), giving $\\binom{3}{2} = 3$ AA combos. Your ace exactly halves the frequency of AA in villain's range."
+
+  - id: q3
+    type: multiple_choice
+    stem: "A player's range is described as **capped**. What does this mean?"
+    options:
+      - "The player has bet the maximum allowed"
+      - "The player's range lacks the very strongest hands (the nuts), typically because they would have re-raised with them preflop"
+      - "The player only holds made hands and no draws"
+      - "The player's range is restricted to pocket pairs"
+    correct: 1
+    explanation: "A capped range is bounded at the top: the player rarely or never holds the strongest possible hands (AA, KK, etc.) because the preflop action would have called for a 3-bet or 4-bet with those hands. For example, a player who calls a CO open from the BB is unlikely to have AA since they would typically 3-bet it."
+
+  - id: q4
+    type: true_false
+    stem: "A polarised betting range contains both very strong hands (value) and very weak hands (bluffs), with relatively few medium-strength holdings."
+    correct: true
+    explanation: "Polarisation refers to a bimodal range: high-equity hands at one extreme and low-equity (bluffing) hands at the other, with the middle-strength region mostly removed. Polarised ranges are common in 3-bet pots and on later streets where the aggressor is representing either the nuts or a complete air bluff."
+
+  - id: q5
+    type: multiple_choice
+    stem: "On a J♠ T♦ 9♥ flop (connected, two-tone), after a BTN flat-call vs. a CO open, which player is more likely to have flopped a straight (87 or Q8)?"
+    options:
+      - "CO, because they opened the pot and have more premium combos"
+      - "BTN, because their flatting range contains suited connectors like 87s and Q8s"
+      - "Neither player — straights are equally distributed across both ranges"
+      - "CO, because they have more Broadway hands that connect with JT9"
+    correct: 1
+    explanation: "BTN's flatting range includes many suited connectors (87s, 76s, QJs, Q8s) that make straights on JT9. CO's opening range skews toward broadway pairs and aces. On JT9, BTN's speculative hands land hardest, giving BTN more of the very best combos (straights and wrap draws)."
+
+  - id: q6
+    type: multiple_choice
+    stem: "A player's 3-bet range is described as **polar**. Which of these hand combinations is most typical of a polar 3-bet range?"
+    options:
+      - "KQo, AJo, TT, 99 — mostly medium-strength broadway and pairs"
+      - "AA, KK, QQ, AK (value) plus A2s–A5s and 54s (bluffs)"
+      - "Any two suited cards, regardless of rank"
+      - "Only the top 5% of hands: AA, KK, QQ, JJ, AKs"
+    correct: 1
+    explanation: "A polar 3-bet range combines premium value hands (AA–QQ, AK) with low-equity hands that have blocking or removal effects (A2s–A5s block AA/AK; 54s are pure bluffs). Medium-strength hands like KQo, TT are either 4-bet-folded or called — they are intentionally excluded from the polar raising range."
+
+  - id: q_range_pct
+    type: parametric
+    stem_template: "A player opens {{pct}}% of hands preflop. A full deck contains 1326 two-card combinations. Approximately how many combos are in their opening range? (Round to the nearest whole number.)"
+    params:
+      pct: { min: 5, max: 40, step: 5 }
+    correct_formula: "Math.round(1326 * pct / 100)"
+    distractor_formulas:
+      - "Math.round(1326 * pct / 100) + 52"
+      - "Math.round(1326 * pct / 200)"
+      - "Math.round(169 * pct / 100)"
+    answer_suffix: " combos"
+    explanation_template: >-
+      {{pct}}% of 1326 total combos = 1326 × {{pct}} / 100 = {{Math.round(1326 * pct / 100)}} combos.
+      Note: 169 is the number of distinct hand *types* (ignoring suits), not the number of combos.
+
+  - id: q_pocket_pairs
+    type: parametric
+    stem_template: "A player's range includes all pocket pairs from {{lo}}{{lo}} down to {{hi}}{{hi}} (for example, if lo=A=14 and hi=9, that is AA through 99). Each pocket pair rank has exactly 6 combos. How many total pocket-pair combos are in this portion of their range?"
+    params:
+      lo: { min: 10, max: 14, step: 1 }
+      hi: { min: 2, max: 9, step: 1 }
+    correct_formula: "(lo - hi + 1) * 6"
+    distractor_formulas:
+      - "(lo - hi) * 6"
+      - "(lo - hi + 1) * 4"
+      - "(lo - hi + 1) * 12"
+    answer_suffix: " combos"
+    explanation_template: >-
+      From rank {{hi}} to rank {{lo}}, there are {{lo - hi + 1}} distinct ranks (inclusive).
+      Each rank contributes 6 combos (C(4,2) = 6), so the total is {{lo - hi + 1}} × 6 = {{(lo - hi + 1) * 6}} combos.
+
+  - id: q_suited_blocker
+    type: parametric
+    stem_template: "Your range contains {{n}} distinct suited two-card hands (4 combos each). You are dealt a card that appears in {{b}} of those suited hands (as one of the two ranks). How many suited combos from those {{n}} hands can villain still hold? (Each blocked hand loses exactly 1 of its 4 suited combos.)"
+    params:
+      n: { min: 4, max: 10, step: 1 }
+      b: { min: 1, max: 4, step: 1 }
+    correct_formula: "n * 4 - b"
+    distractor_formulas:
+      - "n * 4 - b * 2"
+      - "n * 3"
+      - "n * 4"
+    answer_suffix: " combos"
+    explanation_template: >-
+      Before your card is dealt, the {{n}} suited hands have {{n}} × 4 = {{n * 4}} combos total.
+      Holding one card that appears in {{b}} of those hands removes exactly {{b}} combos (one per affected hand, the combo using your specific suit).
+      Remaining: {{n * 4}} − {{b}} = {{n * 4 - b}} combos.

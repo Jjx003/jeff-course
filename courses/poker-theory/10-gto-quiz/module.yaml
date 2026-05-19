@@ -1,0 +1,8 @@
+title: "GTO Quiz"
+slug: "gto-quiz"
+description: "Test your understanding of GTO concepts — mixed strategies, unexploitability, the indifference principle, and when to deviate from GTO for exploitative play."
+order: 10
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [quiz, gto, game-theory, strategy]
+type: quiz

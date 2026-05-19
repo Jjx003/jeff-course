@@ -1,0 +1,8 @@
+title: "Board Texture Analysis"
+slug: "board-texture-analysis"
+description: "Read board textures, assess range advantages, and calibrate c-bet frequency and sizing across dry, wet, paired, and monotone boards."
+order: 15
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [board-texture, range-advantage, c-betting, gto]
+type: reading

@@ -1,0 +1,124 @@
+questions:
+  - id: q_mdf_basic
+    type: parametric
+    stem_template: "The pot is ${{pot}}. Villain bets ${{bet}}. What is the Minimum Defense Frequency (MDF) — the minimum fraction of your range you must continue with to prevent bluffs from being immediately profitable?"
+    params:
+      pot: { min: 60, max: 400, step: 20 }
+      bet: { min: 20, max: 200, step: 20 }
+    correct_formula: "Math.round(pot / (pot + bet) * 100)"
+    distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
+      - "Math.round(pot / (pot + 2 * bet) * 100)"
+      - "Math.round(bet / pot * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      MDF = pot / (pot + bet) = {{pot}} / ({{pot}} + {{bet}}) = {{pot}} / {{pot + bet}} = {{Math.round(pot/(pot+bet)*100)}}%.
+      If you fold more than {{100 - Math.round(pot/(pot+bet)*100)}}% of your range, villain's bluffs become immediately profitable regardless of their equity.
+
+  - id: q_mdf_large_bet
+    type: parametric
+    stem_template: "The pot is ${{pot}}. Villain makes an overbet of ${{bet}}. What is your MDF — the minimum fraction of your range that must continue?"
+    params:
+      pot: { min: 80, max: 300, step: 20 }
+      bet: { min: 100, max: 400, step: 20 }
+    correct_formula: "Math.round(pot / (pot + bet) * 100)"
+    distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
+      - "Math.round(pot / (2 * pot + bet) * 100)"
+      - "Math.round((pot + bet) / (pot + 2 * bet) * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      MDF = pot / (pot + bet) = {{pot}} / {{pot + bet}} = {{Math.round(pot/(pot+bet)*100)}}%.
+      Large overbets generate more fold equity precisely because MDF drops — the defender must call with a smaller but stronger fraction of their range.
+
+  - id: q_alpha
+    type: parametric
+    stem_template: "The pot is ${{pot}}. You are considering a bet of ${{bet}}. What is alpha (α) — the break-even fold frequency, i.e. the maximum fraction of villain's range that can fold before your bluff becomes immediately profitable?"
+    params:
+      pot: { min: 60, max: 360, step: 30 }
+      bet: { min: 20, max: 180, step: 20 }
+    correct_formula: "Math.round(bet / (pot + bet) * 100)"
+    distractor_formulas:
+      - "Math.round(pot / (pot + bet) * 100)"
+      - "Math.round(bet / (2 * pot + bet) * 100)"
+      - "Math.round(bet / pot * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      α = bet / (pot + bet) = {{bet}} / ({{pot}} + {{bet}}) = {{bet}} / {{pot + bet}} = {{Math.round(bet/(pot+bet)*100)}}%.
+      This is the complement of MDF: MDF + α = 100%. If villain folds more than {{Math.round(bet/(pot+bet)*100)}}% of the time, your bluff has positive EV regardless of your hand.
+
+  - id: q_bluff_ratio
+    type: parametric
+    stem_template: "You are building a balanced river betting range. The pot is ${{pot}} and you plan to bet ${{bet}}. What fraction of your *betting range* should consist of bluffs so that villain is indifferent to calling or folding?"
+    params:
+      pot: { min: 60, max: 300, step: 30 }
+      bet: { min: 20, max: 200, step: 20 }
+    correct_formula: "Math.round(bet / (pot + bet) * 100)"
+    distractor_formulas:
+      - "Math.round(pot / (pot + bet) * 100)"
+      - "Math.round(bet / (pot + 2 * bet) * 100)"
+      - "Math.round(50)"
+    answer_suffix: "%"
+    explanation_template: >-
+      The balanced bluff fraction = α = bet / (pot + bet) = {{bet}} / {{pot + bet}} = {{Math.round(bet/(pot+bet)*100)}}%.
+      This is the same formula as alpha. If {{Math.round(bet/(pot+bet)*100)}}% of your betting range is bluffs, villain is indifferent: calling and folding have identical EV against your range.
+
+  - id: q_mdf_direction
+    type: multiple_choice
+    stem: "What happens to the Minimum Defense Frequency (MDF) as bet size increases (holding pot size constant)?"
+    options:
+      - "MDF increases — you must defend a larger fraction of your range"
+      - "MDF decreases — you must defend a smaller fraction of your range"
+      - "MDF stays constant — it only depends on the pot-to-stack ratio"
+      - "MDF first increases then decreases, peaking at a pot-sized bet"
+    correct: 1
+    explanation: >-
+      MDF = pot / (pot + bet). As bet increases, the denominator grows while the numerator stays fixed, so MDF decreases.
+      A larger bet buys more fold equity: the defender is only required to call a smaller fraction — but that fraction must be their strongest hands.
+
+  - id: q_half_pot_fold
+    type: multiple_choice
+    stem: "Villain makes a half-pot bet ($B = 0.5P$). What is the maximum fraction of your range you can fold while remaining unexploitable?"
+    options:
+      - "50%"
+      - "40%"
+      - "33%"
+      - "25%"
+    correct: 2
+    explanation: >-
+      Alpha = B / (P + B) = 0.5P / 1.5P = 1/3 ≈ 33%.
+      You can fold at most 33% of your range. Equivalently, MDF = 1 − 1/3 = 2/3 ≈ 67% — you must continue with at least two thirds of your range.
+
+  - id: q_mdf_tf
+    type: true_false
+    stem: "True or false: MDF and alpha (α) always sum to 100%."
+    correct: true
+    explanation: >-
+      True. MDF = P/(P+B) and α = B/(P+B). Their sum = (P+B)/(P+B) = 1 = 100%.
+      They are complementary: MDF is the minimum call frequency; alpha is the maximum fold frequency. Together they account for your entire range.
+
+  - id: q_pot_sized_bluff_ratio
+    type: multiple_choice
+    stem: "You are betting pot-sized on the river. For your betting range to be balanced (making villain indifferent), what is the correct bluff-to-value ratio?"
+    options:
+      - "1 bluff for every 3 value combos (1:3)"
+      - "1 bluff for every 2 value combos (1:2)"
+      - "1 bluff for every 1 value combo (1:1)"
+      - "2 bluffs for every 1 value combo (2:1)"
+    correct: 2
+    explanation: >-
+      For a pot-sized bet, α = B/(P+B) = P/(2P) = 50%. So 50% of your betting range should be bluffs, which means a 1:1 bluff-to-value ratio.
+      Compare to a half-pot bet where α = 33%, requiring a 1:2 bluff-to-value ratio — far fewer bluffs relative to value.
+
+  - id: q_three_street
+    type: multiple_choice
+    stem: "Villain bets half-pot on the flop (MDF 67%), three-quarters pot on the turn (MDF 57%), and pot-sized on the river (MDF 50%). Approximately what fraction of your original flop range reaches showdown after calling all three streets?"
+    options:
+      - "About 58% (average of the three MDFs)"
+      - "About 25% (67% × 57% × 50% ÷ some adjustment)"
+      - "About 19% (67% × 57% × 50%)"
+      - "About 10% (compound discount applied twice)"
+    correct: 2
+    explanation: >-
+      Multi-street MDF compounds multiplicatively: 0.67 × 0.57 × 0.50 ≈ 0.191 ≈ 19%.
+      Do NOT average the MDFs — each street's fold decision is independent and applied to the surviving range, so you multiply, not average.

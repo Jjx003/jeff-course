@@ -1,0 +1,93 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "The pot is \\$120. Your opponent bets \\$40. What are your pot odds?"
+    options: ["20%", "25%", "33%", "40%"]
+    correct: 0
+    explanation: "Your call is \\$40. Total pot after calling: \\$120 + \\$40 + \\$40 = \\$200. Pot odds = 40/200 = 20%. You need at least 20% equity to call profitably."
+
+  - id: q2
+    type: multiple_choice
+    stem: "Your opponent makes a pot-sized bet (the bet equals the current pot). What are your pot odds?"
+    options: ["25%", "33%", "40%", "50%"]
+    correct: 1
+    explanation: "If the pot is \\$P and the bet is \\$P, you call \\$P into a total of \\$P + \\$P + \\$P = \\$3P. Pot odds = P/(3P) = 1/3 ≈ 33%. A pot-sized bet always gives you 33% pot odds."
+
+  - id: q3
+    type: true_false
+    stem: "A higher pot-odds percentage means you need MORE equity to call profitably."
+    correct: true
+    explanation: "Correct. Pot odds % = call / total pot. A higher % means you're contributing more of the final pot, so you need to win more often to break even. Example: 40% pot odds requires 40% equity, while 20% pot odds only requires 20% equity."
+
+  - id: q4
+    type: true_false
+    stem: "Implied odds can justify calling with less equity than the pure pot odds require."
+    correct: true
+    explanation: "Yes. Implied odds account for future chips you'll win when you hit your draw. If you'll extract a large bet on the next street, the effective pot you're calling into is larger than the current one, reducing the required equity."
+
+  - id: q5
+    type: multiple_choice
+    stem: "You have a flush draw (9 outs) on the turn. The pot is \\$100 and your opponent bets \\$50. On pure pot odds (ignoring implied odds), should you call?"
+    options: ["Yes — equity exceeds pot odds", "No — pot odds exceed equity", "It's exactly break-even", "Cannot tell without stack sizes"]
+    correct: 1
+    explanation: "With 9 outs and one card to come (Rule of 2), your equity is about 9 × 2 = 18%. Pot odds are 50/(100+50+50) = 50/200 = 25%. Equity (18%) < pot odds (25%), so on pure pot odds this is a fold. In practice players often continue because of implied odds — if villain has a strong hand and pays off a future river bet when the flush hits, the effective pot is larger and the call becomes profitable."
+
+  - id: q6
+    type: multiple_choice
+    stem: "You have an open-ended straight draw (8 outs) on the flop. The pot is \\$80 and your opponent bets \\$20. Should you call using only pot odds (no implied odds)?"
+    options: ["Yes — equity exceeds pot odds", "No — pot odds exceed equity", "It's exactly break-even", "Cannot determine"]
+    correct: 0
+    explanation: "8 outs × 4 (two cards to come) = 32% equity. Pot odds: 20/(80+20+20) = 20/120 ≈ 17%. Equity (32%) > Pot Odds (17%). Easy call."
+
+  - id: q_pot_odds_pct
+    type: parametric
+    stem_template: "The pot is ${{pot}}. Villain bets ${{bet}}. What are your pot odds (your call ÷ total pot after calling, as a %)?"
+    params:
+      pot: { min: 60, max: 360, step: 30 }
+      bet: { min: 20, max: 160, step: 20 }
+    correct_formula: "Math.round(bet / (pot + 2 * bet) * 100)"
+    distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
+      - "Math.round(pot / (pot + 2 * bet) * 100)"
+      - "Math.round(bet / pot * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      You call ${{bet}} into a final pot of ${{pot + 2 * bet}}
+      (${{pot}} original + ${{bet}} villain bet + ${{bet}} your call).
+      Pot odds = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet/(pot+2*bet)*100)}}%.
+      You need at least {{Math.round(bet/(pot+2*bet)*100)}}% equity to call profitably.
+
+  - id: q_break_even
+    type: parametric
+    stem_template: "The pot is ${{pot}} and villain bets ${{bet}}. What is your break-even equity to call?"
+    params:
+      pot: { min: 40, max: 300, step: 20 }
+      bet: { min: 20, max: 150, step: 10 }
+    correct_formula: "Math.round(bet / (pot + 2 * bet) * 100)"
+    distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
+      - "Math.round(pot / (pot + 2 * bet) * 100)"
+      - "Math.round((pot + bet) / (pot + 2 * bet) * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      Break-even equity equals pot odds: {{bet}} / ({{pot}} + 2×{{bet}}) = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet/(pot+2*bet)*100)}}%.
+      Call if your equity is at or above {{Math.round(bet/(pot+2*bet)*100)}}%.
+
+  - id: q_equity_margin
+    type: parametric
+    stem_template: "You have {{outs}} outs and there are 2 cards to come. The pot is ${{pot}} and villain bets ${{bet}}. Using the Rule of 4 for equity, by how many percentage points does your equity exceed your pot odds? (Negative = fold, positive = call.)"
+    params:
+      outs: { min: 4, max: 12, step: 1 }
+      pot: { min: 60, max: 240, step: 30 }
+      bet: { min: 20, max: 120, step: 20 }
+    correct_formula: "(outs * 4) - Math.round(bet / (pot + 2 * bet) * 100)"
+    distractor_formulas:
+      - "(outs * 2) - Math.round(bet / (pot + 2 * bet) * 100)"
+      - "(outs * 4) - Math.round(bet / (pot + bet) * 100)"
+      - "(outs * 4) - Math.round(bet / pot * 100)"
+    answer_suffix: ""
+    explanation_template: >-
+      Equity ≈ {{outs}} × 4 = {{outs * 4}}% (Rule of 4, two streets remaining).
+      Pot odds = {{bet}} / ({{pot}} + 2×{{bet}}) = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet/(pot+2*bet)*100)}}%.
+      Margin = {{outs * 4}}% − {{Math.round(bet/(pot+2*bet)*100)}}% = {{(outs * 4) - Math.round(bet/(pot+2*bet)*100)}} percentage points.
+      {{(outs * 4) - Math.round(bet/(pot+2*bet)*100) >= 0 ? "Positive margin — pure pot odds support calling." : "Negative margin — fold on pure pot odds (implied odds may still rescue the call)."}}

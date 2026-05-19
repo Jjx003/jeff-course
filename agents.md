@@ -57,6 +57,7 @@ jeff-course/
 │           ├── solution/        # optional: reference solution code
 │           │   ├── python.py
 │           │   └── cpp.cpp
+│           ├── quiz.yaml        # quiz modules only: question definitions
 │           ├── requirements.txt         # optional: UV pip deps
 │           └── expected_output/         # optional: grading reference (omit for non-deterministic output)
 │               ├── python.txt
@@ -115,7 +116,9 @@ jeff-course/
     │       ├── ProgressRing.svelte        # gamification: track progress
     │       ├── HeatmapCalendar.svelte     # gamification: yearly activity grid
     │       ├── AchievementCard.svelte     # gamification: locked/unlocked card
-    │       └── RewardToast.svelte         # gamification: non-intrusive notification
+    │       ├── RewardToast.svelte         # gamification: non-intrusive notification
+    │       ├── QuizView.svelte            # quiz module: intro → quiz → results phases
+    │       └── InlineMarkdown.svelte      # tiny LaTeX/markdown renderer for option labels
     └── routes/
         ├── +layout.svelte
         ├── +page.svelte                                      # Landing page
@@ -140,9 +143,11 @@ jeff-course/
             ├── runs/[trackSlug]/[problemSlug]/+server.ts
             ├── runs/[trackSlug]/[problemSlug]/[language]/+server.ts
             ├── submissions/[trackSlug]/[problemSlug]/+server.ts
-            ├── stats/+server.ts                              # GET aggregated stats
-            ├── reading/[trackSlug]/[problemSlug]/+server.ts  # GET/POST reading completion
-            └── study-time/heartbeat/+server.ts               # POST active-time heartbeat
+            ├── stats/+server.ts                                       # GET aggregated stats
+            ├── reading/[trackSlug]/[problemSlug]/+server.ts           # GET/POST reading completion
+            ├── quiz/[trackSlug]/[problemSlug]/+server.ts              # GET aggregate quiz progress
+            ├── quiz/[trackSlug]/[problemSlug]/attempt/+server.ts      # POST record one attempt
+            └── study-time/heartbeat/+server.ts                        # POST active-time heartbeat
 ```
 
 ---
@@ -168,9 +173,9 @@ order: 1
 difficulty: beginner
 estimatedMinutes: 25
 tags: [tensors, numpy]
-type: coding              # 'coding' | 'reading'
-languages: [python, cpp]  # CODING only — omit for reading modules
-defaultLanguage: python   # CODING only — omit for reading modules
+type: coding              # 'coding' | 'reading' | 'quiz'
+languages: [python, cpp]  # CODING only — omit for reading/quiz modules
+defaultLanguage: python   # CODING only — omit for reading/quiz modules
 ```
 
 The `<NN>-` numeric prefix in the directory name controls sort order within a track. The `slug` field in `module.yaml` is what appears in the URL.
@@ -180,6 +185,79 @@ The `<NN>-` numeric prefix in the directory name controls sort order within a tr
 `type: coding` (the default) is the original behaviour: an editor pane plus run/submit grading against optional `expected_output/`. The module folder must contain `starter/`, and may contain `requirements.txt` and `expected_output/` for grading.
 
 `type: reading` is a textbook-style module: no editor, no run/submit, just `problem.md` + `theory.md` + `tips.md` rendered with KaTeX and Mermaid. Reading modules MUST omit `languages` and `defaultLanguage`. They MUST NOT have a `starter/` directory; if one exists the parser ignores it. Use reading modules for conceptual deep-dives between coding exercises.
+
+`type: quiz` is an interactive self-assessment module: no editor, no runner. The module directory must contain a `quiz.yaml` file (see format below) alongside `problem.md` (used as the intro briefing on the pre-quiz screen). Quiz modules MUST omit `languages` and `defaultLanguage`.
+
+Quiz UX flow (see `QuizView.svelte`):
+1. **Intro phase** — meta header, `problem.md` briefing, stats card (question count, est. time, pass threshold, best score across all attempts), and a big "Start quiz" / "Retake quiz" CTA. Keyboard: <kbd>Enter</kbd> starts.
+2. **Quiz phase** — one question at a time with a live score chip ("3 right · 1 wrong"), a question-type pill ("Multiple choice" / "True / False" / "Calculation"), the stem rendered with full markdown/LaTeX, and `InlineMarkdown`-rendered options (LaTeX works inside option text). Keyboard: <kbd>1</kbd>–<kbd>9</kbd> select MC options, <kbd>T</kbd>/<kbd>F</kbd> select true/false, <kbd>Enter</kbd>/<kbd>N</kbd> advance after answering.
+3. **Results phase** — pass/fail hero with score bar + pass-threshold marker, best-score line, per-question review cards (filter All / Missed), retake + next-module CTAs. Keyboard: <kbd>R</kbd> retakes.
+
+**Completion semantics:** a quiz is considered "completed" the first time the user scores **≥70%** (`QUIZ_PASS_THRESHOLD` in `src/lib/server/stats.ts`). On the first passing attempt the server inserts into `reading_completions` (same 5-pt reward, same streak credit, same achievement plumbing as readings) — there is no separate "Mark as complete" button; the threshold is the gate. Below-threshold attempts are still persisted to `quiz_attempts` so the intro screen can show "Best: X/Y · N attempts".
+
+### Quiz (`quiz.yaml`)
+
+Three question types are supported: `multiple_choice`, `true_false`, and `parametric`.
+
+```yaml
+# courses/<track-slug>/<NN>-<quiz-slug>/quiz.yaml
+questions:
+  - id: q1
+    type: multiple_choice          # multiple_choice | true_false | parametric
+    stem: "Question text ($LaTeX$ supported)"
+    options: ["Option A", "Option B", "Option C", "Option D"]   # multiple_choice only
+    correct: 1                     # 0-indexed for multiple_choice; boolean for true_false
+    explanation: "Shown after answering. LaTeX supported."
+
+  - id: q2
+    type: true_false
+    stem: "A higher pot odds percentage means you need less equity to call."
+    correct: true
+    explanation: "Correct. Pot odds % = call / (pot + call). A higher % means a worse price."
+
+  - id: q_pot_odds
+    type: parametric
+    stem_template: "The pot is ${{pot}}. Villain bets ${{bet}}. What are your pot odds (your call ÷ total pot after calling)?"
+    params:
+      pot: { min: 60, max: 360, step: 30 }
+      bet: { min: 20, max: 180, step: 20 }
+    correct_formula: "Math.round(bet / (pot + 2 * bet) * 100)"
+    distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
+      - "Math.round(pot / (pot + 2 * bet) * 100)"
+      - "Math.round((pot + bet) / (pot + 2 * bet) * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      You call ${{bet}} into a final pot of ${{pot + 2 * bet}}
+      (${{pot}} + ${{bet}} bet + ${{bet}} call).
+      Pot odds = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet/(pot+2*bet)*100)}}%.
+```
+
+#### Parametric question fields
+
+| Field | Description |
+|---|---|
+| `stem_template` | Question text with `{{expr}}` interpolation slots (see below). |
+| `params` | Map of param names to `{ min, max, step }`. Values are generated as multiples of `step` in `[min…max]`. |
+| `correct_formula` | JS expression (param names in scope) yielding the correct numeric answer. |
+| `distractor_formulas` | List of JS expressions yielding wrong-answer values (one per distractor). |
+| `answer_suffix` | String appended to every option label, e.g. `"%"` or `" ms"`. |
+| `explanation_template` | Explanation text with `{{expr}}` interpolation (same rules as stem_template). |
+
+#### Template interpolation (`{{expr}}`)
+
+Both `stem_template` and `explanation_template` support `{{expr}}` slots:
+
+- **Plain variable** — `{{pot}}` → replaced with the current value of param `pot` (e.g. `120`).
+- **JS expression** — `{{pot + 2 * bet}}` → evaluated with all param names in scope (e.g. `360`).
+
+#### Param generation
+
+For each `{ min, max, step }`, a random integer N in `[min/step … max/step]` is chosen and the final value is `N × step`. This guarantees "nice" multiples (e.g. multiples of 20 or 30) rather than arbitrary decimals.
+
+#### Re-randomization on retake
+
+"Retake quiz" calls `startNewAttempt()`, which re-runs `resolveQuestions()` and generates fresh random values for every parametric question. Static questions (`multiple_choice`, `true_false`) are unaffected — their options are re-normalized but not re-shuffled (they are not randomized to begin with).
 
 ### Markdown files
 All three Markdown files (`problem.md`, `theory.md`, `tips.md`) support:
@@ -220,6 +298,7 @@ src/lib/services/
 | `ExecutionService` | **API** | POSTs to `/api/execute` → `executor.ts` (UV/g++ via spawn) |
 | `StatsService` | **DuckDB** via `/api/stats` | Computed from `submissions` + `reading_completions` + `study_sessions` + course content; achievements persisted on first unlock |
 | `ReadingProgressService` | **DuckDB** via `/api/reading/...` | One row per reading module; first mark-complete preserved |
+| `QuizService` | **DuckDB** via `/api/quiz/...` | One row per attempt; first passing attempt also flips `reading_completions` so a quiz pass grants 5 pts the same way a reading completion does |
 | `StudyTimeService` | **DuckDB** via `/api/study-time/heartbeat` | Posts heartbeats with the running `active_ms` for the current session; server overwrites (never accumulates) |
 
 ### Persistence (DuckDB)
@@ -229,9 +308,10 @@ A single DuckDB file at `data/jeff-course.duckdb` is the source of truth for all
 - `drafts(problem_id, language, code, last_saved_at)` — PK on `(problem_id, language)`
 - `runs(problem_id, language, id, code, result, timestamp)` — PK on `(problem_id, language)`
 - `submissions(id, problem_id, language, code, result, timestamp)` — append-only
-- `reading_completions(problem_id, completed_at)` — PK on `problem_id`
+- `reading_completions(problem_id, completed_at)` — PK on `problem_id` (also used as the "quiz passed" flag — flipped by the first passing quiz attempt)
 - `achievements(id, unlocked_at)` — PK on `id` (only unlocked rows are stored)
 - `study_sessions(id, problem_id, started_at, active_ms, last_heartbeat_at)` — PK on `id` (one row per problem visit; upserted on every heartbeat)
+- `quiz_attempts(id, problem_id, total, correct, passed, duration_ms, completed_at)` — append-only; one row per completed pass through a quiz
 
 All tables are created via `CREATE TABLE IF NOT EXISTS` inside `dbReady`. There is no migration framework — for breaking schema changes, drop the file and restart.
 
@@ -313,12 +393,13 @@ When asked to create a new course/track:
 
 1. Create `courses/<track-slug>/course.yaml` with track metadata.
 2. For each module, create `courses/<track-slug>/<NN>-<problem-slug>/` containing:
-   - `module.yaml` (with `type: coding` or `type: reading`)
-   - `problem.md` — for coding: clear problem statement, constraints, expected I/O. For reading: textbook-style content with KaTeX and Mermaid as needed; end with a "Recap" and a link to the next module.
+   - `module.yaml` (with `type: coding`, `type: reading`, or `type: quiz`)
+   - `problem.md` — for coding: clear problem statement, constraints, expected I/O. For reading: textbook-style content with KaTeX and Mermaid as needed; end with a "Recap" and a link to the next module. For quiz: brief intro/instructions for the question set.
    - `theory.md` — conceptual background, formulas, diagrams in Markdown/LaTeX
    - `tips.md` — incremental hints (avoid spoiling the solution) and a "Going deeper" section with markdown links to references
 3. **Coding modules only:** add `starter/python.py` (and optionally `starter/cpp.cpp`), `solution/python.py`, `solution.md`, `requirements.txt` (if needed), and `expected_output/python.txt` (only when output is CPU-deterministic and easy to verify by hand — for GPU / model-load / network-dependent code, omit it; the platform returns a `pending` verdict).
 4. **Reading modules only:** the four Markdown files are sufficient — no `starter/`, no `expected_output/`, no `requirements.txt`. The parser will ignore those directories if present.
+5. **Quiz modules only:** add `quiz.yaml` with the question definitions (see Quiz format above). `problem.md` is used as intro/instructions. No `starter/`, no `expected_output/`, no `requirements.txt`.
 5. No code changes required — the platform auto-discovers new content on next request.
 
 A typical track mixes coding and reading modules: reading modules introduce the concepts and theory, coding modules let the user implement the ideas hands-on. The `protein-folding` track is the canonical example of this pattern (24 modules, ~half coding / half reading).
@@ -512,6 +593,7 @@ The gamification system is intentionally calm: it surfaces progress and rewards 
 | Solve an intermediate coding problem (first time) | 20 | First accepted submission |
 | Solve an advanced coding problem (first time) | 35 | First accepted submission |
 | Complete a reading module (first time) | 5 | User clicks "Mark as complete" |
+| Pass a quiz module (first time) | 5 | First attempt with score ≥ 70% — auto-credited, no manual button |
 | Accumulate active study time | 0 | Per-tick heartbeat (5 s) — unlocks `hours-*` achievements only; no direct points |
 
 Re-submitting an already-solved problem yields **no** additional points. This is by design — points reflect learning depth, not click frequency. Active study time deliberately grants **no** points — it would invite passive grinding. Instead it unlocks the four `hours-*` achievements (1h / 10h / 50h / 100h), which feel like quiet milestones rather than a meter you can game.
@@ -525,7 +607,9 @@ Re-submitting an already-solved problem yields **no** additional points. This is
 
 ### Achievements
 
-Fifteen achievements split across four categories (`milestone`, `consistency`, `depth`, `time`). The static list lives in `ACHIEVEMENT_DEFS` in `stats.ts`. Each achievement defines an ID, a title, a description, and a category; progress is evaluated against the user's current state on every `GET /api/stats`. When an achievement first unlocks, its ID + timestamp are persisted to the `achievements` table so the UI can show a stable "earned on" date. Locked achievements are not stored — they are re-evaluated from scratch each call.
+Seventeen achievements split across four categories (`milestone`, `consistency`, `depth`, `time`). The static list lives in `ACHIEVEMENT_DEFS` in `stats.ts`. Each achievement defines an ID, a title, a description, and a category; progress is evaluated against the user's current state on every `GET /api/stats`. When an achievement first unlocks, its ID + timestamp are persisted to the `achievements` table so the UI can show a stable "earned on" date. Locked achievements are not stored — they are re-evaluated from scratch each call.
+
+Quiz-specific achievements: `quiz-pass` ("Quiz Conqueror" — pass your first quiz) and `quiz-perfect` ("Perfect Score" — get 100% on a quiz). Quizzes also count toward `theorist` ("Complete 5 readings or quizzes") alongside readings.
 
 The four `time` achievements (`hours-1`, `hours-10`, `hours-50`, `hours-100`) read `totalActiveMs` from the study-time engine — see the "Time tracking" subsection below.
 
@@ -586,7 +670,7 @@ The aggregate is folded into `StatsSummary` as `totalActiveMs` + `activeMsToday`
 | User accounts | Add an auth layer; partition every table on `user_id` |
 | Remote course source | Implement `CourseRepository` against an API or DB |
 | Monaco workers | Replace no-op blob with proper Vite-bundled workers |
-| Quiz modules | Extend `type` field beyond `reading | coding`; add a quiz renderer + answer-checking service |
+| Quiz modules | **Implemented.** `type: quiz` in `module.yaml` + `quiz.yaml` questions file; `QuizView.svelte` renders the intro/quiz/results flow; attempts persisted in `quiz_attempts`; first ≥70% attempt flips `reading_completions` (5 pts + streak). |
 | Streak freeze (skip-day token) | Extend `stats.ts` streak computation; store freezes in a new table |
 
 ---
