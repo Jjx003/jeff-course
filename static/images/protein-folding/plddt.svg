@@ -1,0 +1,21 @@
+<svg width="500" height="200" viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
+<rect width="500" height="200" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+<text x="250" y="40" font-family="system-ui" font-size="20" font-weight="700" fill="#0f172a" text-anchor="middle">AlphaFold pLDDT Confidence Scale</text>
+<g transform="translate(50, 80)">
+<rect x="0" y="0" width="100" height="40" fill="#ff7d45"/>
+<rect x="100" y="0" width="100" height="40" fill="#ffdb13"/>
+<rect x="200" y="0" width="100" height="40" fill="#65cbf3"/>
+<rect x="300" y="0" width="100" height="40" fill="#0053d6"/>
+<line x1="100" y1="-5" x2="100" y2="45" stroke="#ffffff" stroke-width="2"/>
+<line x1="200" y1="-5" x2="200" y2="45" stroke="#ffffff" stroke-width="2"/>
+<line x1="300" y1="-5" x2="300" y2="45" stroke="#ffffff" stroke-width="2"/>
+<text x="50" y="25" font-family="system-ui" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">&lt; 50</text>
+<text x="150" y="25" font-family="system-ui" font-size="14" font-weight="700" fill="#1e293b" text-anchor="middle">50 - 70</text>
+<text x="250" y="25" font-family="system-ui" font-size="14" font-weight="700" fill="#1e293b" text-anchor="middle">70 - 90</text>
+<text x="350" y="25" font-family="system-ui" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">&gt; 90</text>
+<text x="50" y="65" font-family="system-ui" font-size="12" font-weight="600" fill="#c2410c" text-anchor="middle">Very Low (IDR)</text>
+<text x="150" y="65" font-family="system-ui" font-size="12" font-weight="600" fill="#a16207" text-anchor="middle">Low</text>
+<text x="250" y="65" font-family="system-ui" font-size="12" font-weight="600" fill="#0284c7" text-anchor="middle">Confident</text>
+<text x="350" y="65" font-family="system-ui" font-size="12" font-weight="600" fill="#1e3a8a" text-anchor="middle">Very High</text>
+</g>
+</svg>

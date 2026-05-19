@@ -1,0 +1,65 @@
+<svg width="500" height="300" viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
+<rect width="500" height="300" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+<text x="250" y="40" font-family="system-ui" font-size="20" font-weight="700" fill="#0f172a" text-anchor="middle">Co-evolution in an MSA</text>
+<g transform="translate(150, 80)">
+<text x="-10" y="20" font-family="system-ui" font-size="12" fill="#64748b" text-anchor="end">Seq 1</text>
+<rect x="0" y="0" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="20" y="20" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">A</text>
+<rect x="40" y="0" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="60" y="20" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">L</text>
+<rect x="80" y="0" width="40" height="30" fill="#fee2e2" stroke="#94a3b8" stroke-width="1"/>
+<text x="100" y="20" font-family="system-ui" font-size="14" font-weight="600" fill="#b91c1c" text-anchor="middle">D</text>
+<rect x="120" y="0" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="140" y="20" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">V</text>
+<rect x="160" y="0" width="40" height="30" fill="#dbeafe" stroke="#94a3b8" stroke-width="1"/>
+<text x="180" y="20" font-family="system-ui" font-size="14" font-weight="600" fill="#1d4ed8" text-anchor="middle">R</text>
+<text x="-10" y="50" font-family="system-ui" font-size="12" fill="#64748b" text-anchor="end">Seq 2</text>
+<rect x="0" y="30" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="20" y="50" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">A</text>
+<rect x="40" y="30" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="60" y="50" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">L</text>
+<rect x="80" y="30" width="40" height="30" fill="#fee2e2" stroke="#94a3b8" stroke-width="1"/>
+<text x="100" y="50" font-family="system-ui" font-size="14" font-weight="600" fill="#b91c1c" text-anchor="middle">E</text>
+<rect x="120" y="30" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="140" y="50" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">V</text>
+<rect x="160" y="30" width="40" height="30" fill="#dbeafe" stroke="#94a3b8" stroke-width="1"/>
+<text x="180" y="50" font-family="system-ui" font-size="14" font-weight="600" fill="#1d4ed8" text-anchor="middle">K</text>
+<text x="-10" y="80" font-family="system-ui" font-size="12" fill="#64748b" text-anchor="end">Seq 3</text>
+<rect x="0" y="60" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="20" y="80" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">A</text>
+<rect x="40" y="60" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="60" y="80" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">I</text>
+<rect x="80" y="60" width="40" height="30" fill="#fee2e2" stroke="#94a3b8" stroke-width="1"/>
+<text x="100" y="80" font-family="system-ui" font-size="14" font-weight="600" fill="#b91c1c" text-anchor="middle">D</text>
+<rect x="120" y="60" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="140" y="80" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">I</text>
+<rect x="160" y="60" width="40" height="30" fill="#dbeafe" stroke="#94a3b8" stroke-width="1"/>
+<text x="180" y="80" font-family="system-ui" font-size="14" font-weight="600" fill="#1d4ed8" text-anchor="middle">K</text>
+<text x="-10" y="110" font-family="system-ui" font-size="12" fill="#64748b" text-anchor="end">Seq 4</text>
+<rect x="0" y="90" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="20" y="110" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">A</text>
+<rect x="40" y="90" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="60" y="110" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">V</text>
+<rect x="80" y="90" width="40" height="30" fill="#dbeafe" stroke="#94a3b8" stroke-width="1"/>
+<text x="100" y="110" font-family="system-ui" font-size="14" font-weight="600" fill="#1d4ed8" text-anchor="middle">R</text>
+<rect x="120" y="90" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="140" y="110" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">V</text>
+<rect x="160" y="90" width="40" height="30" fill="#fee2e2" stroke="#94a3b8" stroke-width="1"/>
+<text x="180" y="110" font-family="system-ui" font-size="14" font-weight="600" fill="#b91c1c" text-anchor="middle">D</text>
+<text x="-10" y="140" font-family="system-ui" font-size="12" fill="#64748b" text-anchor="end">Seq 5</text>
+<rect x="0" y="120" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="20" y="140" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">A</text>
+<rect x="40" y="120" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="60" y="140" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">L</text>
+<rect x="80" y="120" width="40" height="30" fill="#dbeafe" stroke="#94a3b8" stroke-width="1"/>
+<text x="100" y="140" font-family="system-ui" font-size="14" font-weight="600" fill="#1d4ed8" text-anchor="middle">K</text>
+<rect x="120" y="120" width="40" height="30" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+<text x="140" y="140" font-family="system-ui" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">V</text>
+<rect x="160" y="120" width="40" height="30" fill="#fee2e2" stroke="#94a3b8" stroke-width="1"/>
+<text x="180" y="140" font-family="system-ui" font-size="14" font-weight="600" fill="#b91c1c" text-anchor="middle">E</text>
+</g>
+<path d="M 250 240 Q 290 270 330 240" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="4"/>
+<text x="290" y="270" font-family="system-ui" font-size="12" font-weight="600" fill="#6d28d9" text-anchor="middle">Charge-reversal mutations correlate</text>
+<text x="250" y="65" font-family="system-ui" font-size="12" fill="#64748b" text-anchor="middle">Position i</text>
+<text x="330" y="65" font-family="system-ui" font-size="12" fill="#64748b" text-anchor="middle">Position j</text>
+</svg>
