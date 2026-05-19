@@ -1,3 +1,9 @@
+# The Thermodynamics of Folding
+
+<p align="center">
+  <img src="/images/protein-folding/folding-funnel.svg" alt="Folding Funnel Energy Landscape" />
+</p>
+
 ## Breaking down $\Delta G$
 
 The total free energy change on folding is conventionally decomposed into

@@ -1,3 +1,9 @@
+# Masked Language Modeling
+
+<p align="center">
+  <img src="/images/protein-folding/mlm.svg" alt="Masked Language Modeling" />
+</p>
+
 ## The masked-language-model objective
 
 ESM-2's training objective is exactly the one BERT introduced for

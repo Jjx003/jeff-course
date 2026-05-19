@@ -1,3 +1,9 @@
+# MSAs and Evolutionary Conservation
+
+<p align="center">
+  <img src="/images/protein-folding/coevolution.svg" alt="Co-evolution in an MSA" />
+</p>
+
 ## What an MSA actually is
 
 A **multiple sequence alignment (MSA)** is a stack of sequences, all

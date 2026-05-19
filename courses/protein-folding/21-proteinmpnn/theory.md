@@ -1,3 +1,9 @@
+# ProteinMPNN and Inverse Folding
+
+<p align="center">
+  <img src="/images/protein-folding/inverse-folding.svg" alt="Inverse Folding with ProteinMPNN" />
+</p>
+
 ## The inverse folding problem
 
 **Forward folding** $f: \text{sequence} \to \text{structure}$ has been
