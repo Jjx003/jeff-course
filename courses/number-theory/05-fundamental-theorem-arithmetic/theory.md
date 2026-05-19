@@ -4,6 +4,8 @@
 
 An integer $p > 1$ is called a **prime number** if its only positive divisors are $1$ and $p$. An integer $n > 1$ that is not prime is called **composite**. 
 
+![Prime Distribution](/courses/number-theory/prime-distribution.svg)
+
 If $n$ is composite, there exist integers $a$ and $b$ such that $n = a \cdot b$, where $1 < a < n$ and $1 < b < n$.
 
 ### Euclid's Proof of Infinite Primes
@@ -18,17 +20,21 @@ Assume, for the sake of contradiction, that there are only finitely many prime n
 
 Consider the integer $N$ constructed by multiplying all these primes together and adding 1:
 
-$$N = p_1 \cdot p_2 \cdots p_k + 1$$
+$$
+N = p_1 \cdot p_2 \cdots p_k + 1
+$$
 
-Since $N > p_k$, the number $N$ itself is not in our list of all primes. Thus, $N$ must be a composite number, which means it must be divisible by at least one prime. 
+Since $N > p_k$, the number $N$ itself is not in our list of all primes. Whether $N$ is prime or composite, it has a prime divisor.
 
 Let $p_i$ be a prime that divides $N$. Because $p_i$ is in our complete list of primes, $p_i$ also divides the product $p_1 \cdot p_2 \cdots p_k$.
 
 If $p_i$ divides both $N$ and $p_1 \cdot p_2 \cdots p_k$, it must divide their difference:
 
-$$N - (p_1 \cdot p_2 \cdots p_k) = 1$$
+$$
+N - (p_1 \cdot p_2 \cdots p_k) = 1
+$$
 
-This implies that $p_i$ divides 1, which is impossible since $p_i \ge 2$. This contradiction means our initial assumption—that the number of primes is finite—must be false. Therefore, there are infinitely many primes. $\blacksquare$
+This implies that $p_i$ divides 1, which is impossible since $p_i \ge 2$. This contradiction means our initial assumption, that the number of primes is finite, must be false. Therefore, there are infinitely many primes. $\blacksquare$
 
 ## Euclid's Lemma
 
@@ -42,16 +48,25 @@ Suppose $p \mid ab$ but $p \nmid a$. Since $p$ is prime, its only positive divis
 
 By Bezout's Identity, there exist integers $x$ and $y$ such that:
 
-$$ax + py = 1$$
+$$
+ax + py = 1
+$$
 
 Multiply the entire equation by $b$:
 
-$$abx + pby = b$$
+$$
+abx + pby = b
+$$
 
 We know that $p$ divides $ab$, so we can write $ab = pk$ for some integer $k$. Substituting this into our equation gives:
 
-$$p(kx) + p(by) = b$$
-$$p(kx + by) = b$$
+$$
+p(kx) + p(by) = b
+$$
+
+$$
+p(kx + by) = b
+$$
 
 Since $kx + by$ is an integer, this shows that $p \mid b$. Thus, if $p \nmid a$, then $p \mid b$. $\blacksquare$
 
@@ -64,14 +79,18 @@ We now arrive at the central theorem of this module.
 **Proof of Existence:**
 
 We proceed by strong induction on $n$.
+
 Base case: $n = 2$ is prime, so it is its own prime factorization.
-Inductive step: Assume that every integer $k$ such that $2 \le k < n$ can be factored into primes. If $n$ is prime, we are done. If $n$ is composite, it can be written as $n = a \cdot b$, where $1 < a, b < n$. By our inductive hypothesis, both $a$ and $b$ can be factored into primes. Multiplying their factorizations yields a prime factorization for $n$. 
+
+Inductive step: Assume that every integer $k$ such that $2 \le k < n$ can be factored into primes. If $n$ is prime, we are done. If $n$ is composite, it can be written as $n = a \cdot b$, where $1 < a, b < n$. By our inductive hypothesis, both $a$ and $b$ can be factored into primes. Multiplying their factorizations yields a prime factorization for $n$.
 
 **Proof of Uniqueness:**
 
 Suppose an integer $n$ has two different prime factorizations:
 
-$$n = p_1 p_2 \cdots p_r = q_1 q_2 \cdots q_s$$
+$$
+n = p_1 p_2 \cdots p_r = q_1 q_2 \cdots q_s
+$$
 
 where the $p_i$ and $q_j$ are prime. We can assume the primes are sorted such that $p_1 \le p_2 \le \ldots \le p_r$ and $q_1 \le q_2 \le \ldots \le q_s$.
 

@@ -1,6 +1,6 @@
 # Hensel's Lemma
 
-Solving polynomial equations over the integers, like $x^2 \equiv a \pmod m$, is a common task in number theory and cryptography. 
+Solving polynomial equations over the integers, like $x^2 \equiv a \pmod{m}$, is a common task in number theory and cryptography.
 
 If we can factor $m$ into its prime factorization $m = p_1^{k_1} p_2^{k_2} \cdots p_r^{k_r}$, we can use the Chinese Remainder Theorem to break the problem down into solving $x^2 \equiv a \pmod{p_i^{k_i}}$ for each prime power, and then combine the results.
 

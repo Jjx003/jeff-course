@@ -11,11 +11,12 @@
    * All persistence (drafts, run history, submissions) is handled client-side
    * via the service layer. The server only supplies static course content.
    */
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import { browser } from '$app/environment';
   import { beforeNavigate } from '$app/navigation';
 
   import Header from '$lib/components/Header.svelte';
+  import CourseExplorer, { type ExplorerSection } from '$lib/components/CourseExplorer.svelte';
   import SplitPane from '$lib/components/SplitPane.svelte';
   import TabGroup from '$lib/components/TabGroup.svelte';
   import MarkdownRenderer from '$lib/components/MarkdownRenderer.svelte';
@@ -297,6 +298,38 @@
     ...(problem.tabs.solution ? [{ id: 'solution', label: 'Solution' }] : [])
   ]);
   let activeTabId = $state('problem');
+  let tabScroll = $state<HTMLElement | undefined>(undefined);
+  let explorerOpen = $state(true);
+  let explorerSections = $derived.by<ExplorerSection[]>(() => [
+    { id: 'problem', label: 'Problem', content: problem.tabs.problem },
+    { id: 'theory', label: 'Theory', content: problem.tabs.theory },
+    { id: 'tips', label: 'Tips', content: problem.tabs.tips },
+    ...(problem.tabs.solution ? [{ id: 'solution', label: 'Solution', content: problem.tabs.solution }] : [])
+  ]);
+
+  async function selectExplorerSection(sectionId: string) {
+    activeTabId = sectionId;
+    await tick();
+    tabScroll?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function selectExplorerHeading(sectionId: string, headingId: string) {
+    activeTabId = sectionId;
+    await tick();
+    scrollWithin(tabScroll, tabScroll?.querySelector<HTMLElement>(`[data-markdown-heading-id="${headingId}"]`));
+  }
+
+  function scrollWithin(container: HTMLElement | undefined, target: HTMLElement | null | undefined) {
+    if (!container || !target) return;
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const rawTop = targetRect.top - containerRect.top + container.scrollTop - 12;
+    const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollTo({
+      top: Math.min(Math.max(0, rawTop), maxTop),
+      behavior: 'smooth',
+    });
+  }
 
   // Solution gate
   let solutionRevealed = $state(false);
@@ -859,17 +892,29 @@
             </div>
           </div>
 
-          <!-- Tabs -->
-          <div class="tab-area">
-            <TabGroup tabs={TABS} bind:activeId={activeTabId} children={tabContent} />
-            {#snippet tabContent({ activeId }: { activeId: string })}
-              <div class="tab-scroll">
+          <div class="instructions-body">
+            <CourseExplorer
+              {track}
+              currentSlug={problem.slug}
+              sections={explorerSections}
+              activeSectionId={activeTabId}
+              bind:open={explorerOpen}
+              onsection={(sectionId) => void selectExplorerSection(sectionId)}
+              onheading={(sectionId, headingId) => void selectExplorerHeading(sectionId, headingId)}
+            />
+
+            <div class="instructions-content">
+              <!-- Tabs -->
+              <div class="tab-area">
+                <TabGroup tabs={TABS} bind:activeId={activeTabId} children={tabContent} />
+                {#snippet tabContent({ activeId }: { activeId: string })}
+                  <div class="tab-scroll" bind:this={tabScroll}>
                 {#if activeId === 'problem'}
-                  <MarkdownRenderer content={problem.tabs.problem} variant="study" />
+                  <MarkdownRenderer content={problem.tabs.problem} variant="study" headingPrefix="problem" />
                 {:else if activeId === 'theory'}
-                  <MarkdownRenderer content={problem.tabs.theory} variant="study" />
+                  <MarkdownRenderer content={problem.tabs.theory} variant="study" headingPrefix="theory" />
                 {:else if activeId === 'tips'}
-                  <MarkdownRenderer content={problem.tabs.tips} variant="study" />
+                  <MarkdownRenderer content={problem.tabs.tips} variant="study" headingPrefix="tips" />
                 {:else if activeId === 'solution'}
                   {#if !solutionRevealed}
                     <!-- Confirm gate -->
@@ -899,7 +944,7 @@
                     </div>
                   {:else}
                     <!-- Solution content -->
-                    <MarkdownRenderer content={problem.tabs.solution ?? ''} variant="study" />
+                    <MarkdownRenderer content={problem.tabs.solution ?? ''} variant="study" headingPrefix="solution" />
                     {#if problem.solutionCode}
                       <div class="solution-code-section">
                         <h3 class="solution-code-title">Solution Code</h3>
@@ -915,16 +960,18 @@
                     {/if}
                   {/if}
                 {/if}
+                  </div>
+                {/snippet}
               </div>
-            {/snippet}
-          </div>
 
-          <!-- Prev / Next navigation -->
-          <ProblemNav
-            trackSlug={track.slug}
-            {prevProblem}
-            {nextProblem}
-          />
+              <!-- Prev / Next navigation -->
+              <ProblemNav
+                trackSlug={track.slug}
+                {prevProblem}
+                {nextProblem}
+              />
+            </div>
+          </div>
         </div>
       {/snippet}
 
@@ -1234,6 +1281,25 @@
     padding: 1rem 1.25rem 0.75rem;
     border-bottom: 1px solid #1e293b;
     flex-shrink: 0;
+  }
+
+  .instructions-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+  }
+
+  .instructions-body :global(.course-explorer:not(.collapsed)) {
+    width: 205px;
+    flex-basis: 205px;
+  }
+
+  .instructions-content {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .tab-area {

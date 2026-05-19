@@ -118,7 +118,8 @@ jeff-course/
     │       ├── AchievementCard.svelte     # gamification: locked/unlocked card
     │       ├── RewardToast.svelte         # gamification: non-intrusive notification
     │       ├── QuizView.svelte            # quiz module: intro → quiz → results phases
-    │       └── InlineMarkdown.svelte      # tiny LaTeX/markdown renderer for option labels
+    │       ├── InlineMarkdown.svelte      # tiny LaTeX/markdown renderer for option labels
+    │       └── CourseExplorer.svelte      # reader-style side nav: current-page markdown headings + track search/modules
     └── routes/
         ├── +layout.svelte
         ├── +page.svelte                                      # Landing page

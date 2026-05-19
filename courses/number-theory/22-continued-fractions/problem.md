@@ -9,6 +9,7 @@ Where $a_0$ is an integer, and $a_1, \dots, a_n$ are positive integers. We typic
 Continued fractions offer a powerful way to represent numbers. While decimals depend on an arbitrary base (like 10), continued fractions reveal intrinsic properties of the numbers themselves. Rational numbers always have finite continued fractions, while irrational numbers have infinite ones. 
 
 In this module, you will learn:
+
 - How to compute the continued fraction of a number.
 - What convergents are and how to efficiently calculate them.
 - The fundamental properties of these convergents and why they represent the "best" rational approximations.

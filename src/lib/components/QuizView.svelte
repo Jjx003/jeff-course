@@ -19,9 +19,10 @@
    * Supports `multiple_choice`, `true_false`, and `parametric` question types.
    * Parametric questions re-randomize on every attempt.
    */
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { browser } from '$app/environment';
   import Header from '$lib/components/Header.svelte';
+  import CourseExplorer, { type ExplorerSection } from '$lib/components/CourseExplorer.svelte';
   import MarkdownRenderer from '$lib/components/MarkdownRenderer.svelte';
   import InlineMarkdown from '$lib/components/InlineMarkdown.svelte';
   import ProblemNav from '$lib/components/ProblemNav.svelte';
@@ -415,6 +416,37 @@
     }
     return indices;
   });
+
+  let quizMain = $state<HTMLElement | undefined>(undefined);
+  let explorerOpen = $state(true);
+  let activeExplorerSection = $state('problem');
+  let explorerSections = $derived.by<ExplorerSection[]>(() => [
+    { id: 'problem', label: 'Briefing', content: problem.tabs.problem }
+  ]);
+
+  async function scrollToExplorerTarget(sectionId: string, headingId?: string) {
+    activeExplorerSection = sectionId;
+    if (sectionId === 'problem' && phase !== 'intro') {
+      phase = 'intro';
+    }
+    await tick();
+    const selector = headingId
+      ? `[data-markdown-heading-id="${headingId}"]`
+      : `[data-explorer-section="${sectionId}"]`;
+    scrollWithin(quizMain, quizMain?.querySelector<HTMLElement>(selector));
+  }
+
+  function scrollWithin(container: HTMLElement | undefined, target: HTMLElement | null | undefined) {
+    if (!container || !target) return;
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const rawTop = targetRect.top - containerRect.top + container.scrollTop - 12;
+    const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollTo({
+      top: Math.min(Math.max(0, rawTop), maxTop),
+      behavior: 'smooth',
+    });
+  }
 </script>
 
 <svelte:window onkeydown={onKeyDown} />
@@ -428,10 +460,21 @@
     ]}
   />
 
-  <main class="quiz-main">
-    <article class="quiz-article">
+  <main class="quiz-main" bind:this={quizMain}>
+    <div class="quiz-layout">
+      <CourseExplorer
+        {track}
+        currentSlug={problem.slug}
+        sections={explorerSections}
+        activeSectionId={activeExplorerSection}
+        bind:open={explorerOpen}
+        onsection={(sectionId) => void scrollToExplorerTarget(sectionId)}
+        onheading={(sectionId, headingId) => void scrollToExplorerTarget(sectionId, headingId)}
+      />
+
+      <article class="quiz-article">
       <!-- Meta header — present in every phase so the user always knows where they are. -->
-      <header class="quiz-header">
+      <header class="quiz-header" data-explorer-section="problem">
         <div class="quiz-eyebrow">
           <span class="quiz-eyebrow-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -479,7 +522,7 @@
       {:else if phase === 'intro'}
         {#if problem.tabs.problem.trim()}
           <section class="quiz-intro-body">
-            <MarkdownRenderer content={problem.tabs.problem} variant="study" />
+            <MarkdownRenderer content={problem.tabs.problem} variant="study" headingPrefix="problem" />
           </section>
         {/if}
 
@@ -836,7 +879,8 @@
           {nextProblem}
         />
       </footer>
-    </article>
+      </article>
+    </div>
   </main>
 </div>
 
@@ -856,12 +900,25 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 2rem 1.5rem 4rem;
+  }
+
+  .quiz-layout {
+    min-height: 100%;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .quiz-layout :global(.course-explorer) {
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 56px);
   }
 
   .quiz-article {
+    width: min(100%, 760px);
     max-width: 760px;
     margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
   }
 
   /* ── Header ── */

@@ -7,7 +7,10 @@ Your task is to write a function `solve_crt(remainders, moduli)` that takes two 
 2. `moduli`: A list of the corresponding moduli ($m_i$).
 
 The function should return the smallest non-negative integer $x$ that satisfies the system of congruences:
-$$ x \equiv a_i \pmod{m_i} \text{ for all } i $$
+
+$$
+x \equiv a_i \pmod{m_i} \quad \text{for all } i
+$$
 
 You are guaranteed that all moduli are strictly greater than 1, and that they are pairwise coprime.
 

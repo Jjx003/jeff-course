@@ -19,13 +19,40 @@
   interface Props {
     content: string;
     variant?: 'default' | 'reading' | 'study' | 'compact';
+    headingPrefix?: string;
   }
 
-  let { content, variant = 'default' }: Props = $props();
+  let { content, variant = 'default', headingPrefix = 'md' }: Props = $props();
 
   let html = $state('');
   let loading = $state(true);
   let container = $state<HTMLDivElement>();
+
+  function slugify(text: string): string {
+    const slug = text
+      .toLowerCase()
+      .replace(/<[^>]+>/g, '')
+      .replace(/[`*_~[\]()]/g, '')
+      .replace(/&[a-z0-9#]+;/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return slug || 'section';
+  }
+
+  function assignHeadingIds(root: HTMLElement | null | undefined) {
+    if (!root) return;
+    const seen = new Map<string, number>();
+    const headings = root.querySelectorAll<HTMLHeadingElement>('h1, h2, h3, h4');
+
+    for (const heading of headings) {
+      const base = `${headingPrefix}-${slugify(heading.textContent ?? '')}`;
+      const count = seen.get(base) ?? 0;
+      seen.set(base, count + 1);
+      const id = count === 0 ? base : `${base}-${count + 1}`;
+      heading.id = id;
+      heading.dataset.markdownHeadingId = id;
+    }
+  }
 
   /**
    * Find every <pre><code class="language-mermaid">…</code></pre> in the
@@ -98,15 +125,20 @@
     }
     loading = false;
     // After Svelte flushes the new HTML into the container, upgrade mermaid blocks.
-    queueMicrotask(() => upgradeMermaidBlocks(container));
+    queueMicrotask(() => {
+      assignHeadingIds(container);
+      upgradeMermaidBlocks(container);
+    });
   }
 
   $effect(() => {
     const _ = content;
+    const __ = headingPrefix;
     render();
   });
 
   onMount(() => {
+    assignHeadingIds(container);
     upgradeMermaidBlocks(container);
   });
 </script>
@@ -150,5 +182,8 @@
   }
   :global(.mermaid-error) {
     border-color: #b91c1c !important;
+  }
+  :global(.prose :where(h1, h2, h3, h4)[data-markdown-heading-id]) {
+    scroll-margin-top: 1.25rem;
   }
 </style>

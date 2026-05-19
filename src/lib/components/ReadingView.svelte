@@ -10,9 +10,10 @@
    * Reading modules have a "Mark as complete" CTA so they count toward
    * streaks, points, and achievements.
    */
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { browser } from '$app/environment';
   import Header from '$lib/components/Header.svelte';
+  import CourseExplorer, { type ExplorerSection } from '$lib/components/CourseExplorer.svelte';
   import MarkdownRenderer from '$lib/components/MarkdownRenderer.svelte';
   import ProblemNav from '$lib/components/ProblemNav.svelte';
   import type { Problem, ProblemMeta, Track } from '$lib/types/course.js';
@@ -45,6 +46,35 @@
 
   let hasTheory = $derived(problem.tabs.theory.trim().length > 0);
   let hasFurther = $derived(problem.tabs.tips.trim().length > 0);
+  let readingMain = $state<HTMLElement | undefined>(undefined);
+  let explorerOpen = $state(true);
+  let activeExplorerSection = $state('problem');
+  let explorerSections = $derived.by<ExplorerSection[]>(() => [
+    { id: 'problem', label: 'Overview', content: problem.tabs.problem },
+    ...(hasTheory ? [{ id: 'theory', label: 'Deep dive', content: problem.tabs.theory }] : []),
+    ...(hasFurther ? [{ id: 'tips', label: 'Further reading', content: problem.tabs.tips }] : [])
+  ]);
+
+  async function scrollToExplorerTarget(sectionId: string, headingId?: string) {
+    activeExplorerSection = sectionId;
+    await tick();
+    const selector = headingId
+      ? `[data-markdown-heading-id="${headingId}"]`
+      : `[data-explorer-section="${sectionId}"]`;
+    scrollWithin(readingMain, readingMain?.querySelector<HTMLElement>(selector));
+  }
+
+  function scrollWithin(container: HTMLElement | undefined, target: HTMLElement | null | undefined) {
+    if (!container || !target) return;
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const rawTop = targetRect.top - containerRect.top + container.scrollTop - 12;
+    const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollTo({
+      top: Math.min(Math.max(0, rawTop), maxTop),
+      behavior: 'smooth',
+    });
+  }
 
   // ── Completion state ──────────────────────────────────────────────────
   let problemId = $derived(`${track.slug}/${problem.slug}`);
@@ -108,10 +138,21 @@
     ]}
   />
 
-  <main class="reading-main">
-    <article class="reading-article">
+  <main class="reading-main" bind:this={readingMain}>
+    <div class="reading-layout">
+      <CourseExplorer
+        {track}
+        currentSlug={problem.slug}
+        sections={explorerSections}
+        activeSectionId={activeExplorerSection}
+        bind:open={explorerOpen}
+        onsection={(sectionId) => void scrollToExplorerTarget(sectionId)}
+        onheading={(sectionId, headingId) => void scrollToExplorerTarget(sectionId, headingId)}
+      />
+
+      <article class="reading-article">
       <!-- Meta header -->
-      <header class="reading-header">
+      <header class="reading-header" data-explorer-section="problem">
         <div class="reading-eyebrow">
           <span class="text-slate-500 font-mono text-xs">
             {track.title} · Module {problem.order.toString().padStart(2, '0')}
@@ -134,22 +175,22 @@
 
       <!-- Main body (problem.md) -->
       <section class="reading-body">
-        <MarkdownRenderer content={problem.tabs.problem} variant="reading" />
+        <MarkdownRenderer content={problem.tabs.problem} variant="reading" headingPrefix="problem" />
       </section>
 
       <!-- Optional theory.md as a deep-dive appendix -->
       {#if hasTheory}
-        <section class="reading-section">
+        <section class="reading-section" data-explorer-section="theory">
           <h2 class="reading-section-title">Deep dive</h2>
-          <MarkdownRenderer content={problem.tabs.theory} variant="reading" />
+          <MarkdownRenderer content={problem.tabs.theory} variant="reading" headingPrefix="theory" />
         </section>
       {/if}
 
       <!-- Optional tips.md repurposed as "further reading" -->
       {#if hasFurther}
-        <section class="reading-section">
+        <section class="reading-section" data-explorer-section="tips">
           <h2 class="reading-section-title">Further reading</h2>
-          <MarkdownRenderer content={problem.tabs.tips} variant="reading" />
+          <MarkdownRenderer content={problem.tabs.tips} variant="reading" headingPrefix="tips" />
         </section>
       {/if}
 
@@ -192,7 +233,8 @@
           {nextProblem}
         />
       </footer>
-    </article>
+      </article>
+    </div>
   </main>
 </div>
 
@@ -212,12 +254,25 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 2rem 1.5rem 4rem;
+  }
+
+  .reading-layout {
+    min-height: 100%;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .reading-layout :global(.course-explorer) {
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 56px);
   }
 
   .reading-article {
+    width: min(100%, 820px);
     max-width: 820px;
     margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
   }
 
   .reading-header {

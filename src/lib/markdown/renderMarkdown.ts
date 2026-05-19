@@ -52,8 +52,8 @@ function normalizeMathBlockSyntax(markdown: string): string {
     .map((chunk) => {
       if (chunk.startsWith('```')) return chunk;
       return chunk
-        .replace(/\$\$[ \t]+([\s\S]*?)[ \t]+\$\$/g, (_match, body: string) => {
-          return `$$\n${body.trim()}\n$$`;
+        .replace(/^([ \t]*)\$\$\s*(.*?)\s*\$\$[ \t]*$/gm, (_match, indent: string, body: string) => {
+          return `${indent}$$\n${indent}${body.trim()}\n${indent}$$`;
         })
         .replace(/\\begin\{align\*?\}/g, '\\begin{aligned}')
         .replace(/\\end\{align\*?\}/g, '\\end{aligned}');

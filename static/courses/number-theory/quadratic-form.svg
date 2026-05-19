@@ -1,0 +1,17 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+<path d="M 173.0 151.0 L 152.0 176.5 L 131.0 187.0 L 110.0 182.5 L 89.0 163.0 L 68.0 128.5 L 47.0 79.0" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 203.0 188.5 L 182.0 214.0 L 161.0 224.5 L 140.0 220.0 L 119.0 200.5 L 98.0 166.0 L 77.00000000000001 116.5" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 233.0 211.0 L 212.0 236.5 L 191.0 247.0 L 170.0 242.5 L 149.0 223.0 L 128.0 188.5 L 107.00000000000001 139.0" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 263.0 218.5 L 242.0 244.0 L 221.0 254.5 L 200.0 250.0 L 179.0 230.5 L 158.0 196.0 L 137.0 146.5" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 293.0 211.0 L 272.0 236.5 L 251.0 247.0 L 230.0 242.5 L 209.0 223.0 L 188.0 188.5 L 167.0 139.0" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 323.0 188.5 L 302.0 214.0 L 281.0 224.5 L 260.0 220.0 L 239.0 200.5 L 218.0 166.0 L 197.0 116.5" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 353.0 151.0 L 332.0 176.5 L 311.0 187.0 L 290.0 182.5 L 269.0 163.0 L 248.0 128.5 L 227.0 79.0" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 173.0 151.0 L 203.0 188.5 L 233.0 211.0 L 263.0 218.5 L 293.0 211.0 L 323.0 188.5 L 353.0 151.0" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 152.0 176.5 L 182.0 214.0 L 212.0 236.5 L 242.0 244.0 L 272.0 236.5 L 302.0 214.0 L 332.0 176.5" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 131.0 187.0 L 161.0 224.5 L 191.0 247.0 L 221.0 254.5 L 251.0 247.0 L 281.0 224.5 L 311.0 187.0" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 110.0 182.5 L 140.0 220.0 L 170.0 242.5 L 200.0 250.0 L 230.0 242.5 L 260.0 220.0 L 290.0 182.5" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 89.0 163.0 L 119.0 200.5 L 149.0 223.0 L 179.0 230.5 L 209.0 223.0 L 239.0 200.5 L 269.0 163.0" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 68.0 128.5 L 98.0 166.0 L 128.0 188.5 L 158.0 196.0 L 188.0 188.5 L 218.0 166.0 L 248.0 128.5" fill="none" stroke="#4A5568" stroke-width="1" />
+<path d="M 47.0 79.0 L 77.00000000000001 116.5 L 107.00000000000001 139.0 L 137.0 146.5 L 167.0 139.0 L 197.0 116.5 L 227.0 79.0" fill="none" stroke="#4A5568" stroke-width="1" />
+<text x="200.0" y="290" font-family="Arial" font-size="12" fill="#A0AEC0" text-anchor="middle">Positive Definite Quadratic Form ax² + bxy + cy²</text>
+</svg>

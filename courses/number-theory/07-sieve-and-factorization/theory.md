@@ -16,6 +16,11 @@ What if we want to generate *all* primes up to $N$? We could run trial division 
 
 Instead of testing each number for primality, the **Sieve of Eratosthenes** works by assuming all numbers are prime, and then systematically crossing out the multiples of known primes.
 
+| 2 | 3 | ~~4~~ | 5 | ~~6~~ | 7 | ~~8~~ | ~~9~~ | ~~10~~ |
+|---|---|---|---|---|---|---|---|---|
+| 11 | ~~12~~ | 13 | ~~14~~ | ~~15~~ | ~~16~~ | 17 | ~~18~~ | 19 |
+| ~~20~~ | ~~21~~ | ~~22~~ | 23 | ~~24~~ | ~~25~~ | ~~26~~ | ~~27~~ | ~~28~~ |
+
 1. Create a boolean array `is_prime` of size $N+1$, initialized to `True`. Set `is_prime[0]` and `is_prime[1]` to `False`.
 2. Loop $p$ from $2$ to $\sqrt{N}$.
 3. If `is_prime[p]` is `True`, it is a prime. We then iterate through all multiples of $p$ ($p^2, p^2+p, p^2+2p, \dots$) up to $N$ and mark them as `False`.

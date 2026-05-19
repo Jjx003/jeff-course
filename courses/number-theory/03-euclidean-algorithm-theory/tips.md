@@ -11,8 +11,13 @@
 
 When tracing the algorithm by hand, you only need to keep track of the $a$, $b$, and $r$ values at each step. The quotient $q$ is just a stepping stone to find $r$.
 You can think of each step as:
-$$ \text{new\_a} = \text{old\_b} $$
-$$ \text{new\_b} = \text{old\_a} \bmod \text{old\_b} $$
+$$
+\text{new\_a} = \text{old\_b}
+$$
+
+$$
+\text{new\_b} = \text{old\_a} \bmod \text{old\_b}
+$$
 
 ### Going Deeper
 

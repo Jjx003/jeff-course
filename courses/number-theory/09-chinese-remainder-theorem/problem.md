@@ -5,9 +5,17 @@ Imagine you have a bag of coins. When you count them by 3s, there are 2 left ove
 This classical problem from the Chinese mathematician Sun Tzu (3rd to 5th century CE) is an example of a system of simultaneous congruences. 
 
 We can write this mathematically as:
-$$ x \equiv 2 \pmod 3 $$
-$$ x \equiv 3 \pmod 5 $$
-$$ x \equiv 2 \pmod 7 $$
+$$
+x \equiv 2 \pmod{3}
+$$
+
+$$
+x \equiv 3 \pmod{5}
+$$
+
+$$
+x \equiv 2 \pmod{7}
+$$
 
 The **Chinese Remainder Theorem (CRT)** guarantees that if the moduli are pairwise coprime (i.e., no two moduli share a common factor greater than 1), there exists a unique solution modulo the product of the moduli.
 

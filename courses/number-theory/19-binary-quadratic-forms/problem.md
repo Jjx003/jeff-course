@@ -2,7 +2,9 @@ We've spent considerable time understanding equations of one variable, particula
 
 A **binary quadratic form** is a homogeneous polynomial of degree 2 in two variables, $x$ and $y$:
 
-$$ f(x, y) = ax^2 + bxy + cy^2 $$
+$$
+f(x, y) = ax^2 + bxy + cy^2
+$$
 
 where $a, b, c$ are integers. We often abbreviate this form as $(a, b, c)$.
 
@@ -10,9 +12,12 @@ where $a, b, c$ are integers. We often abbreviate this form as $(a, b, c)$.
 
 Given a specific binary quadratic form $f$, which integers $n$ can be represented by it? That is, for which $n$ do there exist integers $x$ and $y$ such that:
 
-$$ ax^2 + bxy + cy^2 = n $$
+$$
+ax^2 + bxy + cy^2 = n
+$$
 
-This question generalize many famous problems in number theory:
+This question generalizes many famous problems in number theory:
+
 1. **Sums of squares:** Which numbers are of the form $x^2 + y^2$? (Here $a=1, b=0, c=1$).
 2. **Pell's equation:** $x^2 - dy^2 = 1$. (Here $a=1, b=0, c=-d$).
 

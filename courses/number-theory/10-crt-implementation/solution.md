@@ -8,7 +8,7 @@ for m in moduli:
     M *= m
 ```
 
-For each congruence $x \equiv a_i \pmod {m_i}$, compute `Mi = M // m_i`. This number is divisible by every other modulus, but not by `m_i`.
+For each congruence $x \equiv a_i \pmod{m_i}$, compute `Mi = M // m_i`. This number is divisible by every other modulus, but not by `m_i`.
 
 The modular inverse
 

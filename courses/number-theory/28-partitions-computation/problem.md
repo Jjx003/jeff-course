@@ -4,9 +4,12 @@ The partition function $p(n)$ counts the number of ways to write $n$ as a sum of
 
 In this exercise, you will implement an efficient algorithm to compute $p(n)$ using **Euler's Pentagonal Number recurrence**:
 
-$$ p(n) = \sum_{k \neq 0} (-1)^{k-1} p(n - g_k) $$
+$$
+p(n) = \sum_{j=1}^{\infty} (-1)^{j-1}
+\left(p(n - g_j) + p(n - g_{-j})\right)
+$$
 
-where $g_k = \frac{k(3k-1)}{2}$ are the generalized pentagonal numbers ($k = 1, -1, 2, -2, 3, -3, \dots$).
+where $g_m = \frac{m(3m-1)}{2}$ are the generalized pentagonal numbers for $m = 1, -1, 2, -2, 3, -3, \dots$.
 
 ### Task
 Implement a function `partition_function(n)` that returns the value of $p(n)$.

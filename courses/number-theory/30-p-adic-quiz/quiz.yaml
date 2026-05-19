@@ -1,15 +1,17 @@
 questions:
   - id: v_p_val
     type: parametric
-    stem_template: "What is the $p$-adic valuation $v_{{p}}({{{num}}}/{{{den}}})$ for $p = {{p}}$?"
+    stem_template: "What is the $p$-adic valuation $v_5({{num}}/{{den}})$?"
     params:
-      p: { min: 2, max: 7, step: 1 } # Filter to primes manually if needed, but 2,3,5,7 are common
+      p: { min: 5, max: 5, step: 1 }
       num: { min: 1, max: 50, step: 1 }
       den: { min: 1, max: 50, step: 1 }
-    # Note: p might not be prime in random gen, so I'll restrict p to a set of primes in logic if possible
-    # But since I can't easily do sets, I'll use multiple choice for primes
     correct_formula: "((n, d, p) => { let v = 0; let x_n = n; while(x_n % p === 0 && x_n !== 0) { v++; x_n /= p; }; let x_d = d; while(x_d % p === 0 && x_d !== 0) { v--; x_d /= p; }; return v; })(num, den, p)"
-    explanation_template: "We write the fraction as $p^v \cdot a/b$. Factoring out $p={{p}}$ from {{num}}/{{den}} gives valuation {{((n, d, p) => { let v = 0; let x_n = n; while(x_n % p === 0 && x_n !== 0) { v++; x_n /= p; }; let x_d = d; while(x_d % p === 0 && x_d !== 0) { v--; x_d /= p; }; return v; })(num, den, p)}}."
+    distractor_formulas:
+      - "((n, d, p) => { let v = 0; let x_n = n; while(x_n % p === 0 && x_n !== 0) { v++; x_n /= p; }; let x_d = d; while(x_d % p === 0 && x_d !== 0) { v--; x_d /= p; }; return v + 1; })(num, den, p)"
+      - "((n, d, p) => { let v = 0; let x_n = n; while(x_n % p === 0 && x_n !== 0) { v++; x_n /= p; }; let x_d = d; while(x_d % p === 0 && x_d !== 0) { v--; x_d /= p; }; return v - 1; })(num, den, p)"
+      - "((n, d, p) => { let v = 0; let x_n = n; while(x_n % p === 0 && x_n !== 0) { v++; x_n /= p; }; let x_d = d; while(x_d % p === 0 && x_d !== 0) { v--; x_d /= p; }; return v + 2; })(num, den, p)"
+    explanation_template: "Write the fraction as $5^v \\cdot a/b$ with neither $a$ nor $b$ divisible by $5$. Factoring out powers of $5$ from {{num}}/{{den}} gives valuation {{((n, d, p) => { let v = 0; let x_n = n; while(x_n % p === 0 && x_n !== 0) { v++; x_n /= p; }; let x_d = d; while(x_d % p === 0 && x_d !== 0) { v--; x_d /= p; }; return v; })(num, den, p)}}."
 
   - id: norm_p
     type: multiple_choice

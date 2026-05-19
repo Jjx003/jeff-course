@@ -1,0 +1,25 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+<circle cx="150.0" cy="150.0" r="100" fill="none" stroke="#4A5568" stroke-dasharray="2" />
+<circle cx="150.0" cy="50.0" r="15" fill="#2D3748" stroke="#4A5568" />
+<text x="150.0" y="55.0" font-family="Arial" font-size="12" fill="#E2E8F0" text-anchor="middle">0</text>
+<circle cx="228.183148246803" cy="87.65101981412664" r="15" fill="#2D3748" stroke="#4A5568" />
+<text x="228.183148246803" y="92.65101981412664" font-family="Arial" font-size="12" fill="#E2E8F0" text-anchor="middle">1</text>
+<circle cx="247.49279121818236" cy="172.25209339563145" r="15" fill="#2D3748" stroke="#4A5568" />
+<text x="247.49279121818236" y="177.25209339563145" font-family="Arial" font-size="12" fill="#E2E8F0" text-anchor="middle">2</text>
+<circle cx="193.38837391175582" cy="240.0968867902419" r="15" fill="#2D3748" stroke="#4A5568" />
+<text x="193.38837391175582" y="245.0968867902419" font-family="Arial" font-size="12" fill="#E2E8F0" text-anchor="middle">3</text>
+<circle cx="106.6116260882442" cy="240.0968867902419" r="15" fill="#2D3748" stroke="#4A5568" />
+<text x="106.6116260882442" y="245.0968867902419" font-family="Arial" font-size="12" fill="#E2E8F0" text-anchor="middle">4</text>
+<circle cx="52.50720878181764" cy="172.25209339563145" r="15" fill="#2D3748" stroke="#4A5568" />
+<text x="52.50720878181764" y="177.25209339563145" font-family="Arial" font-size="12" fill="#E2E8F0" text-anchor="middle">5</text>
+<circle cx="71.81685175319701" cy="87.65101981412667" r="15" fill="#2D3748" stroke="#4A5568" />
+<text x="71.81685175319701" y="92.65101981412667" font-family="Arial" font-size="12" fill="#E2E8F0" text-anchor="middle">6</text>
+<line x1="224.17777143558934" y1="105.19972223339947" x2="197.3937507229695" y2="222.5481843709691" stroke="#F6AD55" stroke-width="2" marker-end="url(#arrow)" />
+<line x1="204.61119034521303" y1="226.02392010581738" x2="236.26997478472515" y2="186.32506008005598" stroke="#F6AD55" stroke-width="2" marker-end="url(#arrow)" />
+<line x1="231.27535159593882" y1="164.4421860915154" x2="88.03429137544056" y2="95.46092711824272" stroke="#F6AD55" stroke-width="2" marker-end="url(#arrow)" />
+<line x1="75.82222856441068" y1="105.1997222333995" x2="102.60624927703053" y2="222.5481843709691" stroke="#F6AD55" stroke-width="2" marker-end="url(#arrow)" />
+<line x1="95.388809654787" y1="226.02392010581738" x2="63.73002521527484" y2="186.32506008005598" stroke="#F6AD55" stroke-width="2" marker-end="url(#arrow)" />
+<line x1="68.72464840406118" y1="164.4421860915154" x2="211.96570862455945" y2="95.4609271182427" stroke="#F6AD55" stroke-width="2" marker-end="url(#arrow)" />
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L0,10 L10,5 Z" fill="#F6AD55" /></marker></defs>
+<text x="150.0" y="150.0" font-family="Arial" font-size="14" fill="#63B3ED" text-anchor="middle">Order of 3 mod 7</text>
+</svg>

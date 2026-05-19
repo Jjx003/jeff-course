@@ -3,5 +3,6 @@
 - **Heegner Numbers:** There are only nine imaginary quadratic fields with class number 1. The discriminants are $-3, -4, -7, -8, -11, -19, -43, -67, -163$. These are intimately related to Ramanujan's constant $e^{\pi \sqrt{163}} \approx 262537412640768743.99999999999925$, which is mysteriously close to an integer.
 
 ### Going Deeper
+
 - [Binary quadratic form (Wikipedia)](https://en.wikipedia.org/wiki/Binary_quadratic_form)
 - [Class number problem (Wikipedia)](https://en.wikipedia.org/wiki/Class_number_problem)

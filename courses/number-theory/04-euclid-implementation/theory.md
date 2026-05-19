@@ -13,18 +13,22 @@ If $d$ divides both $a$ and $b$ (assume $a > b$), then $d$ must also divide thei
 Because any divisor of $a$ and $b$ is also a divisor of $a - b$, the problem of finding $\gcd(a, b)$ is identical to finding $\gcd(a - b, b)$. We can repeatedly subtract $b$ from $a$ until $a$ becomes smaller than $b$.
 
 Repeated subtraction is exactly what division gives us! When we divide $a$ by $b$, we get a quotient $q$ and a remainder $r$:
-$$a = b \cdot q + r$$
+$$
+a = b \cdot q + r
+$$
 
 Which means $r = a - b \cdot q$. By the same logic as the subtraction observation, any common divisor of $a$ and $b$ must also divide the remainder $r$. 
 
 This leads to the fundamental recurrence of the Euclidean Algorithm:
-$$\gcd(a, b) = \gcd(b, a \pmod b)$$
+$$
+\gcd(a, b) = \gcd(b, a \bmod b)
+$$
 
 ## The Algorithm
 
 The process is remarkably simple:
 1. If $b = 0$, the GCD is simply $a$.
-2. Otherwise, recursively (or iteratively) compute $\gcd(b, a \pmod b)$.
+2. Otherwise, recursively (or iteratively) compute $\gcd(b, a \bmod b)$.
 
 ### Example: $\gcd(1071, 462)$
 

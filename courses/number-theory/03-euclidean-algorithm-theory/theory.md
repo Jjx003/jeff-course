@@ -36,6 +36,15 @@ Since $d \le c$ and $c \le d$, we conclude that $d = c$, or $\gcd(a, b) = \gcd(b
 
 The Euclidean algorithm repeatedly applies this lemma and the Division Algorithm to reduce the size of the numbers until the remainder becomes zero.
 
+```mermaid
+graph TD
+    Start([Start]) --> Input[Input a, b]
+    Input --> Condition{b == 0?}
+    Condition -- Yes --> Result([GCD is a])
+    Condition -- No --> Step[a = b, b = a % b]
+    Step --> Condition
+```
+
 Given two non-negative integers $a$ and $b$ with $a \ge b > 0$:
 
 1. Apply the Division Algorithm: $a = b \cdot q_1 + r_1$, with $0 \le r_1 < b$.
@@ -44,21 +53,54 @@ Given two non-negative integers $a$ and $b$ with $a \ge b > 0$:
 4. If $r_1 \neq 0$, repeat the process with $b$ and $r_1$: $b = r_1 \cdot q_2 + r_2$.
 5. Continue until a remainder of $0$ is reached. The last non-zero remainder is the GCD.
 
-$$ \begin{align*} a &= b \cdot q_1 + r_1 \\ b &= r_1 \cdot q_2 + r_2 \\ r_1 &= r_2 \cdot q_3 + r_3 \\ &\vdots \\ r_{n-2} &= r_{n-1} \cdot q_n + r_n \\ r_{n-1} &= r_n \cdot q_{n+1} + 0 \end{align*} $$
+$$
+\begin{aligned}
+a &= b \cdot q_1 + r_1 \\
+b &= r_1 \cdot q_2 + r_2 \\
+r_1 &= r_2 \cdot q_3 + r_3 \\
+&\vdots \\
+r_{n-2} &= r_{n-1} \cdot q_n + r_n \\
+r_{n-1} &= r_n \cdot q_{n+1} + 0
+\end{aligned}
+$$
 
 The last non-zero remainder, $r_n$, is the GCD of $a$ and $b$.
+
+## Bezout's Identity
+
+An important consequence of the Euclidean Algorithm is that the GCD can always be expressed as a **linear combination** of the original numbers.
+
+**Theorem (Bezout's Identity):** For any integers $a$ and $b$ (not both zero), there exist integers $x$ and $y$ such that:
+
+$$
+ax + by = \gcd(a, b)
+$$
+
+![Bezout's Identity](/courses/number-theory/bezouts-identity.svg)
+
+This $x$ and $y$ can be found by "working backwards" through the steps of the Euclidean Algorithm, a process known as the **Extended Euclidean Algorithm**.
 
 ### Proof of Termination
 
 Why must the algorithm stop? Notice the sequence of remainders:
-$$ b > r_1 > r_2 > r_3 > \dots \ge 0 $$
+
+$$
+b > r_1 > r_2 > r_3 > \dots \ge 0
+$$
+
 The remainders form a strictly decreasing sequence of non-negative integers. Since there are only finitely many non-negative integers strictly less than $b$, the sequence must eventually hit $0$. The algorithm is guaranteed to terminate.
 
 ### Example Trace
 
 Let's compute $\gcd(252, 105)$:
 
-$$ \begin{align*} 252 &= 105 \cdot 2 + 42 \quad &(r_1 = 42) \\ 105 &= 42 \cdot 2 + 21 \quad &(r_2 = 21) \\ 42 &= 21 \cdot 2 + 0 \quad &(r_3 = 0) \end{align*} $$
+$$
+\begin{aligned}
+252 &= 105 \cdot 2 + 42 \quad &(r_1 = 42) \\
+105 &= 42 \cdot 2 + 21 \quad &(r_2 = 21) \\
+42 &= 21 \cdot 2 + 0 \quad &(r_3 = 0)
+\end{aligned}
+$$
 
 Since the remainder is $0$, the last non-zero remainder ($21$) is our GCD.
 So, $\gcd(252, 105) = 21$.

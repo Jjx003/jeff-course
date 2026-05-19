@@ -1,6 +1,6 @@
 import math
 
-def solve_pell(D: int) -> tuple[int, int]:
+def solve_pell(D: int) -> tuple[int, int] | None:
     a0 = math.isqrt(D)
     if a0 * a0 == D:
         return None  # No non-trivial solutions for perfect squares
@@ -9,25 +9,25 @@ def solve_pell(D: int) -> tuple[int, int]:
     d_val = 1
     a = a0
     
-    h_prev, h_curr = 1, a0
-    k_prev, k_curr = 0, 1
+    p_prev, p_curr = 1, a0
+    q_prev, q_curr = 0, 1
     
-    if h_curr * h_curr - D * k_curr * k_curr == 1:
-        return h_curr, k_curr
+    if p_curr * p_curr - D * q_curr * q_curr == 1:
+        return p_curr, q_curr
 
     while True:
         m = d_val * a - m
         d_val = (D - m * m) // d_val
         a = (a0 + m) // d_val
         
-        h_next = a * h_curr + h_prev
-        k_next = a * k_curr + k_prev
+        p_next = a * p_curr + p_prev
+        q_next = a * q_curr + q_prev
         
-        h_prev, h_curr = h_curr, h_next
-        k_prev, k_curr = k_curr, k_next
+        p_prev, p_curr = p_curr, p_next
+        q_prev, q_curr = q_curr, q_next
         
-        if h_curr * h_curr - D * k_curr * k_curr == 1:
-            return h_curr, k_curr
+        if p_curr * p_curr - D * q_curr * q_curr == 1:
+            return p_curr, q_curr
 
 if __name__ == "__main__":
     test_cases = [2, 3, 13, 61, 109]

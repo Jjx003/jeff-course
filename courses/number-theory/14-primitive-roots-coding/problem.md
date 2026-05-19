@@ -7,7 +7,9 @@ Recall that a number $g$ is a primitive root modulo $p$ if its order is exactly 
 Checking every power of $g$ from $1$ to $p-1$ would be too slow. Instead, you can use the property that the order of any element must divide $p-1$. 
 
 Therefore, $g$ is a primitive root modulo $p$ if and only if for every prime factor $q$ of $p-1$:
-$$ g^{(p-1)/q} \not\equiv 1 \pmod p $$
+$$
+g^{(p-1)/q} \not\equiv 1 \pmod p
+$$
 
 ### Input
 A single prime number $p$ where $3 \le p \le 10^9$.

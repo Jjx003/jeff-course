@@ -14,7 +14,7 @@ questions:
       - "It alternates between $1$ and $-1$."
       - "It is $0$."
     correct: 2
-    explanation: "The fundamental identity states that $p_n q_{n-1} - p_{n-1} q_n = (-1)^{n-1}$. Therefore, it alternates between $1$ and $-1$, which implies that the fractions $p_n/q_n$ are always in lowest terms (since their gcd divides $\pm 1$)."
+    explanation: "The fundamental identity states that $p_n q_{n-1} - p_{n-1} q_n = (-1)^{n-1}$. Therefore, it alternates between $1$ and $-1$, which implies that the fractions $p_n/q_n$ are always in lowest terms (since their gcd divides $\\pm 1$)."
 
   - id: q_recurrence
     type: parametric
@@ -36,11 +36,11 @@ questions:
 
   - id: q4
     type: multiple_choice
-    stem: "The sequence of convergents $C_0, C_1, C_2, \dots$ for a real number $x$ has which of the following properties?"
+    stem: "The sequence of convergents $C_0, C_1, C_2, \\dots$ for a real number $x$ has which of the following properties?"
     options:
       - "The convergents are strictly increasing towards $x$."
       - "The convergents are strictly decreasing towards $x$."
-      - "The even-indexed convergents $C_0, C_2, C_4, \dots$ are strictly increasing towards $x$."
+      - "The even-indexed convergents $C_0, C_2, C_4, \\dots$ are strictly increasing towards $x$."
       - "The distance $|C_n - C_{n-1}|$ is always exactly $1/q_n$."
     correct: 2
-    explanation: "The convergents alternate around $x$. The even convergents $C_0, C_2, C_4, \dots$ are strictly increasing and all less than $x$, while the odd convergents $C_1, C_3, C_5, \dots$ are strictly decreasing and all greater than $x$."
+    explanation: "The convergents alternate around $x$. The even convergents $C_0, C_2, C_4, \\dots$ are strictly increasing and all less than $x$, while the odd convergents $C_1, C_3, C_5, \\dots$ are strictly decreasing and all greater than $x$."

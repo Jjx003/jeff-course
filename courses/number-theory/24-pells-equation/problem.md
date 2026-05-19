@@ -2,7 +2,9 @@
 
 A **Diophantine equation** is an algebraic equation where we are strictly interested in integer solutions. One of the most famous non-linear Diophantine equations is **Pell's equation**, which has the form:
 
-$$ x^2 - D y^2 = 1 $$
+$$
+x^2 - D y^2 = 1
+$$
 
 where $D$ is a given positive non-square integer, and we want to find integer solutions for $x$ and $y$. 
 

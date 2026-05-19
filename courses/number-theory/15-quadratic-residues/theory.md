@@ -19,6 +19,8 @@ For example, let $p = 7$. We can square the integers $1$ through $6$ modulo $7$:
 
 The quadratic residues modulo 7 are $\{1, 2, 4\}$. The quadratic nonresidues are $\{3, 5, 6\}$. Notice that exactly half of the non-zero integers are residues, and exactly half are nonresidues. Furthermore, $x^2 \equiv (p-x)^2 \pmod p$, so the squares are symmetric.
 
+![Quadratic Residue Grid](/courses/number-theory/quadratic-residues.svg)
+
 ## The Legendre Symbol
 
 To elegantly express whether $a$ is a quadratic residue, Adrien-Marie Legendre introduced the **Legendre symbol**, denoted as $\left(\frac{a}{p}\right)$. It is defined for an odd prime $p$ and an integer $a$ as follows:
@@ -38,6 +40,7 @@ $$
 $$
 
 This means:
+
 - The product of two residues is a residue.
 - The product of two nonresidues is a residue.
 - The product of a residue and a nonresidue is a nonresidue.

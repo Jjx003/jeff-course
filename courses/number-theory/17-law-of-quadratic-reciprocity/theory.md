@@ -64,6 +64,7 @@ $$
 Let $p = 11$ and $a = 7$.
 The set $S$ is $\{ 7(1), 7(2), 7(3), 7(4), 7(5) \} = \{ 7, 14, 21, 28, 35 \}$.
 We reduce these modulo $11$ into the range $[-5, 5]$:
+
 - $7 \equiv -4 \pmod{11}$
 - $14 \equiv 3 \pmod{11}$
 - $21 \equiv -1 \pmod{11}$
@@ -87,6 +88,7 @@ Example: Compute $\left(\frac{14}{43}\right)$.
    $$
    \left(\frac{7}{43}\right) = -\left(\frac{43}{7}\right)
    $$
+
 4. Reduce modulo $7$: $43 \equiv 1 \pmod 7$, so $\left(\frac{43}{7}\right) = \left(\frac{1}{7}\right) = 1$.
 5. Therefore, $\left(\frac{7}{43}\right) = -1$.
 6. Multiply them together: $\left(\frac{14}{43}\right) = (-1)(-1) = 1$.

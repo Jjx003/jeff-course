@@ -11,6 +11,7 @@ You must compute the symbol using the properties of the Jacobi symbol and the **
 ### Properties of the Jacobi Symbol
 
 For any integers $a, b$ and odd positive integers $m, n$:
+
 1. **Periodicity:** $\left(\frac{a}{n}\right) = \left(\frac{a \pmod n}{n}\right)$
 2. **Multiplicativity:** $\left(\frac{ab}{n}\right) = \left(\frac{a}{n}\right)\left(\frac{b}{n}\right)$
 3. **Base cases:**
@@ -19,7 +20,11 @@ For any integers $a, b$ and odd positive integers $m, n$:
    - $\left(\frac{-1}{n}\right) = 1$ if $n \equiv 1 \pmod 4$, and $-1$ if $n \equiv 3 \pmod 4$.
    - $\left(\frac{2}{n}\right) = 1$ if $n \equiv \pm 1 \pmod 8$, and $-1$ if $n \equiv \pm 3 \pmod 8$.
 4. **Law of Quadratic Reciprocity:** For coprime odd positive integers $m, n$:
-   $$\left(\frac{m}{n}\right)\left(\frac{n}{m}\right) = (-1)^{\frac{m-1}{2}\frac{n-1}{2}}$$
+
+   $$
+   \left(\frac{m}{n}\right)\left(\frac{n}{m}\right) = (-1)^{\frac{m-1}{2}\frac{n-1}{2}}
+   $$
+
    This means $\left(\frac{m}{n}\right) = -\left(\frac{n}{m}\right)$ if $m \equiv n \equiv 3 \pmod 4$, and $\left(\frac{m}{n}\right) = \left(\frac{n}{m}\right)$ otherwise.
 
 ### Expected Input and Output
