@@ -75,6 +75,8 @@ jeff-course/
     │   │   └── courseLoader.ts  # Facade: reads COURSES_DIR env var
     │   ├── markdown/
     │   │   └── renderMarkdown.ts  # unified pipeline (async + sync)
+    │   ├── reading/
+    │   │   └── gradualReader.ts    # Split reading Markdown into focus-mode steps
     │   ├── server/                   # SERVER-SIDE ONLY
     │   │   ├── db.ts                  # DuckDB singleton + schema bootstrap
     │   │   ├── executor.ts            # Code execution (UV / g++ via spawn)
@@ -110,6 +112,7 @@ jeff-course/
     │       ├── OutputPanel.svelte
     │       ├── ProblemNav.svelte
     │       ├── ReadingView.svelte
+    │       ├── GradualReadingView.svelte  # focus-mode stepper for readings
     │       ├── ConfirmDialog.svelte       # reusable confirm/cancel modal
     │       ├── StudyTimeTracker.svelte    # gamification: invisible heartbeat + idle prompt
     │       ├── StreakBadge.svelte         # gamification: header pill
@@ -148,8 +151,29 @@ jeff-course/
             ├── reading/[trackSlug]/[problemSlug]/+server.ts           # GET/POST reading completion
             ├── quiz/[trackSlug]/[problemSlug]/+server.ts              # GET aggregate quiz progress
             ├── quiz/[trackSlug]/[problemSlug]/attempt/+server.ts      # POST record one attempt
+            ├── audio/[trackSlug]/[problemSlug]/+server.ts             # GET reading TTS manifest summary
+            ├── audio/[trackSlug]/[problemSlug]/[clipId]/+server.ts    # GET one reading TTS WAV clip
             └── study-time/heartbeat/+server.ts                        # POST active-time heartbeat
 ```
+
+---
+
+## TTS Narration Pipeline
+
+Standalone text-to-speech tooling lives in `tools/tts/`. It is intentionally outside the SvelteKit app for now, but is meant to be agent-callable later for course narration assets.
+
+- `tools/tts/qwen_tts_pipeline.py` is the CLI. Use `uv run --directory tools/tts --python 3.11 qwen_tts_pipeline.py ...`. Rendering supports `--engine stock` (default) and `--engine faster` (CUDA-only, `faster-qwen3-tts`, same manifest shape).
+- `tools/tts/voices/*.json` are reusable voice profiles. `custom-reader.json` uses `Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice`; the clone and design templates target Qwen's Base and VoiceDesign models.
+- `tools/tts/examples/course-snippet.json` shows the stable agent input format: a title plus `items[]` with `id`, optional `title`, and `text`.
+- `tools/tts/benchmark_qwen_tts.py` benchmarks stock `qwen-tts` against `andimarafioti/faster-qwen3-tts` for 0.6B and 1.7B CustomVoice models. Run it with `uv run --script` and the PyTorch CUDA index; it writes WAV samples plus JSON/Markdown results under `data/tts-output/benchmarks/qwen-tts/`.
+- Outputs go under `data/tts-output/` by convention and include WAV files plus `manifest.json`.
+- Reading narration is exposed to the browser through `/api/audio/[trackSlug]/[problemSlug]` and `/api/audio/[trackSlug]/[problemSlug]/[clipId]`; keep generated WAVs under `data/tts-output/<track-slug>-gradual/` rather than moving them into `static/`.
+- For course reading pages, prefer `--split-mode gradual --engine faster --max-new-tokens 1536`; this mirrors focus-mode mini sections and keeps each gradual step as one audio clip. For stock rendering, use `--batch-size 2` and try `--batch-size 3` only when VRAM allows. Use `2048` for unusually long steps.
+- `manifest.outputs[].text` is the spoken-text contract used by generation, fallback browser narration, and word alignment. Markdown tables are split into their own gradual step and converted to compact spoken prose before rendering, so do not expect this field to preserve raw Markdown table syntax.
+- After generating clips, run `uv run --directory tools/tts --python 3.11 qwen_tts_pipeline.py align-manifest --manifest ../../data/tts-output/<track-slug>-gradual/manifest.json` to add word-level timings. The aligner uses torchaudio wav2vec2 CTC forced alignment against each manifest entry's exact `text`, skips existing `words[]` unless `--force` is passed, and writes clip-relative `words: [{ text, startMs, endMs, confidence? }]`. The audio API passes `words[]` through to the reader; the player highlights words when timings exist and falls back unchanged when they do not.
+- Clone voices can be precomputed with `prepare-voice --voice <clone-profile.json> --out data/tts-cache/<name>.pkl`, then reused during render with `--voice-cache`. CustomVoice speakers do not expose a separate prompt cache in Qwen's public API; use one CLI process per page/section and `--batch-size 2` or higher. The CLI batches token generation and decodes audio-code outputs individually to avoid Qwen's Windows batched-decoder aliasing error.
+- Run `doctor` before long jobs to verify Torch/CUDA, `qwen_tts`, `soundfile`, SoX, and ffmpeg availability. For GPU, mirror the course executor strategy: Python 3.11 with `--index-url https://download.pytorch.org/whl/cu124`, PyPI as extra index, and `--index-strategy unsafe-best-match`. The faster engine requires CUDA Torch/Torchaudio 2.5.1+; the TTS lock currently uses 2.6.0+cu124.
+- For voice cloning, only use reference audio Jeff owns or has permission to clone, and keep the exact transcript in the voice profile or generation request.
 
 ---
 
@@ -186,6 +210,8 @@ The `<NN>-` numeric prefix in the directory name controls sort order within a tr
 `type: coding` (the default) is the original behaviour: an editor pane plus run/submit grading against optional `expected_output/`. The module folder must contain `starter/`, and may contain `requirements.txt` and `expected_output/` for grading.
 
 `type: reading` is a textbook-style module: no editor, no run/submit, just `problem.md` + `theory.md` + `tips.md` rendered with KaTeX and Mermaid. Reading modules MUST omit `languages` and `defaultLanguage`. They MUST NOT have a `starter/` directory; if one exists the parser ignores it. Use reading modules for conceptual deep-dives between coding exercises.
+
+Reading modules support two UI modes from the same Markdown source. **Page** mode renders the full article with `CourseExplorer`; **Focus** mode (`GradualReadingView`) splits `problem.md`, optional `theory.md`, and optional `tips.md` into one-step-at-a-time cards via `src/lib/reading/gradualReader.ts`. This is a reader preference only, persisted in `localStorage`; it does not change the course content format.
 
 `type: quiz` is an interactive self-assessment module: no editor, no runner. The module directory must contain a `quiz.yaml` file (see format below) alongside `problem.md` (used as the intro briefing on the pre-quiz screen). Quiz modules MUST omit `languages` and `defaultLanguage`.
 

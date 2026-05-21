@@ -66,6 +66,11 @@ R5: pLDDT 81.0
 The coordinates of this structure are irrelevant for the analysis;
 we only read the B-factors.
 
+![Protein contact map, PDB ID 2QIP chain A](https://commons.wikimedia.org/wiki/Special:Redirect/file/Protein_Contact_Map%2C_2-Color%2C_2QIP-A.png)
+
+*A contact map reduces a 3D protein structure to residue pairs that are close
+in space. Image from Wikimedia Commons, Chuck.sweet, CC BY-SA 3.0.*
+
 ## RMSD formula
 
 For $N$ atom pairs $(p_i, q_i)$ assumed to be already optimally

@@ -6,6 +6,12 @@ String them together in different orders and you get insulin, hemoglobin,
 the keratin in your fingernails, the enzymes digesting your lunch, and the
 antibodies guarding your cells. Same alphabet — wildly different words.
 
+![Insulin structure, PDB ID 4INS](/courses/protein-folding/insulin-4ins.png)
+
+*Insulin is a small hormone, but it is still built from the same amino-acid
+alphabet as every other protein in this course. Structure image from PDBe/RCSB
+PDB, PDB ID `4INS`.*
+
 This is the single most important fact for the whole course: because there is
 a fixed, small vocabulary, **a protein can be written as a string of letters**,
 exactly like a sentence in English. Myoglobin, the oxygen-shuttling protein in
@@ -23,11 +29,21 @@ get the letters `ACDEFGHIKLMNPQRSTVWY` — every letter of the alphabet *except*
 22nd "non-standard" amino acids — selenocysteine and pyrrolysine — but they
 appear in only a handful of proteins and we will ignore them.)
 
+![Myoglobin structure, PDB ID 1MBN](/courses/protein-folding/myoglobin-1mbn.png)
+
+*Myoglobin is the sequence above folded into a compact oxygen-binding protein.
+Structure image from PDBe/RCSB PDB, PDB ID `1MBN`.*
+
 This text representation is what makes machine learning on proteins look so
 much like machine learning on natural language. Everything from BLAST to
 ESM-2 to AlphaFold2's MSA stack ultimately operates on these strings.
 
 ## The chemistry in one picture
+
+![Amino-acid zwitterion diagram](/courses/protein-folding/wiki-amino-acid-zwitterions.svg)
+
+*The shared amino-acid backbone and the variable side chain `R`. Image from
+Wikimedia Commons, Tim Vickers / GYassineMrabet, CC BY 3.0.*
 
 Every amino acid shares the same backbone:
 
@@ -48,6 +64,11 @@ When two amino acids link, the carboxyl `–COOH` of one reacts with the amino
 `H2N–` of the next, losing a water molecule and forming a **peptide bond**.
 A chain of these linked amino acids is a **polypeptide**, and once it has a
 stable folded structure, it's a **protein**.
+
+![Peptide bond formation](https://upload.wikimedia.org/wikipedia/commons/4/44/Peptide_bond_formation.svg)
+
+*Peptide-bond formation: two amino acids join and release water. Image from
+Wikimedia Commons, Yikrazuul, public domain.*
 
 Once bonded into a chain, each individual amino acid is called a **residue**.
 You will see this word everywhere in the rest of the course — "residue 47 of

@@ -43,6 +43,11 @@ The ~7-point GDT_TS gap is real but small. For most downstream uses
 (rapid screening, MSA-poor sequences, novel protein families), the
 60× speed-up dominates the accuracy concern.
 
+![Myoglobin structure, PDB ID 1MBN](/courses/protein-folding/myoglobin-1mbn.png)
+
+*A folded protein is the final output both AlphaFold2 and ESMFold are trying
+to predict from sequence. Structure image from PDBe/RCSB PDB, PDB ID `1MBN`.*
+
 ## Architectural sketch
 
 ```mermaid

@@ -35,6 +35,12 @@ $\text{R6} \to \text{R10}$ along the top row. The two rows are stacked
 as contacts. This is structurally what a tiny **beta-hairpin** looks like
 (without the hydrogen bonds that make a real one).
 
+![Crambin structure, PDB ID 1CRN](/courses/protein-folding/crambin-1crn.png)
+
+*Real PDB files are much richer than the toy string in this exercise. Crambin
+is a compact 46-residue protein often used for structure-parsing examples.
+Structure image from PDBe/RCSB PDB, PDB ID `1CRN`.*
+
 Use `Bio.PDB.PDBParser`:
 
 ```python

@@ -53,6 +53,17 @@ These three patterns ($\alpha$, $\beta$, coil) are the targets of classical
 because modern PLMs predict full 3D structure directly). Most proteins are
 about 30 % helix, 20 % sheet, 50 % loop, give or take.
 
+![Alpha helix highlighted in protein 1EFN](https://upload.wikimedia.org/wikipedia/commons/a/ad/Folding_proteine_1EFN_focussing_on_alpha_helix.png)
+
+*An alpha helix as an actual local fold in a protein chain. Image from
+Wikimedia Commons, CC BY-SA 3.0.*
+
+![Antiparallel beta sheet hydrogen bonding](https://upload.wikimedia.org/wikipedia/commons/b/b7/Beta_sheet_bonding_antiparallel-color.svg)
+
+*An antiparallel beta sheet: neighboring strands run in opposite directions
+and hydrogen-bond across the sheet. Image from Wikimedia Commons,
+Fvasconcellos, public domain.*
+
 ## Tertiary structure: the fold of one chain
 
 The **tertiary structure** is the complete 3D arrangement of *one* polypeptide
@@ -69,6 +80,11 @@ tertiary structure: a roughly globular bundle of eight α-helices wrapped
 around a heme group, with hydrophobic side chains pointing inward and polar
 side chains pointing outward (remember the hydrophobicity rule from module 1).
 
+![Myoglobin tertiary structure, PDB ID 1MBN](/courses/protein-folding/myoglobin-1mbn.png)
+
+*A single myoglobin chain: mostly alpha-helical tertiary structure wrapped
+around a heme group. Structure image from PDBe/RCSB PDB, PDB ID `1MBN`.*
+
 ## Quaternary structure: multiple chains together
 
 Many proteins only function as **assemblies of several chains**. The
@@ -82,6 +98,12 @@ secondary structure) that pack together to form the working oxygen carrier.
 Each chain on its own looks a lot like myoglobin, but only the four-chain
 assembly has the cooperative oxygen-binding behaviour that makes hemoglobin
 useful.
+
+![Hemoglobin tetramer, PDB ID 4HHB](/courses/protein-folding/hemoglobin-4hhb.png)
+
+*Hemoglobin is quaternary structure in the literal sense: four related
+protein chains packed into one oxygen-carrying assembly. Structure image from
+PDBe/RCSB PDB, PDB ID `4HHB`.*
 
 AlphaFold2's original release predicted single-chain (tertiary) structures.
 AlphaFold-Multimer and AlphaFold3 added multi-chain (quaternary) prediction,
@@ -142,6 +164,12 @@ it. Contacts within helices show up as a thin diagonal band; contacts
 within sheets show up as off-diagonal stripes; contacts between far-apart
 parts of the chain (long-range contacts) are the rare but critical bright
 spots that nail down the global fold.
+
+![Crambin compact structure, PDB ID 1CRN](/courses/protein-folding/crambin-1crn.png)
+
+*Crambin is tiny, which makes it a useful mental model for alpha-carbon traces,
+distance maps, and contact maps. Structure image from PDBe/RCSB PDB, PDB ID
+`1CRN`.*
 
 ## Why the hierarchy matters for ML
 

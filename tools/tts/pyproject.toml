@@ -1,0 +1,17 @@
+[project]
+name = "jeff-course-tts"
+version = "0.1.0"
+description = "Standalone Qwen3-TTS pipeline for course narration assets."
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "faster-qwen3-tts>=0.2.6",
+  "hf-xet>=1.2.0",
+  "numpy>=1.26",
+  "qwen-tts>=0.1.1",
+  "soundfile>=0.12",
+  "torch>=2.5.1,<2.7",
+  "torchaudio>=2.5.1,<2.7",
+]
+
+[tool.uv]
+package = false

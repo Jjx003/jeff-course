@@ -22,6 +22,11 @@ MB_fragment : MGLSDGEWQLVLNVWGKVEADIPGHGQEVL
 HBB_fragment: VHLTPEEKSAVTALWGKVNVDEVGGEALGRL
 ```
 
+![Protein sequence alignment example](https://commons.wikimedia.org/wiki/Special:Redirect/file/Protein_alignment.svg)
+
+*A multiple alignment of hemoglobin-family protein sequences. Image from
+Wikimedia Commons, Nothingserious, public domain.*
+
 ## Expected output
 
 Use BLOSUM62 with affine gap penalties `open=-10`, `extend=-1` (the

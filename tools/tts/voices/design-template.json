@@ -1,0 +1,6 @@
+{
+  "mode": "design",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+  "language": "English",
+  "instruct": "A relaxed but articulate adult course narrator, medium-low pitch, patient pacing, subtle enthusiasm, studio-clean delivery."
+}

@@ -33,6 +33,12 @@ pass, without bolting on chemistry-specific heads. AF3 also drops the
 hard distinction between protein-only and protein-complex prediction
 modes.
 
+![SARS-CoV-2 main protease with inhibitor, PDB ID 6LU7](/courses/protein-folding/sars-cov-2-main-protease-6lu7.png)
+
+*Modern structure models aim at mixed biological scenes: protein chains,
+small molecules, ions, and interfaces in one coordinate system. Structure
+image from PDBe/RCSB PDB, PDB ID `6LU7`.*
+
 The code was open-sourced in **November 2024** under a non-commercial
 license. **Weights are gated** — you request access via a Google form
 and DeepMind typically responds within 2-3 business days. The license

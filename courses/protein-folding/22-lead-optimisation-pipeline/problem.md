@@ -22,6 +22,12 @@ a *de novo* design, or a natural protein — and you propose
 expression yield, thermostability, specificity, ...). You test the
 candidates in the lab, integrate the results, and iterate.
 
+![SARS-CoV-2 main protease with inhibitor, PDB ID 6LU7](/courses/protein-folding/sars-cov-2-main-protease-6lu7.png)
+
+*Lead optimisation often lives at interfaces like this: a protein target,
+a bound molecule, and a small set of residues where better chemistry matters.
+Structure image from PDBe/RCSB PDB, PDB ID `6LU7`.*
+
 The classical alternative is **directed evolution**: random
 mutations + selection + iterate. It works but is slow. Modern
 ML-based pipelines use protein language models to **propose

@@ -1,0 +1,13 @@
+{
+  "title": "Course Narration Smoke Test",
+  "items": [
+    {
+      "id": "intro",
+      "text": "Welcome back. In this lesson, we will connect derivatives to the training loop used by neural networks."
+    },
+    {
+      "id": "recap",
+      "text": "The main idea is simple: compute a loss, estimate how each parameter contributed to it, then nudge the parameters in a better direction."
+    }
+  ]
+}

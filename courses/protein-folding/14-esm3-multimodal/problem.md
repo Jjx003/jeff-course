@@ -160,6 +160,18 @@ estimate this divergence is equivalent to **roughly 500 million years
 of natural evolution** — hence the title of the release paper,
 "*Simulating 500 million years of evolution with a language model*".
 
+![Green fluorescent protein beta barrel, PDB ID 1EMA](/courses/protein-folding/gfp-1ema.png)
+
+*Natural GFP forms a beta barrel around its chromophore. ESM3's esmGFP result
+is striking because the generated sequence keeps this family-level structural
+solution while moving far from natural GFP sequences. Structure image from
+PDBe/RCSB PDB, PDB ID `1EMA`.*
+
+![Crystallized green fluorescent protein](https://upload.wikimedia.org/wikipedia/commons/b/bb/Crystalized_green_fluorescence_protein_%28GFP%29.jpg)
+
+*Crystallized GFP glowing under light. Image from Wikimedia Commons,
+Honestresearcher, CC BY-SA 4.0.*
+
 In von Neumann's framing: the model has compressed enough of biology's
 joint distribution to design a *new* member of an existing protein
 family, even though the family is sparse in its training data.

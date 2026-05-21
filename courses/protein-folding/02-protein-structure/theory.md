@@ -74,6 +74,11 @@ Domain decomposition matters for ML because:
 
 ## Crystallography vs cryo-EM vs NMR
 
+![Protein crystals grown in space](https://upload.wikimedia.org/wikipedia/commons/a/ad/Protein_crystals_grown_in_space.jpg)
+
+*Protein crystals grown for X-ray crystallography. Image from Wikimedia
+Commons / NASA Marshall Space Flight Center, public domain.*
+
 Three experimental methods produced essentially every structure in the PDB
 before AlphaFold2:
 
@@ -82,6 +87,11 @@ before AlphaFold2:
 | X-ray crystallography | High resolution (≤ 2 Å) | Needs a well-ordered crystal |
 | Cryo-electron microscopy | Works on huge / membrane / dynamic complexes | Resolution typically 3–4 Å |
 | NMR spectroscopy | Captures dynamics in solution | Limited to smaller proteins (≤ ~25 kDa) |
+
+![Cryo-EM image of cell lysate](https://upload.wikimedia.org/wikipedia/commons/c/c0/Cryo-EM_image_of_C._thermophilum_lysate.jpg)
+
+*Cryo-EM begins from noisy particle images like this before reconstruction.
+Image from Wikimedia Commons, Pkastrit, CC BY-SA 4.0.*
 
 A PDB structure's resolution (in Ångströms — *lower* is better) is one of
 the first things to look at. A 1.5 Å crystal structure shows you atom

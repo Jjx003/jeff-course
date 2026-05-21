@@ -10,6 +10,12 @@ This is the building block under the Cradle "logiter" approach
 saw any assay data, but its log-probabilities still rank sequences
 in a way that correlates with fitness.
 
+![Myoglobin structure, PDB ID 1MBN](/courses/protein-folding/myoglobin-1mbn.png)
+
+*Variant-effect scoring starts from a sequence, but the reason mutations
+matter is that they perturb a folded molecule. Structure image from PDBe/RCSB
+PDB, PDB ID `1MBN`.*
+
 ## The PLL formula
 
 For a sequence $x = (x_1, \ldots, x_L)$, the **pseudo-log-likelihood**

@@ -13,6 +13,11 @@ This is the simplest possible structure-prediction script — fewer
 than 30 lines of code — and it produces a file you can drop into
 PyMOL or RCSB's NGL viewer.
 
+![Myoglobin structure, PDB ID 1MBN](/courses/protein-folding/myoglobin-1mbn.png)
+
+*The exercise folds a short myoglobin fragment; this is the full reference
+protein. Structure image from PDBe/RCSB PDB, PDB ID `1MBN`.*
+
 ## Hardware
 
 - **Recommended:** NVIDIA GPU with $\ge 16$ GB VRAM. ESMFold's

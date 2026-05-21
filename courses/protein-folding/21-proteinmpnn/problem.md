@@ -13,6 +13,12 @@ protein: take a structure you like, generate sequences that should
 fold into it, score them with ESM-2 PLL (module 20), and pick the
 best for wet-lab validation.
 
+![Lysozyme structure, PDB ID 1LYZ](/courses/protein-folding/lysozyme-1lyz.png)
+
+*Inverse folding starts from a backbone like this and asks which amino-acid
+sequences are compatible with the shape. Structure image from PDBe/RCSB PDB,
+PDB ID `1LYZ`.*
+
 ## Setup
 
 - **Hardware**: the starter ships a deterministic NumPy stub that

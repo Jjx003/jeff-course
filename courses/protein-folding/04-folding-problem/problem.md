@@ -27,6 +27,12 @@ The economic and scientific payoff for a fast, accurate sequence-to-
 structure model was clear for decades. The actual model just took a while
 to arrive.
 
+![Ribonuclease A structure, PDB ID 7RSA](/courses/protein-folding/ribonuclease-a-7rsa.png)
+
+*Ribonuclease A is the molecule behind Anfinsen's classic folding experiment:
+sequence plus the right conditions can be enough to recover a stable structure.
+Structure image from PDBe/RCSB PDB, PDB ID `7RSA`.*
+
 ## A short timeline
 
 ```mermaid

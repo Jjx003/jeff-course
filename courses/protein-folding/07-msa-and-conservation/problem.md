@@ -39,6 +39,12 @@ mutations away from the same hypothetical ancestor. A real MSA from
 HHblits or jackhmmer can have thousands of sequences and significant
 gap content; we use a small toy MSA so the maths is checkable by hand.
 
+![Protein multiple sequence alignment](https://commons.wikimedia.org/wiki/Special:Redirect/file/Protein_alignment.svg)
+
+*A multiple sequence alignment turns related proteins into columns that can
+be counted, compared, and scored for conservation. Image from Wikimedia
+Commons, Nothingserious, public domain.*
+
 ## The conservation score
 
 For column $i$, let $p_{a,i}$ be the fraction of sequences whose residue

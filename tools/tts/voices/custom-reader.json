@@ -1,0 +1,7 @@
+{
+  "mode": "custom",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "language": "English",
+  "speaker": "Aiden",
+  "instruct": "Read as a calm, clear course narrator. Keep a steady pace, precise diction, and a warm but focused tone."
+}

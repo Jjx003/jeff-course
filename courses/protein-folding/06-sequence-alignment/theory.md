@@ -39,6 +39,11 @@ the background frequencies of each amino acid. Positive scores mean
 "more common than chance"; negative scores mean "rarely observed in
 related proteins".
 
+![BLOSUM62 substitution matrix](https://commons.wikimedia.org/wiki/Special:Redirect/file/BLOSUM62.png)
+
+*BLOSUM62 as a full amino-acid substitution matrix. Image from Wikimedia
+Commons, Nothingserious, public domain.*
+
 Some example entries (rounded to integers, as in the standard matrix):
 
 | | A | L | K | D |
