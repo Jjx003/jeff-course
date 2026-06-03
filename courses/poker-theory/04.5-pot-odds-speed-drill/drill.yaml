@@ -1,0 +1,24 @@
+title: "Pot Odds Speed Drill"
+instructions: "Type the nearest whole-number percentage."
+roundSeconds: 120
+targetAccuracy: 0.85
+itemsPerRound: 20
+items:
+  - id: pot_odds_percent
+    prompt_template: "The pot is ${{pot}}. Villain bets ${{bet}}. You call ${{bet}}. What pot odds percentage do you need? Round to the nearest whole percent."
+    params:
+      pot: { min: 60, max: 360, step: 20 }
+      bet: { min: 20, max: 180, step: 10 }
+    correct_formula: "Math.round(bet / (pot + 2 * bet) * 100)"
+    answer_suffix: "%"
+    tolerance: 0
+    explanation_template: "Final pot after calling is {{pot + 2 * bet}}. Needed equity is call / final pot = {{bet}} / {{pot + 2 * bet}}."
+  - id: bluff_break_even
+    prompt_template: "You bluff ${{bet}} into a pot of ${{pot}}. What fold percentage breaks even? Round to the nearest whole percent."
+    params:
+      pot: { min: 80, max: 400, step: 20 }
+      bet: { min: 40, max: 240, step: 20 }
+    correct_formula: "Math.round(bet / (pot + bet) * 100)"
+    answer_suffix: "%"
+    tolerance: 0
+    explanation_template: "A pure bluff breaks even when folds = bet / (pot + bet) = {{bet}} / {{pot + bet}}."

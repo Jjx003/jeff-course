@@ -24,6 +24,7 @@ import type {
   RawModuleYaml,
   RawQuizYaml,
   QuizQuestion,
+  DrillConfig,
   RuntimeHint,
   Language,
   Difficulty,
@@ -66,6 +67,8 @@ function normalizeLanguages(values: string[] | undefined): Language[] {
 function normalizeModuleType(value: string | undefined): ModuleType {
   if (value === 'reading') return 'reading';
   if (value === 'quiz') return 'quiz';
+  if (value === 'test') return 'test';
+  if (value === 'drill') return 'drill';
   return 'coding';
 }
 
@@ -198,11 +201,16 @@ export function parseFullProblem(
   }
   const hasExpectedOutput = Object.keys(expectedOutput).length > 0;
 
-  // Load quiz questions for quiz modules
+  // Load quiz questions for quiz/test modules
   let quizQuestions: QuizQuestion[] | undefined;
-  if (meta.type === 'quiz') {
+  if (meta.type === 'quiz' || meta.type === 'test') {
     const rawQuiz = readYaml<RawQuizYaml>(path.join(modulePath, 'quiz.yaml'));
     quizQuestions = rawQuiz?.questions ?? [];
+  }
+
+  let drill: DrillConfig | undefined;
+  if (meta.type === 'drill') {
+    drill = readYaml<DrillConfig>(path.join(modulePath, 'drill.yaml')) ?? undefined;
   }
 
   return {
@@ -214,7 +222,8 @@ export function parseFullProblem(
     ...(requirementsPath ? { requirementsPath } : {}),
     ...(hasExpectedOutput ? { expectedOutput: expectedOutput as Record<Language, string> } : {}),
     ...(hasSolutionCode ? { solutionCode } : {}),
-    ...(quizQuestions !== undefined ? { quizQuestions } : {})
+    ...(quizQuestions !== undefined ? { quizQuestions } : {}),
+    ...(drill !== undefined ? { drill } : {})
   };
 }
 

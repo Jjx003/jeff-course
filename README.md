@@ -1,27 +1,28 @@
-# ML Course — Interactive Coding Exercises
+# Jeff Course
 
-A local-first web application for interactive machine-learning coding exercises.
-Think LeetCode, but driven entirely by Markdown files on your filesystem —
-no accounts, no cloud, no setup beyond `npm install`.
+A local-first learning platform where courses are files, not products.
+
+Jeff Course turns a folder of YAML, Markdown, quizzes, drills, and starter code
+into a LeetCode-style course site. The goal is simple: if an agent can generate
+good course material for a subject, you should be able to study it, improve it,
+and share it with someone else.
 
 ![SvelteKit](https://img.shields.io/badge/SvelteKit-2-orange)
 ![Svelte](https://img.shields.io/badge/Svelte-5-orange)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-38bdf8)
-![Monaco Editor](https://img.shields.io/badge/Monaco-Editor-0078d4)
+![Tailwind_CSS](https://img.shields.io/badge/Tailwind-3-38bdf8)
+![DuckDB](https://img.shields.io/badge/DuckDB-local-yellow)
 
----
+## What It Is
 
-## Features
+Jeff Course is a local web app for self-directed courses. It can host reading
+modules, coding exercises, quizzes, tests, timed drills, progress tracking, and
+study history. Course content lives in `courses/`. User progress lives in
+`data/jeff-course.duckdb`.
 
-- **Split-pane exercise UI** — instructional content left, Monaco editor right, draggable divider
-- **Tabbed instructions** — Problem / Theory / Tips rendered from Markdown + LaTeX (KaTeX)
-- **Python & C++ support** — language switcher with per-language draft persistence
-- **Local persistence** — drafts, run history, and submissions saved in `localStorage`
-- **Filesystem-driven content** — add a problem by adding a folder; zero app code changes
-- **Mock execution** — Run/Submit flow with simulated output; clean interface for a real backend
-
----
+It ships with tracks in machine learning, biology, systems, math, databases,
+semiconductors, and poker theory, but the important part is the format: courses
+are meant to be generated, edited, copied, and shared.
 
 ## Quick Start
 
@@ -34,207 +35,99 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173).
 
----
+For coding exercises, install the language tools you want to run:
 
-## Project Structure
+- Python: install [`uv`](https://docs.astral.sh/uv/) so the app can run `uv run`.
+- C++: install `g++` if you want to run C++ modules.
+- Docker: optional, useful for isolated or heavier sandbox runs.
 
-```
+For Windows, macOS, Linux, tablets, phones, Chromebooks, and LAN access, see
+[Setup Guide](docs/setup.md).
+
+## Why This Exists
+
+Most learning platforms make the course the scarce thing. Jeff Course treats the
+course as a portable artifact. An agent can draft a track on any topic, a human
+can clean it up, and the result can be shared as ordinary files.
+
+The platform is intentionally calm: no accounts, no feed, no marketplace lock-in.
+It keeps progress, streaks, achievements, and practice history locally so you can
+build momentum without turning study into noise.
+
+## What You Can Build
+
+Each course can mix several module types:
+
+| Type | Use it for |
+|---|---|
+| Reading | Textbook-style lessons with Markdown, LaTeX, Mermaid diagrams, and focus mode |
+| Coding | Python or C++ exercises with starter code, run/submit, and expected-output grading |
+| Quiz | Self-checks with immediate feedback |
+| Test | Exam-style assessments that reveal answers at the end |
+| Drill | Timed generated practice for speed and fluency |
+
+See [Course Authoring](docs/course-authoring.md) for the file format and sharing
+workflow.
+
+## Project Layout
+
+```text
 jeff-course/
-├── courses/                          # Course content — edit this to add problems
-│   └── tensors/
-│       ├── course.yaml               # Track metadata
-│       ├── 01-intro-to-tensors/
-│       │   ├── module.yaml           # Problem metadata
-│       │   ├── problem.md            # Problem statement (Markdown + LaTeX)
-│       │   ├── theory.md             # Theory explanation
-│       │   ├── tips.md               # Tips & hints
-│       │   └── starter/
-│       │       ├── python.py         # Python starter code
-│       │       └── cpp.cpp           # C++ starter code
-│       ├── 02-matrix-multiplication/
-│       └── 03-broadcasting/
-└── src/
-    ├── lib/
-    │   ├── types/                    # Shared TypeScript types
-    │   │   ├── course.ts             # Track, Problem, ProblemMeta, Language…
-    │   │   └── execution.ts          # RunRequest, RunResult, Draft, snapshots…
-    │   ├── content/                  # Server-side course parser (Node.js fs)
-    │   │   ├── courseParser.ts       # Reads YAML + Markdown → app models
-    │   │   └── courseLoader.ts       # Thin facade; resolves COURSES_DIR
-    │   ├── markdown/
-    │   │   └── renderMarkdown.ts     # unified → remark → rehype → KaTeX → HTML
-    │   ├── services/                 # Interfaces + local implementations
-    │   │   ├── courseRepository.ts
-    │   │   ├── draftStorage.ts
-    │   │   ├── runHistoryStorage.ts
-    │   │   ├── submissionStorage.ts
-    │   │   ├── executionService.ts
-    │   │   └── local/                # localStorage + mock execution
-    │   └── components/               # Svelte UI components
-    │       ├── SplitPane.svelte
-    │       ├── TabGroup.svelte
-    │       ├── MarkdownRenderer.svelte
-    │       ├── CodeEditor.svelte
-    │       ├── LanguageSwitcher.svelte
-    │       ├── OutputPanel.svelte
-    │       ├── ProblemNav.svelte
-    │       └── Header.svelte
-    └── routes/
-        ├── +page.svelte              # Landing page
-        ├── tracks/+page.svelte       # Track list
-        ├── tracks/[trackSlug]/       # Track detail
-        └── tracks/[trackSlug]/problems/[problemSlug]/  # Exercise page
+  courses/                 Course tracks, modules, Markdown, quizzes, drills
+  data/                    Local DuckDB progress and generated/cache data
+  docs/                    User-facing setup and authoring docs
+  infra/docker/            Local sandbox Dockerfiles
+  src/
+    lib/content/           Server-side course loader and parser
+    lib/server/            DuckDB, execution, grading, stats, sandbox sessions
+    lib/services/          Client-facing service interfaces and implementations
+    lib/components/        Svelte UI components
+    routes/                SvelteKit pages and API routes
 ```
-
----
-
-## Authoring Course Content
-
-Add a new track or problem by creating files — no app code to edit.
-
-### Track metadata — `courses/<track-slug>/course.yaml`
-
-```yaml
-title: "Introduction to Tensors"
-slug: "tensors"
-description: "Build tensor primitives from scratch."
-tags: [machine-learning, linear-algebra]
-difficulty: intermediate   # beginner | intermediate | advanced
-order: 1
-```
-
-### Problem metadata — `courses/<track-slug>/<NN>-<problem-slug>/module.yaml`
-
-```yaml
-title: "Tensor Basics: Shape and Strides"
-slug: "intro-to-tensors"
-description: "Create a minimal Tensor class."
-order: 1
-difficulty: beginner
-estimatedMinutes: 25
-tags: [tensors, numpy]
-languages: [python, cpp]
-defaultLanguage: python
-```
-
-The `NN-` numeric prefix in the folder name controls problem ordering (lexicographic sort).
-
-### Tab content
-
-| File | Tab shown in UI |
-|------|----------------|
-| `problem.md` | Problem |
-| `theory.md` | Theory |
-| `tips.md` | Tips |
-
-All files support standard Markdown, GitHub Flavored Markdown (tables, task lists),
-and LaTeX math:
-
-```markdown
-Inline math: $C_{ij} = \sum_k A_{ik} B_{kj}$
-
-Block math:
-$$\text{stride}_i = \prod_{j=i+1}^{k-1} d_j$$
-```
-
-### Starter code
-
-Place language-specific starter files in `starter/`:
-
-```
-starter/
-  python.py
-  cpp.cpp
-```
-
----
-
-## Architecture
-
-The codebase is structured so local-only mode works end-to-end today,
-and each layer can be swapped for a remote implementation later without
-touching UI components.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  UI Components (Svelte)                                     │
-│  know nothing about storage or execution internals          │
-└────────────────────┬────────────────────────────────────────┘
-                     │ calls
-┌────────────────────▼────────────────────────────────────────┐
-│  Service Interfaces                                         │
-│  CourseRepository · DraftStorage · RunHistoryStorage        │
-│  SubmissionStorage · ExecutionService                       │
-└────────────────────┬────────────────────────────────────────┘
-                     │ implemented by
-┌────────────────────▼────────────────────────────────────────┐
-│  Local Implementations (today)                              │
-│  filesystem (server) · localStorage (client) · mock exec   │
-├─────────────────────────────────────────────────────────────┤
-│  Remote Implementations (future)                            │
-│  HTTP API · cloud DB · sandboxed execution backend          │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Extension points
-
-| What to swap | How |
-|---|---|
-| Course content source | Implement `CourseRepository` to call a CMS/API instead of reading `courses/` |
-| Override content directory | Set the `COURSES_DIR` environment variable |
-| Persistence | Implement `DraftStorage` / `RunHistoryStorage` / `SubmissionStorage` to call a backend API |
-| Code execution | Implement `ExecutionService` to call a sandboxed runner (Judge0, custom Docker, etc.) |
-| Auth | Add an auth middleware in `+layout.server.ts`; services already have a clean boundary |
-
----
-
-## Available Scripts
-
-```bash
-npm run dev          # Start dev server (http://localhost:5173)
-npm run build        # Production build
-npm run preview      # Preview production build locally
-npm run check        # TypeScript + Svelte type check
-```
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | [SvelteKit 2](https://kit.svelte.dev) + [Svelte 5](https://svelte.dev) |
-| Language | TypeScript 5 |
-| Styling | [Tailwind CSS 3](https://tailwindcss.com) + `@tailwindcss/typography` |
-| Editor | [Monaco Editor](https://microsoft.github.io/monaco-editor/) |
-| Markdown + Math | `unified` · `remark-parse` · `remark-gfm` · `remark-math` · `rehype-katex` |
-| YAML parsing | `js-yaml` |
-| Course storage | Node.js `fs` (server-side load functions) |
-| Client persistence | `localStorage` |
-| Build tool | [Vite 6](https://vite.dev) |
-
----
-
-## Supported Languages
-
-| Language | Syntax highlighting | Starter code |
-|---|---|---|
-| Python | ✓ | ✓ |
-| C++ | ✓ | ✓ |
-
-Adding a new language: add its value to the `Language` union in `src/lib/types/course.ts`,
-list it in `module.yaml`, and add a starter file in `starter/`.
-
----
 
 ## Included Tracks
 
-### Tensors
+| Track | Modules |
+|---|---:|
+| Biochem & Org Chem Warm-up | 15 |
+| Database Implementation in C++ | 17 |
+| Model Optimization Systems | 18 |
+| Number Theory | 35 |
+| Poker Theory: Mathematics & Strategy | 23 |
+| Protein Folding and Design | 27 |
+| Semiconductor Pipeline and Ecosystem | 19 |
+| Introduction to Tensors | 11 |
 
-Three problems that build intuition for the primitives behind every deep-learning framework:
+## Scripts
 
-| # | Problem | Topics |
-|---|---|---|
-| 1 | **Tensor Basics: Shape and Strides** | memory layout, C-contiguous strides, indexing |
-| 2 | **Matrix Multiplication** | triple-loop matmul, cache-friendly loop ordering, FLOPs |
-| 3 | **Broadcasting** | NumPy broadcasting rules, stride-trick implementation |
+```bash
+npm run dev          # Start the dev server
+npm run build        # Build with adapter-node
+npm run preview      # Preview the production build
+npm run check        # Svelte + TypeScript checks
+```
+
+## Environment Variables
+
+| Variable | Purpose |
+|---|---|
+| `COURSES_DIR` | Override the course content directory. Defaults to `<repo>/courses`. |
+| `DB_PATH` | Override the DuckDB file path. Defaults to `<repo>/data/jeff-course.duckdb`. |
+| `TORCH_INDEX_URL` | Override the PyTorch wheel index used by Python exercises with `torch`. |
+| `SANDBOX_SKIP_GPU_PROBE=1` | Skip Docker GPU probing on startup. |
+
+## Tech Stack
+
+SvelteKit 2, Svelte 5 runes, TypeScript, Tailwind CSS, Monaco Editor, unified
+Markdown rendering, KaTeX, Mermaid, DuckDB, Vite 6, and adapter-node.
+
+Important: `@sveltejs/vite-plugin-svelte` must stay on v5 or newer for Vite 6.
+
+## Sharing Courses
+
+A course is just a folder under `courses/<track-slug>/`. To share one, share that
+folder. To install one, copy it into `courses/` or point `COURSES_DIR` at a
+folder that contains one or more track directories.
+
+The long-term spirit of the project is a commons of agent-generated courses:
+small enough to fork, clear enough to review, and personal enough to study from.

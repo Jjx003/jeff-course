@@ -1,0 +1,8 @@
+title: "Amino Acid Chemistry Deep Dive"
+slug: "amino-acid-chemistry-deep-dive"
+description: "Test side-chain charge, aromaticity, sulfur chemistry, backbone constraints, and mutation consequences."
+order: 11
+difficulty: beginner
+estimatedMinutes: 18
+tags: [amino-acids, side-chains, quiz]
+type: quiz

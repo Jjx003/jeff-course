@@ -1,0 +1,11 @@
+title: "Model Optimization Systems"
+slug: "model-optimization-systems"
+description: >
+  The practical systems layer behind modern LLM and protein-model deployment:
+  quantization, LoRA and QLoRA, fused kernels, KV-cache memory, speculative
+  decoding, batching, and sequence-packing tricks that standard ML courses
+  usually skip.
+tags: [machine-learning, llm, protein-folding, systems, optimization]
+difficulty: advanced
+order: 8
+

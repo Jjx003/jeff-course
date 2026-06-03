@@ -1,0 +1,11 @@
+title: "Speculative decoding simulator"
+slug: "speculative-decoding-simulator"
+description: "Estimate speedup from draft length, acceptance rate, and verification cost."
+order: 14
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [speculative-decoding, simulation]
+type: coding
+languages: [python]
+defaultLanguage: python
+

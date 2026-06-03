@@ -1,0 +1,23 @@
+title: "Structure Metric Speed Drill"
+instructions: "Answer with the requested integer or nearest whole percent."
+roundSeconds: 120
+targetAccuracy: 0.8
+itemsPerRound: 18
+items:
+  - id: contact_precision
+    prompt_template: "A model predicts {{predicted}} contacts, and {{correct}} are true contacts. What is contact precision as a whole percent?"
+    params:
+      predicted: { min: 20, max: 100, step: 5 }
+      correct: { min: 10, max: 80, step: 5 }
+    correct_formula: "Math.round(Math.min(correct, predicted) / predicted * 100)"
+    answer_suffix: "%"
+    tolerance: 0
+    explanation_template: "Precision is true predicted contacts divided by all predicted contacts."
+  - id: high_confidence_count
+    prompt_template: "A protein has {{length}} residues. {{pct}}% are high-confidence by pLDDT. About how many residues is that?"
+    params:
+      length: { min: 80, max: 320, step: 20 }
+      pct: { min: 50, max: 95, step: 5 }
+    correct_formula: "Math.round(length * pct / 100)"
+    tolerance: 0
+    explanation_template: "High-confidence count is length times the percentage."

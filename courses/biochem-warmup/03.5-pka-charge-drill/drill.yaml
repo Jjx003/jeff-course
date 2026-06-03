@@ -1,0 +1,22 @@
+title: "pKa Charge State Drill"
+instructions: "Answer with the integer charge."
+roundSeconds: 120
+targetAccuracy: 0.85
+itemsPerRound: 20
+items:
+  - id: acidic_group_charge
+    prompt_template: "An acidic side chain has pKa {{pka}} at pH {{ph}}. What is its dominant charge?"
+    params:
+      pka: { min: 4, max: 6, step: 1 }
+      ph: { min: 2, max: 9, step: 1 }
+    correct_formula: "ph > pka ? -1 : 0"
+    tolerance: 0
+    explanation_template: "Acidic groups are mostly deprotonated and negative when pH is above pKa."
+  - id: basic_group_charge
+    prompt_template: "A basic side chain has pKa {{pka}} at pH {{ph}}. What is its dominant charge?"
+    params:
+      pka: { min: 8, max: 11, step: 1 }
+      ph: { min: 5, max: 12, step: 1 }
+    correct_formula: "ph < pka ? 1 : 0"
+    tolerance: 0
+    explanation_template: "Basic groups are mostly protonated and positive when pH is below pKa."

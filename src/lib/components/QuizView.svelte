@@ -68,6 +68,9 @@
 
   const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
   const DEFAULT_PASS_THRESHOLD = 0.7;
+  let isTest = $derived(problem.type === 'test');
+  let assessmentNoun = $derived(isTest ? 'test' : 'quiz');
+  let assessmentTitle = $derived(isTest ? 'Test' : 'Quiz');
 
   // ── resolveQuestions ──────────────────────────────────────────────────
   // Pure function: converts raw QuizQuestion[] (which may include parametric
@@ -182,18 +185,22 @@
   let isLastQuestion  = $derived(currentIndex === resolved.length - 1);
 
   let correctCount = $derived(
-    answers.reduce<number>((acc, ans, i) => {
-      const q = resolved[i];
-      if (!q || ans === null) return acc;
-      return acc + (ans === q.correctIndex ? 1 : 0);
-    }, 0)
+    isTest && phase !== 'results'
+      ? 0
+      : answers.reduce<number>((acc, ans, i) => {
+          const q = resolved[i];
+          if (!q || ans === null) return acc;
+          return acc + (ans === q.correctIndex ? 1 : 0);
+        }, 0)
   );
   let wrongCount = $derived(
-    answers.reduce<number>((acc, ans, i) => {
-      const q = resolved[i];
-      if (!q || ans === null) return acc;
-      return acc + (ans === q.correctIndex ? 0 : 1);
-    }, 0)
+    isTest && phase !== 'results'
+      ? 0
+      : answers.reduce<number>((acc, ans, i) => {
+          const q = resolved[i];
+          if (!q || ans === null) return acc;
+          return acc + (ans === q.correctIndex ? 0 : 1);
+        }, 0)
   );
 
   let scoreRatio = $derived(resolved.length > 0 ? correctCount / resolved.length : 0);
@@ -515,7 +522,7 @@
       <!-- ── Phase: empty (no questions configured) ──────────────────── -->
       {#if quizQuestions.length === 0}
         <div class="quiz-empty">
-          <p>No questions found for this quiz. Check that <code>quiz.yaml</code> exists and is valid.</p>
+          <p>No questions found for this {assessmentNoun}. Check that <code>quiz.yaml</code> exists and is valid.</p>
         </div>
 
       <!-- ── Phase: intro ───────────────────────────────────────────── -->
@@ -560,7 +567,7 @@
           <div class="intro-cta-row">
             <button class="cta-primary" onclick={startAttempt}>
               <span aria-hidden="true">▶</span>
-              {progress && progress.attempts > 0 ? 'Retake quiz' : 'Start quiz'}
+              {progress && progress.attempts > 0 ? `Retake ${assessmentNoun}` : `Start ${assessmentNoun}`}
             </button>
             {#if progress && progress.attempts > 0}
               <span class="intro-cta-sub">
@@ -586,6 +593,11 @@
             </div>
           </div>
 
+          {#if isTest}
+            <div class="score-chip" title="Answers recorded so far">
+              <span>{answers.filter((ans) => ans !== null).length} answered</span>
+            </div>
+          {:else}
           <div class="score-chip" title="Correct / wrong so far">
             <span class="score-chip-correct">
               <span class="dot dot-green" aria-hidden="true"></span>
@@ -597,6 +609,7 @@
               {wrongCount}
             </span>
           </div>
+          {/if}
         </div>
 
         <!-- Question card -->
@@ -618,13 +631,15 @@
             <div class="options-list">
               {#each currentQuestion.options as option, i}
                 {@const chosen = currentAnswer === i}
-                {@const correct = isAnswered && i === currentQuestion.correctIndex}
-                {@const wrong = isAnswered && chosen && !correct}
+                {@const revealAnswer = isAnswered && !isTest}
+                {@const correct = revealAnswer && i === currentQuestion.correctIndex}
+                {@const wrong = revealAnswer && chosen && !correct}
                 <button
                   class="option-btn"
                   class:option-correct={correct}
                   class:option-wrong={wrong}
-                  class:option-faded={isAnswered && !correct && !wrong}
+                  class:option-selected={isAnswered && isTest && chosen}
+                  class:option-faded={revealAnswer && !correct && !wrong}
                   class:option-idle={!isAnswered}
                   disabled={isAnswered}
                   onclick={() => selectAnswer(i)}
@@ -644,13 +659,15 @@
             <div class="tf-row">
               {#each currentQuestion.options as opt, i}
                 {@const chosen = currentAnswer === i}
-                {@const correct = isAnswered && i === currentQuestion.correctIndex}
-                {@const wrong = isAnswered && chosen && !correct}
+                {@const revealAnswer = isAnswered && !isTest}
+                {@const correct = revealAnswer && i === currentQuestion.correctIndex}
+                {@const wrong = revealAnswer && chosen && !correct}
                 <button
                   class="tf-btn"
                   class:option-correct={correct}
                   class:option-wrong={wrong}
-                  class:option-faded={isAnswered && !correct && !wrong}
+                  class:option-selected={isAnswered && isTest && chosen}
+                  class:option-faded={revealAnswer && !correct && !wrong}
                   class:option-idle={!isAnswered}
                   disabled={isAnswered}
                   onclick={() => selectAnswer(i)}
@@ -667,7 +684,7 @@
             </div>
           {/if}
 
-          {#if isAnswered}
+          {#if isAnswered && !isTest}
             {@const answered = currentAnswer as number}
             {@const correct = isCorrectAnswer(currentQuestion, answered)}
             <div
@@ -691,13 +708,22 @@
                 {isLastQuestion ? 'See results' : 'Next question →'}
               </button>
             </div>
-          {:else}
+          {:else if !isAnswered}
             <div class="kbd-hint kbd-hint-strip">
               {#if currentQuestion.type === 'true_false'}
                 <span><kbd>T</kbd>/<kbd>F</kbd> or <kbd>1</kbd>/<kbd>2</kbd> to answer</span>
               {:else}
                 <span>Press <kbd>1</kbd>–<kbd>{Math.min(currentQuestion.options.length, 9)}</kbd> to answer</span>
               {/if}
+            </div>
+          {:else}
+            <div class="question-actions">
+              <span class="kbd-hint kbd-hint-inline">
+                Answer recorded. <kbd>Enter</kbd> {isLastQuestion ? 'to see results' : 'for next'}
+              </span>
+              <button class="cta-primary" onclick={nextQuestion}>
+                {isLastQuestion ? 'See results' : 'Next question ->'}
+              </button>
             </div>
           {/if}
         </div>
@@ -721,7 +747,7 @@
             {/if}
           </div>
           <div class="results-hero-body">
-            <div class="results-hero-eyebrow">{passed ? 'Quiz passed' : 'Almost there'}</div>
+            <div class="results-hero-eyebrow">{passed ? `${assessmentTitle} passed` : 'Almost there'}</div>
             <div class="results-hero-score">
               <span class="results-hero-num">{correctCount}</span>
               <span class="results-hero-divider">/ {resolved.length}</span>
@@ -1264,6 +1290,11 @@
     background: rgba(239, 68, 68, 0.1);
     color: #fecaca;
   }
+  .option-btn.option-selected {
+    border-color: #60a5fa;
+    background: rgba(96, 165, 250, 0.1);
+    color: #dbeafe;
+  }
   .option-btn.option-faded {
     opacity: 0.55;
   }
@@ -1353,6 +1384,11 @@
     border-color: #ef4444;
     background: rgba(239, 68, 68, 0.1);
     color: #fecaca;
+  }
+  .tf-btn.option-selected {
+    border-color: #60a5fa;
+    background: rgba(96, 165, 250, 0.1);
+    color: #dbeafe;
   }
   .tf-btn.option-correct .tf-shortcut {
     background: rgba(34, 197, 94, 0.22);

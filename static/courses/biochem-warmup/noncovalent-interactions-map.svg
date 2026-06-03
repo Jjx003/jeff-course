@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 500" role="img" aria-labelledby="title desc">
+  <title id="title">Noncovalent interaction map</title>
+  <desc id="desc">A schematic protein binding pocket showing hydrogen bonds, salt bridges, hydrophobic packing, aromatic stacking, and desolvation.</desc>
+  <rect width="820" height="500" fill="#f8fafc"/>
+  <text x="410" y="46" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">Many weak contacts add up</text>
+  <path d="M162 260 C170 132 275 92 395 118 C500 140 624 118 672 226 C724 342 628 420 504 404 C385 388 298 442 210 360 C178 330 156 302 162 260 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+  <ellipse cx="420" cy="260" rx="82" ry="45" fill="#e0f2fe" stroke="#0284c7" stroke-width="3"/>
+  <text x="420" y="268" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" fill="#075985">ligand</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="17" fill="#0f172a" stroke-linecap="round">
+    <line x1="338" y1="242" x2="246" y2="205" stroke="#2563eb" stroke-width="4" stroke-dasharray="8 8"/>
+    <text x="176" y="196" fill="#2563eb">H-bond</text>
+    <line x1="486" y1="238" x2="590" y2="196" stroke="#dc2626" stroke-width="4"/>
+    <text x="596" y="191" fill="#dc2626">salt bridge</text>
+    <circle cx="285" cy="325" r="34" fill="#fed7aa" stroke="#ea580c" stroke-width="3"/>
+    <circle cx="340" cy="347" r="24" fill="#fed7aa" stroke="#ea580c" stroke-width="3"/>
+    <text x="206" y="380" fill="#ea580c">hydrophobic packing</text>
+    <rect x="548" y="302" width="80" height="36" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="3"/>
+    <rect x="566" y="322" width="80" height="36" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="3"/>
+    <text x="552" y="386" fill="#a16207">pi stacking</text>
+    <path d="M382 151 C406 134 452 133 476 151" fill="none" stroke="#14b8a6" stroke-width="4"/>
+    <text x="360" y="103" fill="#0f766e">desolvation cost</text>
+  </g>
+</svg>

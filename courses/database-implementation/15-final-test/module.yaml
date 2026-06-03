@@ -1,0 +1,8 @@
+title: Database Implementation Final
+slug: database-implementation-final
+description: Comprehensive assessment across storage, indexing, tuple layout, execution, optimization, cost estimation, and the final SELECT planner.
+order: 15
+difficulty: advanced
+estimatedMinutes: 45
+tags: [databases, c++, storage, query-execution, optimizer, assessment]
+type: test

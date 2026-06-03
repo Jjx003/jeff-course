@@ -1,0 +1,106 @@
+questions:
+  - id: roles_fabless
+    type: multiple_choice
+    stem: "A fabless chip company usually owns which part of the value chain?"
+    options:
+      - "The product architecture, RTL, physical design decisions, software stack, and customer relationships"
+      - "The EUV scanner fleet and cleanroom used to manufacture every wafer"
+      - "Only the final package assembly line"
+      - "The mine-to-wafer supply of silicon, neon, argon, and photoresist"
+    correct: 0
+    explanation: "Fabless firms design and sell chips but outsource wafer manufacturing to foundries and often outsource assembly/test to OSATs or packaging partners."
+
+  - id: foundry_vs_idm
+    type: multiple_choice
+    stem: "What most cleanly distinguishes a pure-play foundry from an IDM?"
+    options:
+      - "A foundry only makes memory; an IDM only makes logic."
+      - "A foundry manufactures chips for external customers; an IDM both designs and manufactures many of its own chips."
+      - "A foundry sells EDA software; an IDM sells substrate laminates."
+      - "A foundry owns no fabs; an IDM owns no product teams."
+    correct: 1
+    explanation: "TSMC-style pure-play foundries sell manufacturing capacity as a service. IDMs such as Intel or many analog firms historically combine product design with internal manufacturing."
+
+  - id: osat_role
+    type: multiple_choice
+    stem: "Where does an OSAT most commonly sit in the pipeline?"
+    options:
+      - "Before circuit design, defining the instruction set architecture"
+      - "Inside the EUV source, producing laser pulses for lithography"
+      - "After wafer fabrication, handling assembly, package build, and test"
+      - "Between EDA synthesis and place-and-route, checking Verilog syntax"
+    correct: 2
+    explanation: "OSAT means outsourced semiconductor assembly and test. It is downstream of wafer fab, although advanced AI packages can blur the line between foundry and OSAT responsibilities."
+
+  - id: wafer_starts
+    type: multiple_choice
+    stem: "A fab reports 40,000 wafer starts per month. What is being counted?"
+    options:
+      - "The number of good chips shipped to customers each month"
+      - "The number of lithography masks used per product"
+      - "The number of HBM stacks attached to packages each month"
+      - "The number of wafers beginning the manufacturing flow each month"
+    correct: 3
+    explanation: "Wafer starts measure input capacity. Good die output depends on die size, defect density, process complexity, and yield."
+
+  - id: utilization_fixed_cost
+    type: true_false
+    stem: "Because fabs have high depreciation, labor, maintenance, and facilities costs, low utilization can damage gross margin even if wafer pricing is unchanged."
+    correct: true
+    explanation: "Correct. A large part of fab cost is fixed or semi-fixed. When fewer wafers move through the line, those costs are spread across fewer sellable wafers."
+
+  - id: yield_cost
+    type: true_false
+    stem: "If wafer cost and die size are unchanged, improving yield lowers cost per good die."
+    correct: true
+    explanation: "Correct. More good die from the same wafer means the wafer's cost is divided over more sellable units."
+
+  - id: capex_margin_lag
+    type: multiple_choice
+    stem: "Why can aggressive capacity expansion pressure a foundry's financials before demand fully arrives?"
+    options:
+      - "Depreciation is paid only after every chip is sold, so it never affects margin."
+      - "Tools and buildings require large upfront capex and then depreciation, while revenue only appears when customers fill the capacity."
+      - "New fabs eliminate fixed costs because automation replaces cleanrooms."
+      - "Foundries cannot charge for advanced nodes until the node is at end of life."
+    correct: 1
+    explanation: "Capacity is built ahead of demand. If ramps are slow or customers delay, depreciation and startup costs show up before high-volume revenue catches up."
+
+  - id: utilization_pricing_power
+    type: multiple_choice
+    stem: "When leading-edge foundry utilization is very high and customers have few alternatives, what usually happens to pricing power?"
+    options:
+      - "It shifts entirely to customers because fabs must discount every wafer."
+      - "It disappears because wafer prices are fixed by silicon commodity markets."
+      - "It shifts toward the foundry because scarce qualified capacity becomes valuable."
+      - "It moves to OSATs only, because wafer fabrication no longer matters."
+    correct: 2
+    explanation: "High utilization plus limited substitutes lets the capacity owner defend or raise price, especially for qualified leading-edge process slots."
+
+  - id: good_die_parametric
+    type: parametric
+    stem_template: "A wafer has {{dies_per_wafer}} candidate die. Yield is {{yield_pct}}%. About how many good die does one wafer produce?"
+    params:
+      dies_per_wafer: { min: 400, max: 900, step: 100 }
+      yield_pct: { min: 50, max: 90, step: 10 }
+    correct_formula: "Math.round(dies_per_wafer * yield_pct / 100)"
+    distractor_formulas:
+      - "Math.round(dies_per_wafer / (yield_pct / 100))"
+      - "Math.round(dies_per_wafer * yield_pct / 200)"
+      - "Math.round(dies_per_wafer * yield_pct / 100 + 25)"
+    answer_suffix: " good die"
+    explanation_template: "Good die are candidate die times yield: {{dies_per_wafer}} x {{yield_pct}}% = {{Math.round(dies_per_wafer * yield_pct / 100)}}."
+
+  - id: cost_per_good_die_parametric
+    type: parametric
+    stem_template: "A processed wafer costs USD {{wafer_cost}} and yields {{good_die}} good die. What is the approximate cost per good die?"
+    params:
+      wafer_cost: { min: 12000, max: 24000, step: 3000 }
+      good_die: { min: 60, max: 180, step: 30 }
+    correct_formula: "Math.round(wafer_cost / good_die)"
+    distractor_formulas:
+      - "Math.round(wafer_cost / (good_die * 2))"
+      - "Math.round(wafer_cost / (good_die / 2))"
+      - "Math.round(good_die / wafer_cost * 1000)"
+    answer_suffix: " dollars"
+    explanation_template: "Cost per good die divides wafer cost by sellable die: USD {{wafer_cost}} / {{good_die}} = about {{Math.round(wafer_cost / good_die)}} dollars."

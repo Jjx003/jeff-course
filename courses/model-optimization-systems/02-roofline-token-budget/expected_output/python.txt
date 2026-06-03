@@ -1,0 +1,9 @@
+=== 70B decode roofline ===
+weight read: 140.0 GB
+matmul work: 140.0 GFLOP
+memory lower bound: 41.79 ms
+compute lower bound: 0.142 ms
+bottleneck guess: memory
+GQA KV cache: 2.50 GiB
+MHA KV cache: 20.00 GiB
+

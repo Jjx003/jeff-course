@@ -1,0 +1,100 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "Which formula pattern best represents an alcohol functional group?"
+    options:
+      - "R-OH"
+      - "R-COOH"
+      - "R-SH"
+      - "R-C(=O)-NH2"
+    correct: 0
+    explanation: "An alcohol is an -OH group attached to a carbon framework. Carboxylic acids, thiols, and amides have different heteroatom patterns."
+
+  - id: q2
+    type: multiple_choice
+    stem: "At physiological pH, a simple carboxylic acid side chain is usually found mostly as:"
+    options:
+      - "R-COOH, neutral"
+      - "R-COO^-, negatively charged"
+      - "R-CO^+, positively charged"
+      - "R-CH2OH, neutral"
+    correct: 1
+    explanation: "Most biological carboxylic acids have pKa values near 4-5, so at pH near 7 they are mostly deprotonated carboxylates."
+
+  - id: q3
+    type: true_false
+    stem: "A thiol has the pattern R-SH and is the sulfur analog of an alcohol."
+    correct: true
+    explanation: "Thiols contain sulfur in place of the alcohol oxygen. Cysteine side chains are biological thiols."
+
+  - id: q4
+    type: multiple_choice
+    stem: "Which group is the repeating linkage in a protein backbone?"
+    options:
+      - "Ester"
+      - "Amide"
+      - "Aldehyde"
+      - "Phosphate monoester"
+    correct: 1
+    explanation: "The peptide bond is an amide linkage between a carbonyl carbon and a nitrogen."
+
+  - id: q5
+    type: multiple_choice
+    stem: "Which statement best describes a phosphate group in nucleotides?"
+    options:
+      - "It is usually hydrophobic and uncharged."
+      - "It is often negatively charged and strongly polar."
+      - "It behaves like an aromatic ring."
+      - "It removes all hydrogen-bonding ability from the molecule."
+    correct: 1
+    explanation: "Phosphates are highly polar and commonly carry negative charge, which makes nucleotide backbones water-compatible."
+
+  - id: q6
+    type: multiple_choice
+    stem: "The carbonyl functional group is:"
+    options:
+      - "C=O"
+      - "C=C"
+      - "N-H"
+      - "P-O-P"
+    correct: 0
+    explanation: "A carbonyl is a carbon double-bonded to oxygen. Aldehydes, ketones, carboxylic acids, esters, and amides all contain carbonyls."
+
+  - id: q7
+    type: true_false
+    stem: "Aromatic rings are typically planar because their pi electrons are delocalized."
+    correct: true
+    explanation: "Aromaticity requires cyclic, conjugated pi overlap, which favors a flat ring geometry."
+
+  - id: q8
+    type: multiple_choice
+    stem: "Which pair correctly matches a functional group with a common biomolecular example?"
+    options:
+      - "Amine - lysine side chain"
+      - "Thiol - phosphate backbone"
+      - "Carboxylate - benzene ring"
+      - "Alcohol - peptide bond"
+    correct: 0
+    explanation: "Lysine has a basic amine side chain. Peptide bonds are amides, and phosphate backbones are phosphate esters."
+
+  - id: q9
+    type: multiple_choice
+    stem: "A neutral amide is generally less basic than a simple amine because:"
+    options:
+      - "The nitrogen lone pair is delocalized into the carbonyl."
+      - "The nitrogen has no electrons."
+      - "The carbonyl removes all polarity."
+      - "Amides are always negatively charged."
+    correct: 0
+    explanation: "Amide resonance shares the nitrogen lone pair with the carbonyl, making it less available to bind a proton."
+
+  - id: q10
+    type: multiple_choice
+    stem: "Which collection contains only groups that can commonly participate in hydrogen bonding?"
+    options:
+      - "Alcohol, amide, carboxylate"
+      - "Alkane, aromatic hydrocarbon, methyl group"
+      - "Benzene, ethyl group, methane"
+      - "Only carbon-carbon single bonds"
+    correct: 0
+    explanation: "Alcohols, amides, and carboxylates contain electronegative atoms that can donate or accept hydrogen bonds depending on their exact protonation state."

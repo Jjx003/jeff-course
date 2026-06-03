@@ -1,0 +1,24 @@
+title: "Shape and Broadcast Speed Drill"
+instructions: "Answer with a single integer."
+roundSeconds: 120
+targetAccuracy: 0.85
+itemsPerRound: 20
+items:
+  - id: matmul_output_elements
+    prompt_template: "A matrix of shape ({{m}}, {{k}}) multiplies a matrix of shape ({{k}}, {{n}}). How many elements are in the output?"
+    params:
+      m: { min: 2, max: 12, step: 1 }
+      k: { min: 2, max: 16, step: 1 }
+      n: { min: 2, max: 12, step: 1 }
+    correct_formula: "m * n"
+    tolerance: 0
+    explanation_template: "The output shape is ({{m}}, {{n}}), so it has {{m * n}} elements."
+  - id: broadcast_elements
+    prompt_template: "A tensor with shape ({{batch}}, {{rows}}, 1) broadcasts with (1, {{rows}}, {{cols}}). How many elements are in the broadcasted result?"
+    params:
+      batch: { min: 2, max: 8, step: 1 }
+      rows: { min: 2, max: 10, step: 1 }
+      cols: { min: 2, max: 10, step: 1 }
+    correct_formula: "batch * rows * cols"
+    tolerance: 0
+    explanation_template: "Broadcast shape is ({{batch}}, {{rows}}, {{cols}}), so element count is {{batch * rows * cols}}."

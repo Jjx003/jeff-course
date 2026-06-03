@@ -1,0 +1,9 @@
+title: "Speculative decoding and inference tricks"
+slug: "speculative-decoding"
+description: "Understand draft-target verification, EAGLE-style heads, prefix caching, and sampling caveats."
+order: 13
+difficulty: advanced
+estimatedMinutes: 35
+tags: [speculative-decoding, inference, latency]
+type: reading
+

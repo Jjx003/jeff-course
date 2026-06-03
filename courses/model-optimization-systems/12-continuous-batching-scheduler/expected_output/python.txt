@@ -1,0 +1,7 @@
+t=0: active=A,B
+t=1: active=A,C
+t=2: active=A,C
+t=3: active=D
+t=4: active=D
+completed: A:3 B:1 C:3 D:5
+

@@ -1,0 +1,11 @@
+title: "Merge LoRA and count the memory"
+slug: "lora-merge-and-memory"
+description: "Implement the LoRA delta, merge it into a base matrix, and compute adapter memory."
+order: 7
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [lora, qlora, memory]
+type: coding
+languages: [python]
+defaultLanguage: python
+

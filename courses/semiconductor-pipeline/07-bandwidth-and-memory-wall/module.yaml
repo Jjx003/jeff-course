@@ -1,0 +1,10 @@
+title: "Bandwidth and the memory wall"
+slug: "bandwidth-and-memory-wall"
+description: "Implement small roofline and HBM sizing helpers to see why memory bandwidth and capacity shape AI accelerator value."
+order: 7
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [hbm, bandwidth, roofline, ai-accelerators]
+type: coding
+languages: [python]
+defaultLanguage: python

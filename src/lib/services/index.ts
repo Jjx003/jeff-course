@@ -25,6 +25,7 @@ export { apiStatsService as statsService } from './api/statsService.api.js';
 export { apiReadingProgressService as readingProgressService } from './api/readingProgressService.api.js';
 export { apiStudyTimeService as studyTimeService } from './api/studyTimeService.api.js';
 export { apiQuizService as quizService } from './api/quizService.api.js';
+export { apiDrillService as drillService } from './api/drillService.api.js';
 
 // Execution service
 export { localExecutionService as executionService } from './local/executionService.local.js';

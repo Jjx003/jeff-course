@@ -1,0 +1,12 @@
+Roofline scenarios:
+  attention_scores: intensity=16.00 FLOP/byte -> 53.6 TFLOP/s (bandwidth-bound)
+  dense_matmul: intensity=280.00 FLOP/byte -> 800.0 TFLOP/s (compute-bound)
+  layer_norm: intensity=0.75 FLOP/byte -> 2.5 TFLOP/s (bandwidth-bound)
+
+HBM sizing:
+  70B weights at 2 bytes + 20% overhead: 168.0 GB
+  8B weights at 2 bytes + 15% overhead: 18.4 GB
+  KV cache, 80 layers, hidden 8192, seq 32768, fp16: 85.9 GB
+
+Takeaway:
+  Bandwidth decides low-intensity throughput; capacity decides which models and context lengths fit.

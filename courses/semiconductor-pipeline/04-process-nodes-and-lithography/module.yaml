@@ -1,0 +1,8 @@
+title: "Process nodes and lithography"
+slug: "process-nodes-and-lithography"
+description: "Understand node names, EUV and DUV lithography, masks, reticles, overlay, multi-patterning, and leading-edge constraints."
+order: 4
+difficulty: intermediate
+estimatedMinutes: 25
+tags: [process-nodes, lithography, euv, duv]
+type: reading

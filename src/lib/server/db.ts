@@ -132,6 +132,20 @@ export const dbReady: Promise<void> = (async () => {
   `);
   await dbRun(`CREATE INDEX IF NOT EXISTS quiz_attempts_problem_idx ON quiz_attempts (problem_id)`);
 
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS drill_attempts (
+      id           VARCHAR PRIMARY KEY,
+      problem_id   VARCHAR NOT NULL,
+      total        INTEGER NOT NULL,
+      correct      INTEGER NOT NULL,
+      avg_ms       BIGINT  NOT NULL,
+      best_streak  INTEGER NOT NULL,
+      duration_ms  BIGINT  NOT NULL,
+      completed_at BIGINT  NOT NULL
+    )
+  `);
+  await dbRun(`CREATE INDEX IF NOT EXISTS drill_attempts_problem_idx ON drill_attempts (problem_id)`);
+
   // Study sessions track active engagement time per problem visit. The
   // client owns `active_ms` as a running counter (it pauses on idle / hidden
   // tab); each heartbeat overwrites the row's `active_ms`, never appends to

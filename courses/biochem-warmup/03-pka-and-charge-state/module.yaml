@@ -1,0 +1,10 @@
+title: "pKa and charge state"
+slug: "pka-and-charge-state"
+description: "Use Henderson-Hasselbalch to estimate protonated fractions and biomolecular net charge."
+order: 3
+difficulty: beginner
+estimatedMinutes: 30
+tags: [pka, charge, henderson-hasselbalch, amino-acids]
+type: coding
+languages: [python]
+defaultLanguage: python

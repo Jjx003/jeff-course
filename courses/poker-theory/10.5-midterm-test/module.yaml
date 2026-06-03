@@ -1,0 +1,8 @@
+title: "Poker Theory Midterm"
+slug: "poker-theory-midterm"
+description: "A checkpoint test covering probability, pot odds, expected value, range theory, and GTO foundations."
+order: 10.5
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [test, probability, pot-odds, expected-value, ranges, gto]
+type: test

@@ -1,0 +1,126 @@
+questions:
+  - id: final_euclid_invariant
+    type: true_false
+    stem: "Euclid's algorithm is based on the invariant $\\gcd(a,b)=\\gcd(b, a \\bmod b)$ for $b \\ne 0$."
+    correct: true
+    explanation: "True. Replacing $a$ by its remainder after division by $b$ preserves exactly the common divisors, which is the key invariant of Euclid's algorithm."
+
+  - id: final_crt_structure
+    type: multiple_choice
+    stem: "When $m$ and $n$ are coprime, the Chinese Remainder Theorem identifies $\\mathbb Z/(mn)\\mathbb Z$ with:"
+    options:
+      - "$\\mathbb Z/m\\mathbb Z \\times \\mathbb Z/n\\mathbb Z$"
+      - "$\\mathbb Z/(m+n)\\mathbb Z$"
+      - "$\\mathbb Z/\\gcd(m,n)\\mathbb Z$"
+      - "$\\mathbb Z/(m-n)\\mathbb Z$"
+    correct: 0
+    explanation: "For coprime moduli, reduction modulo $m$ and modulo $n$ gives a ring isomorphism from $\\mathbb Z/(mn)\\mathbb Z$ to the product ring."
+
+  - id: final_totient_prime_power
+    type: parametric
+    stem_template: "Compute $\\varphi({{p}}^{{k}})$."
+    params:
+      p: { min: 3, max: 7, step: 2 }
+      k: { min: 2, max: 4, step: 1 }
+    correct_formula: "Math.pow(p,k) - Math.pow(p,k-1)"
+    distractor_formulas:
+      - "Math.pow(p,k) - 1"
+      - "Math.pow(p,k-1)"
+      - "p * k"
+    answer_suffix: ""
+    explanation_template: "For a prime power, $\\varphi(p^k)=p^k-p^{k-1}=p^{k-1}(p-1)$. Here that is ${{Math.pow(p,k)}}-{{Math.pow(p,k-1)}}={{Math.pow(p,k)-Math.pow(p,k-1)}}$."
+
+  - id: final_quadratic_reciprocity_sign
+    type: multiple_choice
+    stem: "For distinct odd primes $p$ and $q$, when does quadratic reciprocity introduce a negative sign between $\\left(\\frac{p}{q}\\right)$ and $\\left(\\frac{q}{p}\\right)$?"
+    options:
+      - "When $p \\equiv q \\equiv 3 \\pmod 4$."
+      - "When at least one of $p,q$ is $1 \\pmod 4$."
+      - "Whenever $p < q$."
+      - "Whenever both primes are quadratic residues."
+    correct: 0
+    explanation: "Quadratic reciprocity gives $\\left(\\frac{p}{q}\\right)\\left(\\frac{q}{p}\\right)=(-1)^{((p-1)/2)((q-1)/2)}$, which is negative exactly when both primes are $3 \\pmod 4$."
+
+  - id: final_jacobi_warning
+    type: true_false
+    stem: "If the Jacobi symbol $\\left(\\frac{a}{n}\\right)=1$ for odd composite $n$, then $a$ must be a quadratic residue modulo $n$."
+    correct: false
+    explanation: "False. A Jacobi symbol of $1$ is necessary but not sufficient for being a quadratic residue modulo a composite modulus."
+
+  - id: final_sum_two_squares
+    type: multiple_choice
+    stem: "Which condition characterizes positive integers representable as a sum of two squares?"
+    options:
+      - "Every prime $q \\equiv 3 \\pmod 4$ appears with even exponent in the prime factorization."
+      - "Every prime factor is $1 \\pmod 4$."
+      - "The integer is squarefree."
+      - "The integer has an odd number of divisors."
+    correct: 0
+    explanation: "The two-square theorem says that primes congruent to $3 \\pmod 4$ must occur to even exponent; primes $2$ and $1 \\pmod 4$ primes are unrestricted."
+
+  - id: final_continued_fraction_convergents
+    type: true_false
+    stem: "Convergents of a simple continued fraction give especially good rational approximations to the represented real number."
+    correct: true
+    explanation: "True. Continued-fraction convergents satisfy strong best-approximation properties among rationals with bounded denominator."
+
+  - id: final_pell_check
+    type: parametric
+    stem_template: "For $D={{D}}$ and $x={{x}}$, $y={{y}}$, compute $x^2-Dy^2$."
+    params:
+      D: { min: 2, max: 6, step: 1 }
+      x: { min: 3, max: 9, step: 2 }
+      y: { min: 1, max: 3, step: 1 }
+    correct_formula: "x*x - D*y*y"
+    distractor_formulas:
+      - "x*x + D*y*y"
+      - "D*x*x - y*y"
+      - "x*x - D*y"
+    answer_suffix: ""
+    explanation_template: "Substitute directly into the Pell expression: $x^2-Dy^2={{x}}^2-{{D}}\\cdot{{y}}^2={{x*x}}-{{D*y*y}}={{x*x-D*y*y}}$."
+
+  - id: final_partition_generating_function
+    type: multiple_choice
+    stem: "The ordinary generating function for the partition numbers $p(n)$ is:"
+    options:
+      - "$\\prod_{k\\ge 1}\\frac{1}{1-x^k}$"
+      - "$\\prod_{k\\ge 1}(1+x^k)$"
+      - "$\\sum_{k\\ge 1} kx^k$"
+      - "$\\frac{1}{1-x}$"
+    correct: 0
+    explanation: "Each part size $k$ may appear $0,1,2,\\ldots$ times, contributing $1+x^k+x^{2k}+\\cdots=(1-x^k)^{-1}$. Multiplying over all $k$ gives the partition generating function."
+
+  - id: final_padic_absolute_value
+    type: multiple_choice
+    stem: "If $v_p(n)$ is the exponent of $p$ in $n$, then the p-adic absolute value of a nonzero integer $n$ is:"
+    options:
+      - "$|n|_p = p^{-v_p(n)}$"
+      - "$|n|_p = p^{v_p(n)}$"
+      - "$|n|_p = v_p(n)$"
+      - "$|n|_p = n^{-p}$"
+    correct: 0
+    explanation: "The p-adic norm is normalized so that higher divisibility by $p$ makes a number smaller: $|n|_p=p^{-v_p(n)}$."
+
+  - id: final_dirichlet_convolution
+    type: multiple_choice
+    stem: "For arithmetic functions $f$ and $g$, the Dirichlet convolution $(f*g)(n)$ is:"
+    options:
+      - "$\\sum_{d\\mid n} f(d)g(n/d)$"
+      - "$\\sum_{d=1}^n f(d)g(d)$"
+      - "$f(n)+g(n)$"
+      - "$f(g(n))$"
+    correct: 0
+    explanation: "Dirichlet convolution sums over divisors: $(f*g)(n)=\\sum_{d\\mid n} f(d)g(n/d)$. This operation corresponds to multiplying Dirichlet series under suitable convergence assumptions."
+
+  - id: final_convolution_value
+    type: parametric
+    stem_template: "Let $\\mathbf{1}(n)=1$ and $\\operatorname{Id}(n)=n$. Compute $(\\mathbf{1}*\\operatorname{Id})({{n}})$."
+    params:
+      n: { min: 4, max: 10, step: 1 }
+    correct_formula: "Array.from({length:n},(_,i)=>i+1).filter(d => n % d === 0).reduce((s,d)=>s+n/d,0)"
+    distractor_formulas:
+      - "Array.from({length:n},(_,i)=>i+1).filter(d => n % d === 0).reduce((s,d)=>s+d*d,0)"
+      - "n"
+      - "Array.from({length:n},(_,i)=>i+1).filter(d => n % d === 0).length"
+    answer_suffix: ""
+    explanation_template: "$(\\mathbf{1}*\\operatorname{Id})(n)=\\sum_{d\\mid n}\\mathbf{1}(d)\\operatorname{Id}(n/d)=\\sum_{d\\mid n} n/d$, which is the same as summing the positive divisors of $n$. For $n={{n}}$, add those divisor values to get the selected answer."

@@ -1,0 +1,8 @@
+title: "Foundry economics quiz"
+slug: "foundry-economics-quiz"
+description: "Check your intuition for chip-company roles, wafer starts, yield, utilization, capex, and gross margin."
+order: 5
+difficulty: intermediate
+estimatedMinutes: 18
+tags: [foundries, economics, yield, capex]
+type: quiz

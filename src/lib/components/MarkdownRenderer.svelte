@@ -27,6 +27,7 @@
   let html = $state('');
   let loading = $state(true);
   let container = $state<HTMLDivElement>();
+  let expandedImage = $state<{ src: string; alt: string } | null>(null);
 
   function slugify(text: string): string {
     const slug = text
@@ -109,6 +110,48 @@
     }
   }
 
+  function enhanceImages(root: HTMLElement | null | undefined) {
+    if (!root || !browser) return;
+
+    const images = root.querySelectorAll<HTMLImageElement>('img');
+    for (const image of images) {
+      image.dataset.expandableImage = 'true';
+      image.tabIndex = 0;
+      image.setAttribute('role', 'button');
+      image.setAttribute('title', 'Open image');
+      image.setAttribute('aria-label', image.alt ? `Open image: ${image.alt}` : 'Open image');
+    }
+  }
+
+  function openImage(image: HTMLImageElement) {
+    expandedImage = {
+      src: image.currentSrc || image.src,
+      alt: image.alt || 'Course image'
+    };
+  }
+
+  function closeImage() {
+    expandedImage = null;
+  }
+
+  function handleMarkdownClick(event: MouseEvent) {
+    const target = event.target;
+    if (!(target instanceof HTMLImageElement)) return;
+    openImage(target);
+  }
+
+  function handleMarkdownKeydown(event: KeyboardEvent) {
+    const target = event.target;
+    if (!(target instanceof HTMLImageElement)) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    openImage(target);
+  }
+
+  function handleWindowKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && expandedImage) closeImage();
+  }
+
   async function render() {
     if (!content.trim()) {
       html = '<p class="text-slate-500 italic">No content.</p>';
@@ -128,6 +171,7 @@
     queueMicrotask(() => {
       assignHeadingIds(container);
       upgradeMermaidBlocks(container);
+      enhanceImages(container);
     });
   }
 
@@ -137,11 +181,29 @@
     render();
   });
 
+  $effect(() => {
+    const root = container;
+    if (!root) return;
+
+    const clickListener = (event: MouseEvent) => handleMarkdownClick(event);
+    const keydownListener = (event: KeyboardEvent) => handleMarkdownKeydown(event);
+    root.addEventListener('click', clickListener);
+    root.addEventListener('keydown', keydownListener);
+
+    return () => {
+      root.removeEventListener('click', clickListener);
+      root.removeEventListener('keydown', keydownListener);
+    };
+  });
+
   onMount(() => {
     assignHeadingIds(container);
     upgradeMermaidBlocks(container);
+    enhanceImages(container);
   });
 </script>
+
+<svelte:window onkeydown={handleWindowKeydown} />
 
 {#if loading}
   <div class="flex items-center gap-2 px-6 py-8 text-slate-500">
@@ -165,6 +227,28 @@
   </div>
 {/if}
 
+{#if expandedImage}
+  <div class="image-modal-shell">
+    <button class="image-modal-backdrop" type="button" aria-label="Close image" onclick={closeImage}></button>
+    <div
+      class="image-modal"
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      aria-label={expandedImage.alt}>
+      <div class="image-modal-toolbar">
+        <div class="image-modal-title">{expandedImage.alt}</div>
+        <button type="button" class="image-modal-close" aria-label="Close image" onclick={closeImage}>
+          x
+        </button>
+      </div>
+      <div class="image-modal-canvas">
+        <img src={expandedImage.src} alt={expandedImage.alt} />
+      </div>
+    </div>
+  </div>
+{/if}
+
 <style>
   :global(.mermaid-diagram) {
     display: flex;
@@ -185,5 +269,99 @@
   }
   :global(.prose :where(h1, h2, h3, h4)[data-markdown-heading-id]) {
     scroll-margin-top: 1.25rem;
+  }
+  :global(.prose img[data-expandable-image='true']) {
+    cursor: zoom-in;
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  :global(.prose img[data-expandable-image='true']:hover),
+  :global(.prose img[data-expandable-image='true']:focus-visible) {
+    border-color: rgb(56 189 248 / 0.75);
+    box-shadow: 0 0 0 3px rgb(56 189 248 / 0.16);
+    outline: none;
+  }
+  .image-modal-shell {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .image-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    display: block;
+    height: 100%;
+    width: 100%;
+    cursor: zoom-out;
+    border: 0;
+    background: rgb(2 6 23 / 0.86);
+    backdrop-filter: blur(10px);
+  }
+  .image-modal {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    max-height: min(94vh, 1100px);
+    width: min(92vw, 1200px);
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgb(71 85 105 / 0.9);
+    border-radius: 10px;
+    background: #020617;
+    box-shadow: 0 24px 80px rgb(0 0 0 / 0.55);
+  }
+  .image-modal-toolbar {
+    display: flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid rgb(30 41 59 / 0.95);
+    padding: 0.5rem 0.75rem 0.5rem 1rem;
+  }
+  .image-modal-title {
+    overflow: hidden;
+    color: #cbd5e1;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .image-modal-close {
+    display: inline-flex;
+    height: 2rem;
+    width: 2rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #cbd5e1;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+  .image-modal-close:hover,
+  .image-modal-close:focus-visible {
+    background: rgb(51 65 85 / 0.8);
+    color: #f8fafc;
+    outline: none;
+  }
+  .image-modal-canvas {
+    overflow: auto;
+    padding: 1rem;
+  }
+  .image-modal-canvas img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: calc(94vh - 6rem);
+    height: auto;
+    margin: 0 auto;
+    border-radius: 6px;
+    background: #f8fafc;
   }
 </style>

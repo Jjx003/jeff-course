@@ -1,0 +1,8 @@
+Semiconductor pipeline constraint dashboard
+-------------------------------------------
+1. HBM stacks | util=1.47x | backlog=5.00 mo | score=3.03 | note=memory allocation limits module shipments
+2. Advanced packaging | util=1.33x | backlog=4.00 mo | score=2.68 | note=interposer and substrate capacity gate AI accelerators
+3. Data-center power | util=1.40x | backlog=4.00 mo | score=2.66 | note=rack deployment waits on power and cooling readiness
+
+HBM stacks: utilization=1.47x, months_to_clear=5.00
+Optical transceivers: utilization=1.12x, months_to_clear=2.00

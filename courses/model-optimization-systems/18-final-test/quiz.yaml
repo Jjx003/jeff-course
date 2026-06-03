@@ -1,0 +1,55 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "A low-batch decode step in a 70B BF16 model is often memory-bound because:"
+    options: ["It must reread a very large amount of weight data per generated token", "The tokenizer is too slow", "Softmax is impossible in BF16", "LoRA adapters always double compute"]
+    correct: 0
+    explanation: "At low batch, the weight read can dominate because there is not enough reuse to amortize memory bandwidth."
+  - id: q2
+    type: true_false
+    stem: "Weight quantization and KV-cache quantization solve exactly the same bottleneck."
+    correct: false
+    explanation: "Weight quantization compresses model parameters; KV-cache quantization targets the cache that grows with context and concurrency."
+  - id: q3
+    type: multiple_choice
+    stem: "The LoRA parameter count for one matrix is:"
+    options: ["r(d_in + d_out)", "d_in d_out r", "d_in + d_out + r^2", "2 d_in d_out"]
+    correct: 0
+    explanation: "LoRA stores A and B, with shapes r by d_in and d_out by r."
+  - id: q4
+    type: multiple_choice
+    stem: "What makes online softmax useful for tiled attention?"
+    options: ["It stores token strings in sorted order", "It combines block softmax statistics exactly without materializing all scores", "It removes the need for matrix multiplication", "It only works for protein sequences"]
+    correct: 1
+    explanation: "Running max, denominator, and output accumulators let blocks be streamed exactly."
+  - id: q5
+    type: true_false
+    stem: "Speculative decoding can reduce latency while preserving the target model distribution when the verification rule is correct."
+    correct: true
+    explanation: "The draft proposes tokens, but the target model verifies them."
+  - id: q6
+    type: multiple_choice
+    stem: "For protein structure models, pair representations are dangerous because they often scale like:"
+    options: ["O(log L)", "O(L)", "O(L^2)", "O(1)"]
+    correct: 2
+    explanation: "Pair features are indexed by residue pairs, so memory can scale quadratically with sequence length."
+  - id: q7
+    type: parametric
+    stem_template: "A {{params}}B parameter model is stored in {{bits}} bits per weight. About how many GB are the raw weights?"
+    params:
+      params: { min: 8, max: 72, step: 8 }
+      bits: { min: 4, max: 8, step: 4 }
+    correct_formula: "Math.round(params * bits / 8)"
+    distractor_formulas:
+      - "params * bits"
+      - "Math.round(params * 8 / bits)"
+      - "Math.round(params + bits)"
+    answer_suffix: " GB"
+    explanation_template: "{{bits}} bits is {{bits / 8}} bytes, so raw storage is {{params}} * {{bits / 8}} GB."
+  - id: q8
+    type: multiple_choice
+    stem: "Which optimization is most directly about admitting new decode requests while old requests continue?"
+    options: ["Continuous batching", "NF4 codebook design", "Protein contact maps", "SVD initialization"]
+    correct: 0
+    explanation: "Continuous batching schedules work at token granularity instead of waiting for a whole batch to finish."
+

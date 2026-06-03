@@ -124,14 +124,22 @@
           <span class="text-xs text-slate-600">{problem.estimatedMinutes}m</span>
           {#if problem.type === 'reading'}
             <span class="text-xs text-slate-500 font-mono uppercase tracking-wider">Read</span>
-          {:else if problem.type === 'quiz'}
-            <span class="quiz-pill" title="Self-assessment quiz">
+          {:else if problem.type === 'quiz' || problem.type === 'test'}
+            <span class="quiz-pill" title={problem.type === 'test' ? 'Exam-style test' : 'Self-assessment quiz'}>
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" />
                 <path d="M9.5 9.5a2.5 2.5 0 1 1 4 2c-.8.7-1.5 1.3-1.5 2.5" />
                 <circle cx="12" cy="17" r="0.6" fill="currentColor" />
               </svg>
-              Quiz
+              {problem.type === 'test' ? 'Test' : 'Quiz'}
+            </span>
+          {:else if problem.type === 'drill'}
+            <span class="quiz-pill" title="Replayable speed drill">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 6v6l4 2" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+              Drill
             </span>
           {:else}
             {#each problem.languages as lang}

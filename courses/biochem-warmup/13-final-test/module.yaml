@@ -1,0 +1,8 @@
+title: "Biochem Warm-up Final Test"
+slug: "biochem-warmup-final-test"
+description: "A cumulative test spanning chemical foundations, protein interactions, thermodynamics, kinetics, amino acid chemistry, and mutation reasoning."
+order: 13
+difficulty: beginner
+estimatedMinutes: 30
+tags: [test, cumulative, thermodynamics, kinetics, amino-acids, mutations]
+type: test

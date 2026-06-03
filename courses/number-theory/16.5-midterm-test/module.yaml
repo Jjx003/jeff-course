@@ -1,0 +1,8 @@
+title: "Midterm Test: Foundations Through Quadratic Residues"
+slug: "midterm-test"
+description: "A cumulative checkpoint covering divisibility, Euclid's algorithm, primes, congruences, CRT, Hensel lifting, primitive roots, and quadratic residues."
+order: 16.5
+difficulty: advanced
+estimatedMinutes: 35
+tags: [number-theory, assessment, midterm, congruences, quadratic-residues]
+type: test

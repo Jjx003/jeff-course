@@ -1,0 +1,137 @@
+questions:
+  - id: q_raii_file_handle
+    type: multiple_choice
+    stem: "Why is an RAII wrapper a good fit for a database file descriptor?"
+    options:
+      - "It closes the descriptor automatically when the owning object leaves scope, including during exceptions."
+      - "It makes every read and write durable without calling fsync."
+      - "It lets multiple objects delete the same descriptor safely."
+      - "It avoids all kernel calls by caching file contents in C++ memory."
+    correct: 0
+    explanation: "RAII ties resource lifetime to object lifetime. A file descriptor wrapper can close in its destructor even when control leaves through an exception."
+
+  - id: q_unique_page_guard
+    type: true_false
+    stem: "A `std::unique_ptr<Page, Deleter>` can express exclusive ownership while still running a custom unpin or cleanup action when the guard is destroyed."
+    correct: true
+    explanation: "A unique pointer owns exactly one object, and its deleter type defines the cleanup behavior. That makes it useful for page guards that must release a pinned page."
+
+  - id: q_move_only_buffer
+    type: multiple_choice
+    stem: "A move-only `Buffer<T>` used for storage-engine memory should usually delete copy construction because:"
+    options:
+      - "copying the object could duplicate ownership of the same allocation and cause double-free or aliasing bugs."
+      - "C++ templates cannot be copied."
+      - "move constructors are slower than copy constructors."
+      - "deleted copy construction prevents the buffer from storing non-trivial objects."
+    correct: 0
+    explanation: "Move-only ownership prevents two objects from believing they own the same memory. The resource can still be transferred explicitly with move construction or move assignment."
+
+  - id: q_slab_allocator_goal
+    type: multiple_choice
+    stem: "What is the main performance reason to use a slab allocator for fixed-size database objects?"
+    options:
+      - "It reduces repeated general-purpose heap allocation overhead and improves locality for similarly sized objects."
+      - "It compresses pages before they are written to disk."
+      - "It guarantees that every allocation is durable after a crash."
+      - "It lets variable-length tuples grow without page compaction."
+    correct: 0
+    explanation: "A slab allocator reuses fixed-size blocks from a free list, avoiding many calls into the general heap and keeping hot objects close together in memory."
+
+  - id: q_slotted_page_regions
+    type: true_false
+    stem: "In the slotted-page design from this course, slot entries grow from the front of the page while tuple bytes are packed from the end of the page."
+    correct: true
+    explanation: "The slot array starts after the header and grows forward. Tuple payloads are placed from the page end backward, leaving one contiguous free-space region between them."
+
+  - id: q_slotted_page_free_space
+    type: parametric
+    stem_template: "A page has {{pageSize}} bytes. Its header is {{header}} bytes, each slot entry is {{slotBytes}} bytes, and it currently stores {{slots}} live slots plus {{tupleBytes}} bytes of tuple payload. Ignoring compaction holes, how many bytes of free space remain?"
+    params:
+      pageSize: { min: 4096, max: 4096, step: 4096 }
+      header: { min: 8, max: 16, step: 4 }
+      slotBytes: { min: 4, max: 4, step: 4 }
+      slots: { min: 20, max: 80, step: 10 }
+      tupleBytes: { min: 1600, max: 2800, step: 200 }
+    correct_formula: "pageSize - header - slotBytes * slots - tupleBytes"
+    distractor_formulas:
+      - "pageSize - header - tupleBytes"
+      - "pageSize - slotBytes * slots - tupleBytes"
+      - "pageSize - header - slotBytes * (slots + 1) - tupleBytes"
+    answer_suffix: " bytes"
+    explanation_template: "Free space is the page size minus the fixed header, minus the slot array, minus tuple payload bytes: {{pageSize}} - {{header}} - {{slotBytes}} * {{slots}} - {{tupleBytes}} = {{pageSize - header - slotBytes * slots - tupleBytes}} bytes."
+
+  - id: q_tombstone_stability
+    type: multiple_choice
+    stem: "Why does a deleted tuple leave a tombstone slot instead of shifting later slots left?"
+    options:
+      - "Stable `(page_id, slot_id)` references are needed so existing index entries remain valid."
+      - "Tombstones make reads from disk page-aligned."
+      - "Shifting slots would make the B+ tree height increase immediately."
+      - "The operating system requires every page to contain at least one deleted slot."
+    correct: 0
+    explanation: "Indexes often point to records by `(page_id, slot_id)`. Re-numbering slots during deletion would invalidate those references."
+
+  - id: q_pread_pwrite
+    type: multiple_choice
+    stem: "Why does the disk manager use `pread` and `pwrite` instead of `read` and `write`?"
+    options:
+      - "They operate at an explicit offset without changing the shared file position, which is safer for concurrent page access."
+      - "They automatically allocate B+ tree nodes."
+      - "They bypass the need for a buffer pool."
+      - "They always force data to durable storage before returning."
+    correct: 0
+    explanation: "`pread` and `pwrite` take an offset argument and do not mutate the file descriptor's current offset. Durability still requires flushing or fsync."
+
+  - id: q_page_offset_calc
+    type: parametric
+    stem_template: "With page size {{pageSize}} bytes, what byte offset stores page id {{pageId}}?"
+    params:
+      pageSize: { min: 4096, max: 4096, step: 4096 }
+      pageId: { min: 3, max: 15, step: 3 }
+    correct_formula: "pageSize * pageId"
+    distractor_formulas:
+      - "pageSize + pageId"
+      - "pageSize * (pageId - 1)"
+      - "pageSize * (pageId + 1)"
+    answer_suffix: " bytes"
+    explanation_template: "A page begins at `page_id * PAGE_SIZE`, so page {{pageId}} starts at {{pageId}} * {{pageSize}} = {{pageId * pageSize}} bytes."
+
+  - id: q_buffer_pin_count
+    type: true_false
+    stem: "A buffer-pool frame with `pin_count > 0` is eligible for eviction as long as it is not dirty."
+    correct: false
+    explanation: "Pinned frames are in active use and cannot be evicted. Dirty status only controls whether a frame must be written back before reuse once it is otherwise evictable."
+
+  - id: q_dirty_eviction
+    type: multiple_choice
+    stem: "What must the buffer pool do before reusing a dirty victim frame for a different page?"
+    options:
+      - "Write the dirty page back to disk, then update the page table to reflect the new page-to-frame mapping."
+      - "Drop the dirty bytes because the caller already saw the result."
+      - "Increment the victim's pin count so future evictions skip it forever."
+      - "Move the page into every B+ tree leaf."
+    correct: 0
+    explanation: "Dirty frames contain changes not yet reflected on disk. They must be flushed before the frame is reused, and the page table must stop mapping the old page to that frame."
+
+  - id: q_bplus_leaf_split
+    type: multiple_choice
+    stem: "During a B+ tree leaf split, which key is inserted into the parent as the separator?"
+    options:
+      - "The first key of the new right leaf, copied upward while remaining in the leaf."
+      - "The last key of the left leaf, moved out of the leaf."
+      - "A random key chosen to keep inserts unpredictable."
+      - "Every key in the leaf, copied upward into the parent."
+    correct: 0
+    explanation: "For leaf splits, the first key of the right leaf is copied to the parent. It stays in the leaf so leaf-level search and range scans remain complete."
+
+  - id: q_bplus_range_scan
+    type: multiple_choice
+    stem: "What B+ tree structure makes range scans efficient after the starting leaf is found?"
+    options:
+      - "Leaf nodes are linked in sorted order, so the scan can walk leaf-to-leaf."
+      - "Internal nodes store every row value."
+      - "The root keeps a bitmap of all deleted tuples."
+      - "Every separator key stores a full tuple payload."
+    correct: 0
+    explanation: "B+ tree leaves form a linked sorted sequence. A range scan searches to the first matching leaf, then walks across leaves rather than repeating root-to-leaf searches."

@@ -1,0 +1,164 @@
+questions:
+  - id: final_pot_odds
+    type: parametric
+    stem_template: "The pot is ${{pot}}. Villain bets ${{bet}}. What equity do you need to call profitably?"
+    params:
+      pot: { min: 100, max: 400, step: 50 }
+      bet: { min: 25, max: 200, step: 25 }
+    correct_formula: "Math.round(bet / (pot + 2 * bet) * 100)"
+    distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
+      - "Math.round(pot / (pot + 2 * bet) * 100)"
+      - "Math.round(bet / pot * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      You call {{bet}} into a final pot of {{pot + 2 * bet}}.
+      Break-even equity = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet/(pot+2*bet)*100)}}%.
+
+  - id: final_mdf
+    type: parametric
+    stem_template: "The pot is ${{pot}} and villain bets ${{bet}}. What is your Minimum Defense Frequency?"
+    params:
+      pot: { min: 100, max: 500, step: 50 }
+      bet: { min: 50, max: 300, step: 50 }
+    correct_formula: "Math.round(pot / (pot + bet) * 100)"
+    distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
+      - "Math.round(pot / (pot + 2 * bet) * 100)"
+      - "Math.round(bet / (pot + 2 * bet) * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      MDF = pot / (pot + bet) = {{pot}} / {{pot + bet}} = {{Math.round(pot/(pot+bet)*100)}}%.
+      Folding more than {{100 - Math.round(pot/(pot+bet)*100)}}% lets villain's zero-equity bluffs profit immediately.
+
+  - id: final_alpha_bluff_fraction
+    type: parametric
+    stem_template: "You bet ${{bet}} into a pot of ${{pot}} on the river. What fraction of your betting range can be bluffs in a balanced polar strategy?"
+    params:
+      pot: { min: 100, max: 400, step: 50 }
+      bet: { min: 50, max: 300, step: 50 }
+    correct_formula: "Math.round(bet / (pot + bet) * 100)"
+    distractor_formulas:
+      - "Math.round(pot / (pot + bet) * 100)"
+      - "Math.round(bet / (pot + 2 * bet) * 100)"
+      - "Math.round((pot + bet) / (pot + 2 * bet) * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      Balanced river bluff fraction equals alpha: bet / (pot + bet).
+      Here alpha = {{bet}} / {{pot + bet}} = {{Math.round(bet/(pot+bet)*100)}}%.
+
+  - id: final_geometric_sizing
+    type: parametric
+    stem_template: "Effective stacks are {{spr}} times the pot and there are {{streets}} streets remaining. Using geometric sizing, what percentage of the current pot should you bet each street?"
+    params:
+      spr: { min: 2, max: 8, step: 1 }
+      streets: { min: 2, max: 3, step: 1 }
+    correct_formula: "Math.round((Math.pow(spr, 1/streets) - 1) / 2 * 100)"
+    distractor_formulas:
+      - "Math.round((Math.pow(spr, 1/streets) - 1) * 100)"
+      - "Math.round((spr / streets - 1) / 2 * 100)"
+      - "Math.round(100 / (100 + spr * 25) * 100)"
+    answer_suffix: "% pot"
+    explanation_template: >-
+      Geometric sizing uses growth factor g = SPR^(1/streets) = {{spr}}^(1/{{streets}}) = {{Math.round(Math.pow(spr,1/streets)*100)/100}}.
+      Bet fraction = (g - 1) / 2 = {{Math.round((Math.pow(spr,1/streets)-1)/2*100)}}% of pot.
+
+  - id: final_icm_threshold
+    type: parametric
+    stem_template: "A chip-EV call breaks even at {{chip_equity}}% equity, but ICM adds a {{risk_premium}} percentage-point risk premium. What equity threshold should you require?"
+    params:
+      chip_equity: { min: 25, max: 45, step: 5 }
+      risk_premium: { min: 5, max: 20, step: 5 }
+    correct_formula: "chip_equity + risk_premium"
+    distractor_formulas:
+      - "chip_equity - risk_premium"
+      - "Math.round(chip_equity * (1 + risk_premium / 100))"
+      - "Math.round(risk_premium / chip_equity * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      ICM risk premium raises the required equity over the chip-EV threshold.
+      Required equity = {{chip_equity}}% + {{risk_premium}} percentage points = {{chip_equity + risk_premium}}%.
+
+  - id: final_combo_blocker
+    type: multiple_choice
+    stem: "You hold the ace of hearts on a three-heart river. What is the most direct blocker effect?"
+    options:
+      - "You block villain from having any flush"
+      - "You block villain's nut-flush combinations"
+      - "You increase villain's number of value hands"
+      - "You make pot odds irrelevant"
+    correct: 1
+    explanation: "The ace of hearts blocks the nut flush and reduces the number of strongest flushes villain can hold. It does not block every possible flush."
+
+  - id: final_mdf_alpha
+    type: true_false
+    stem: "MDF and alpha are complements: for the same bet size, MDF + alpha = 100%."
+    correct: true
+    explanation: "True. MDF = P/(P+B), alpha = B/(P+B), and the two fractions sum to (P+B)/(P+B) = 100%."
+
+  - id: final_polarized_sizing
+    type: multiple_choice
+    stem: "On the river, your range is mostly very strong value hands and missed draws with poor showdown value. Which sizing family best matches that range?"
+    options:
+      - "Tiny merged bet"
+      - "Large polar bet or overbet"
+      - "Mandatory check"
+      - "Minimum legal bet only"
+    correct: 1
+    explanation: "A polar range wants to pressure the opponent with large sizes: value hands win more when called, and bluffs gain fold equity."
+
+  - id: final_board_texture
+    type: multiple_choice
+    stem: "Which flop is most likely to be considered wet and dynamic?"
+    options:
+      - "K-7-2 rainbow"
+      - "A-A-5 rainbow"
+      - "J-T-9 two-tone"
+      - "Q-4-4 rainbow"
+    correct: 2
+    explanation: "J-T-9 two-tone contains many straight draws, pair-plus-draw hands, and flush draws. Equity can shift sharply on later streets."
+
+  - id: final_position
+    type: true_false
+    stem: "Being in position improves equity realization because you act after the opponent on future streets."
+    correct: true
+    explanation: "True. Position gives more information, controls pot size more effectively, and lets hands realize equity more efficiently."
+
+  - id: final_initiative
+    type: multiple_choice
+    stem: "What does initiative usually give the preflop aggressor on many flops?"
+    options:
+      - "The right to win the pot without showdown automatically"
+      - "A credible first betting opportunity because their range often contains strong hands"
+      - "Immunity from check-raises"
+      - "A guarantee of nut advantage on every board"
+    correct: 1
+    explanation: "Initiative means the aggressor can often represent strong hands and apply pressure first. It is useful, but board texture and range interaction still matter."
+
+  - id: final_multistreet_plan
+    type: multiple_choice
+    stem: "Why should a flop bet often be chosen with turn and river plans in mind?"
+    options:
+      - "Because future cards never change range advantage"
+      - "Because sizing, stack depth, blockers, and barrel candidates determine which later streets can profitably continue"
+      - "Because the flop is the only street where EV matters"
+      - "Because every flop c-bet commits the stack"
+    correct: 1
+    explanation: "Multi-street planning connects current sizing to later stack-to-pot ratios, good barrel cards, value targets, and bluff candidates."
+
+  - id: final_icm_concept
+    type: true_false
+    stem: "In tournaments, chip EV and dollar EV can diverge because losing chips often hurts more than winning the same number of chips helps."
+    correct: true
+    explanation: "True. ICM makes chips nonlinear in dollar value, especially near bubbles and pay jumps. This creates risk premium and tighter calling thresholds."
+
+  - id: final_exploit
+    type: multiple_choice
+    stem: "When is an exploitative deviation most justified?"
+    options:
+      - "When you have reliable evidence that an opponent over-folds, over-calls, or otherwise deviates from equilibrium"
+      - "Whenever a solver mixes two actions"
+      - "Only when you are out of position"
+      - "Never; GTO forbids adjustment"
+    correct: 0
+    explanation: "Exploitative play is justified by a real opponent tendency. You give up some theoretical balance to gain EV against that specific leak."

@@ -1,0 +1,8 @@
+title: "pKa Charge State Drill"
+slug: "pka-charge-state-drill"
+description: "Practice quick protonation and net-charge calls from pH and pKa."
+order: 3.5
+difficulty: beginner
+estimatedMinutes: 8
+tags: [pka, charge, acid-base, drill]
+type: drill

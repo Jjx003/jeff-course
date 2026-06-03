@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 420" role="img" aria-labelledby="title desc">
+  <title id="title">Thiol disulfide redox</title>
+  <desc id="desc">Two cysteine thiols oxidize to a disulfide bond and can be reduced back to thiols.</desc>
+  <rect width="860" height="420" fill="#f8fafc"/>
+  <text x="430" y="48" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">Cysteine toggles between thiols and disulfides</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="28" fill="#0f172a" stroke-linecap="round">
+    <text x="92" y="190">R-SH</text>
+    <text x="92" y="250">R-SH</text>
+    <path d="M250 210 H600" stroke="#2563eb" stroke-width="5"/>
+    <path d="M600 210 l-24 -15 M600 210 l-24 15" stroke="#2563eb" stroke-width="5"/>
+    <path d="M600 250 H250" stroke="#16a34a" stroke-width="5"/>
+    <path d="M250 250 l24 -15 M250 250 l24 15" stroke="#16a34a" stroke-width="5"/>
+    <text x="360" y="190" font-size="20" fill="#2563eb">oxidation</text>
+    <text x="362" y="286" font-size="20" fill="#16a34a">reduction</text>
+    <text x="645" y="225">R-S-S-R</text>
+    <rect x="632" y="177" width="160" height="72" rx="12" fill="none" stroke="#ef4444" stroke-width="4"/>
+    <text x="638" y="308" font-size="19" fill="#475569">covalent staple</text>
+    <text x="86" y="308" font-size="19" fill="#475569">reactive thiols</text>
+  </g>
+</svg>

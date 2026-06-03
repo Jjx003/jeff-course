@@ -1,0 +1,11 @@
+title: "Roofline math for token budgets"
+slug: "roofline-token-budget"
+description: "Estimate when an inference step is memory-bound, compute-bound, or KV-cache-bound."
+order: 2
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [roofline, memory-bandwidth, inference]
+type: coding
+languages: [python]
+defaultLanguage: python
+

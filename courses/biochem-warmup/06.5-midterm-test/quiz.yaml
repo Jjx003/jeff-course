@@ -1,0 +1,123 @@
+questions:
+  - id: resonance_peptide_planarity
+    type: multiple_choice
+    stem: "Why is the peptide bond usually treated as planar?"
+    options:
+      - "Amide resonance gives the C-N bond partial double-bond character."
+      - "All single bonds in proteins are completely rigid."
+      - "The peptide bond is a disulfide bond."
+      - "The backbone has no polar atoms."
+    correct: 0
+    explanation: "The amide nitrogen lone pair delocalizes into the carbonyl, giving the peptide C-N bond partial double-bond character and restricting rotation."
+
+  - id: carbonyl_polarity
+    type: multiple_choice
+    stem: "In a carbonyl group, which atom is most electron-rich and commonly acts as a hydrogen-bond acceptor?"
+    options:
+      - "The oxygen"
+      - "The carbonyl carbon"
+      - "A neighboring alpha hydrogen"
+      - "A methyl carbon"
+    correct: 0
+    explanation: "Oxygen is more electronegative than carbon, so the carbonyl oxygen carries partial negative character and can accept hydrogen bonds."
+
+  - id: amide_basicity
+    type: true_false
+    stem: "A neutral amide is usually much less basic than a simple amine because the nitrogen lone pair is delocalized toward the carbonyl."
+    correct: true
+    explanation: "True. Amide resonance makes the nitrogen lone pair less available for proton binding than in a typical amine."
+
+  - id: acid_fraction
+    type: parametric
+    stem_template: "A carboxylic acid has pKa {{pka}}. At pH {{ph}}, approximately what percent is in the protonated HA form? Use $HA/A^- = 10^{pKa-pH}$."
+    params:
+      pka: { min: 4, max: 5, step: 1 }
+      ph: { min: 6, max: 8, step: 1 }
+    correct_formula: "Math.round(100 / (1 + Math.pow(10, ph - pka)))"
+    distractor_formulas:
+      - "Math.round(100 / (1 + Math.pow(10, pka - ph)))"
+      - "50"
+      - "25"
+    answer_suffix: "%"
+    explanation_template: "For an acid, fraction protonated is $1/(1+10^{pH-pKa})$. Here that is $1/(1+10^{{ph - pka}})$, or about {{Math.round(100 / (1 + Math.pow(10, ph - pka)))}}%."
+
+  - id: hydrophobic_effect_driver
+    type: multiple_choice
+    stem: "What is the main thermodynamic idea behind the hydrophobic effect in water?"
+    options:
+      - "Clustering nonpolar surfaces can release ordered water and increase solvent entropy."
+      - "Nonpolar groups form strong covalent bonds with water."
+      - "Water refuses to hydrogen bond with other water molecules."
+      - "Hydrophobic groups are usually charged at neutral pH."
+    correct: 0
+    explanation: "Water can form ordered shells around exposed nonpolar surfaces. Burying those surfaces together can release some ordered water, often making the process entropy-favorable."
+
+  - id: hbond_donor_acceptor
+    type: multiple_choice
+    stem: "Which pair correctly identifies a hydrogen-bond donor and acceptor?"
+    options:
+      - "Donor: O-H group; acceptor: carbonyl oxygen"
+      - "Donor: alkane C-H; acceptor: methyl carbon"
+      - "Donor: carboxylate oxygen; acceptor: protonated ammonium nitrogen"
+      - "Donor: aromatic carbon; acceptor: alkane carbon"
+    correct: 0
+    explanation: "An O-H group can donate its hydrogen, and a carbonyl oxygen can accept through lone pairs. The other pairs do not describe the usual donor-acceptor pattern."
+
+  - id: chirality_recognition
+    type: true_false
+    stem: "Two enantiomers can bind differently to a chiral protein pocket even if they have the same atom connectivity."
+    correct: true
+    explanation: "True. Protein binding sites are chiral environments, so mirror-image ligands can make different three-dimensional contacts."
+
+  - id: net_charge_simple_peptide
+    type: parametric
+    stem_template: "At pH 7, estimate the net charge of a short peptide with {{lys}} Lys side chains, {{asp}} Asp side chains, a free N-terminus, and a free C-terminus. Assume Lys and the N-terminus are +1, Asp and the C-terminus are -1."
+    params:
+      lys: { min: 1, max: 4, step: 1 }
+      asp: { min: 1, max: 3, step: 1 }
+    correct_formula: "lys + 1 - asp - 1"
+    distractor_formulas:
+      - "lys + asp"
+      - "lys + 1 - asp"
+      - "lys - asp - 1"
+    answer_suffix: ""
+    explanation_template: "The N- and C-termini cancel in this simplified estimate. Net charge = {{lys}} Lys - {{asp}} Asp = {{lys + 1 - asp - 1}}."
+
+  - id: glycine_backbone
+    type: multiple_choice
+    stem: "Why can glycine access backbone conformations that many other residues cannot?"
+    options:
+      - "Its side chain is only hydrogen, so it creates very little steric clash."
+      - "It has a permanent positive charge."
+      - "It forms a rigid ring with the backbone nitrogen."
+      - "It is always D rather than L."
+    correct: 0
+    explanation: "Glycine's minimal side chain reduces steric restrictions, allowing unusually broad phi/psi angle access."
+
+  - id: proline_constraint
+    type: multiple_choice
+    stem: "What makes proline unusual in a protein backbone?"
+    options:
+      - "Its side chain loops back to the backbone nitrogen and restricts phi angle."
+      - "It has no covalent bonds."
+      - "It is the only residue with a carboxylate side chain."
+      - "It always forms disulfides."
+    correct: 0
+    explanation: "Proline's cyclic side chain constrains the backbone and its backbone nitrogen lacks a normal amide hydrogen donor."
+
+  - id: phosphate_properties
+    type: multiple_choice
+    stem: "Which description best fits biological phosphate groups?"
+    options:
+      - "Highly polar and often negatively charged"
+      - "Nonpolar and usually buried without partners"
+      - "Aromatic and planar like benzene"
+      - "Identical in reactivity to an alkane"
+    correct: 0
+    explanation: "Phosphate groups contain multiple oxygens and commonly carry negative charge, making them strongly polar and water-compatible."
+
+  - id: water_competes
+    type: true_false
+    stem: "When a ligand binds a protein, polar groups on both partners may need to give up favorable hydrogen bonds with water before forming new contacts."
+    correct: true
+    explanation: "True. Desolvation is part of binding: new ligand-protein contacts must compensate for favorable water contacts that are lost."

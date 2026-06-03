@@ -1,0 +1,5 @@
+weak draft: committed=2.11 speedup=1.60x
+solid draft: committed=3.05 speedup=2.31x
+long draft: committed=3.70 speedup=2.26x
+expensive draft: committed=3.05 speedup=1.53x
+

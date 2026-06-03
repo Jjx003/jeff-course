@@ -1,0 +1,10 @@
+title: "Yield and capacity model"
+slug: "yield-and-capacity-model"
+description: "Estimate dies per wafer, Poisson yield, good dies per month, and bottleneck capacity."
+order: 3
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [yield, capacity, modeling, python]
+type: coding
+languages: [python]
+defaultLanguage: python

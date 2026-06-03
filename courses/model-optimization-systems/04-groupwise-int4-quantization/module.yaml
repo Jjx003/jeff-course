@@ -1,0 +1,11 @@
+title: "Implement groupwise INT4 quantization"
+slug: "groupwise-int4-quantization"
+description: "Write a tiny symmetric groupwise quantizer and measure reconstruction error."
+order: 4
+difficulty: intermediate
+estimatedMinutes: 40
+tags: [quantization, int4, compression]
+type: coding
+languages: [python]
+defaultLanguage: python
+

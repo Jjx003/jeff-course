@@ -1,0 +1,125 @@
+questions:
+  - id: mid_divisibility_transitive
+    type: true_false
+    stem: "If $a \\mid b$ and $b \\mid c$, then $a \\mid c$."
+    correct: true
+    explanation: "True. If $b = ak$ and $c = b\\ell$, then $c = a(k\\ell)$, so $a$ divides $c$."
+
+  - id: mid_bezout_coprime
+    type: multiple_choice
+    stem: "Which statement is equivalent to $\\gcd(a,b)=1$?"
+    options:
+      - "There exist integers $x,y$ such that $ax+by=1$."
+      - "Both $a$ and $b$ are prime."
+      - "$a$ divides $b-1$."
+      - "$ab$ has no prime factors."
+    correct: 0
+    explanation: "Bezout's identity says that the least positive integer combination of $a$ and $b$ is $\\gcd(a,b)$. Thus $\\gcd(a,b)=1$ exactly when $ax+by=1$ has an integer solution."
+
+  - id: mid_gcd_calculation
+    type: parametric
+    stem_template: "Compute $\\gcd({{a}}, {{b}})$."
+    params:
+      a: { min: 84, max: 132, step: 12 }
+      b: { min: 126, max: 198, step: 18 }
+    correct_formula: "((x,y)=>{ x=Math.abs(x); y=Math.abs(y); while(y!==0){ const t=x%y; x=y; y=t; } return x; })(a,b)"
+    distractor_formulas:
+      - "((x,y)=>{ x=Math.abs(x); y=Math.abs(y); while(y!==0){ const t=x%y; x=y; y=t; } return x; })(a,b) + 6"
+      - "Math.min(a,b)"
+      - "Math.abs(a-b)"
+    answer_suffix: ""
+    explanation_template: "Running Euclid's algorithm on ${{a}}$ and ${{b}}$ preserves the gcd at each remainder step. The correct answer is the last nonzero remainder."
+
+  - id: mid_prime_factorization_lcm
+    type: multiple_choice
+    stem: "If $a = 2^3\\cdot 3^2\\cdot 5$ and $b = 2\\cdot 3^4\\cdot 7$, what prime-power rule gives $\\operatorname{lcm}(a,b)$?"
+    options:
+      - "Use the larger exponent of each prime appearing in either factorization."
+      - "Use the smaller exponent of each shared prime only."
+      - "Add only the exponents of primes appearing in both numbers."
+      - "Ignore primes that appear in only one factorization."
+    correct: 0
+    explanation: "The lcm must contain enough of every prime to be divisible by both numbers, so it uses the maximum exponent for each prime."
+
+  - id: mid_mod_inverse_condition
+    type: true_false
+    stem: "An integer $a$ has a multiplicative inverse modulo $n$ if and only if $\\gcd(a,n)=1$."
+    correct: true
+    explanation: "True. A modular inverse $ax \\equiv 1 \\pmod n$ is exactly a Bezout relation $ax+ny=1$, which exists if and only if $\\gcd(a,n)=1$."
+
+  - id: mid_crt_compatibility
+    type: multiple_choice
+    stem: "For the system $x \\equiv 2 \\pmod 6$ and $x \\equiv 5 \\pmod 9$, what is the correct compatibility check?"
+    options:
+      - "No solution, because $2 \\not\\equiv 5 \\pmod{\\gcd(6,9)}$."
+      - "A unique solution modulo $15$, because $6+9=15$."
+      - "A unique solution modulo $54$, because $6$ and $9$ are coprime."
+      - "Infinitely many incongruent solutions modulo $54$."
+    correct: 0
+    explanation: "For non-coprime moduli, the residues must agree modulo the gcd. Here $\\gcd(6,9)=3$, but $2 \\not\\equiv 5 \\pmod 3$, so the system is inconsistent."
+
+  - id: mid_crt_calculation
+    type: parametric
+    stem_template: "Find the least nonnegative solution to $x \\equiv {{r3}} \\pmod 3$ and $x \\equiv {{r5}} \\pmod 5$."
+    params:
+      r3: { min: 0, max: 2, step: 1 }
+      r5: { min: 0, max: 4, step: 1 }
+    correct_formula: "Array.from({length:15},(_,i)=>i).find(x => x % 3 === r3 && x % 5 === r5)"
+    distractor_formulas:
+      - "(Array.from({length:15},(_,i)=>i).find(x => x % 3 === r3 && x % 5 === r5) + 3) % 15"
+      - "(Array.from({length:15},(_,i)=>i).find(x => x % 3 === r3 && x % 5 === r5) + 5) % 15"
+      - "(r3 + r5) % 15"
+    answer_suffix: ""
+    explanation_template: "Since $3$ and $5$ are coprime, there is one solution modulo $15$. Checking residues modulo $15$ gives $x \\equiv {{Array.from({length:15},(_,i)=>i).find(x => x % 3 === r3 && x % 5 === r5)}} \\pmod{15}$."
+
+  - id: mid_hensel_condition
+    type: multiple_choice
+    stem: "In the simple version of Hensel's Lemma, what condition guarantees a unique lift of a root $r$ modulo $p$ to a root modulo higher powers of $p$?"
+    options:
+      - "$f'(r) \\not\\equiv 0 \\pmod p$"
+      - "$f(r) \\not\\equiv 0 \\pmod p$"
+      - "$p$ is a quadratic residue modulo $r$"
+      - "$r$ is a primitive root modulo $p$"
+    correct: 0
+    explanation: "The nonsingular condition $f'(r) \\not\\equiv 0 \\pmod p$ lets us invert the derivative modulo $p$ and solve uniquely for each correction term."
+
+  - id: mid_order_divides_group
+    type: true_false
+    stem: "If $a$ is a unit modulo an odd prime $p$, then the order of $a$ modulo $p$ divides $p-1$."
+    correct: true
+    explanation: "True. The units modulo $p$ form a group of order $p-1$, and Lagrange's theorem says the order of any element divides the group order."
+
+  - id: mid_primitive_root_definition
+    type: multiple_choice
+    stem: "What does it mean for $g$ to be a primitive root modulo an odd prime $p$?"
+    options:
+      - "The powers of $g$ generate every nonzero residue modulo $p$."
+      - "$g^2 \\equiv 1 \\pmod p$."
+      - "$g$ is the smallest positive prime less than $p$."
+      - "$g$ has no inverse modulo $p$."
+    correct: 0
+    explanation: "A primitive root is a generator of $(\\mathbb Z/p\\mathbb Z)^\\times$, so its powers run through all $p-1$ nonzero residue classes."
+
+  - id: mid_legendre_euler
+    type: multiple_choice
+    stem: "Euler's criterion says that for odd prime $p$ and $p \\nmid a$, the Legendre symbol $\\left(\\frac{a}{p}\\right)$ is congruent modulo $p$ to:"
+    options:
+      - "$a^{(p-1)/2}$"
+      - "$a^{p-1}$"
+      - "$a^2$"
+      - "$p^{(a-1)/2}$"
+    correct: 0
+    explanation: "Euler's criterion is $a^{(p-1)/2} \\equiv \\left(\\frac{a}{p}\\right) \\pmod p$, where the right side is interpreted as $1$ or $-1$."
+
+  - id: mid_legendre_mod7
+    type: parametric
+    stem_template: "For $a={{a}}$, compute the Legendre symbol $\\left(\\frac{a}{7}\\right)$."
+    params:
+      a: { min: 1, max: 6, step: 1 }
+    correct_formula: "([1,2,4].includes(a % 7) ? 1 : -1)"
+    distractor_formulas:
+      - "([1,2,4].includes(a % 7) ? -1 : 1)"
+      - "0"
+      - "2"
+    answer_suffix: ""
+    explanation_template: "The nonzero quadratic residues modulo $7$ are $1^2,2^2,3^2 \\equiv 1,4,2$, so the residue set is $\\{1,2,4\\}$. Since ${{a}}$ {{ [1,2,4].includes(a % 7) ? 'is' : 'is not' }} in that set, the Legendre symbol is ${{[1,2,4].includes(a % 7) ? 1 : -1}}$."

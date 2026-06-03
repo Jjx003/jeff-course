@@ -1,0 +1,9 @@
+title: "The 2026 optimization stack"
+slug: "optimization-stack"
+description: "Build the mental model for modern LLM and protein-model optimization."
+order: 1
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [systems, inference, llm, protein-models]
+type: reading
+

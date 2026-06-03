@@ -38,8 +38,12 @@ export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
  *                 for theory, background concepts, or pure-reading lessons.
  *   - `quiz`    : interactive self-assessment with multiple-choice / true-false
  *                 questions loaded from `quiz.yaml`. No editor, no runner.
+ *   - `test`    : exam-style assessment using `quiz.yaml`; correctness and
+ *                 explanations are withheld until the results screen.
+ *   - `drill`   : replayable timed practice using `drill.yaml`, optimized for
+ *                 speed, fluency, and visible improvement over time.
  */
-export type ModuleType = 'coding' | 'reading' | 'quiz';
+export type ModuleType = 'coding' | 'reading' | 'quiz' | 'test' | 'drill';
 
 // ── Quiz types ───────────────────────────────────────────────────────────
 
@@ -142,6 +146,38 @@ export interface QuizAttempt {
   completedAt: number;
 }
 
+export interface DrillItem {
+  id: string;
+  prompt_template: string;
+  params: Record<string, { min: number; max: number; step: number }>;
+  correct_formula: string;
+  answer_suffix?: string;
+  tolerance?: number;
+  explanation_template?: string;
+}
+
+export interface DrillConfig {
+  title?: string;
+  instructions?: string;
+  roundSeconds?: number;
+  targetAccuracy?: number;
+  itemsPerRound?: number;
+  items: DrillItem[];
+}
+
+export interface DrillProgress {
+  problemId: string;
+  attempts: number;
+  bestCorrect: number | null;
+  bestTotal: number | null;
+  bestAccuracy: number | null;
+  bestAvgMs: number | null;
+  bestStreak: number | null;
+  hasPassed: boolean;
+  passedAt: number | null;
+  targetAccuracy: number;
+}
+
 // ── Raw filesystem metadata shapes (used by the parser) ─────────────────
 
 /**
@@ -207,7 +243,7 @@ export interface ProblemMeta {
   difficulty: Difficulty;
   estimatedMinutes: number;
   tags: string[];
-  /** `coding` (split pane + editor) or `reading` (textbook layout). */
+  /** `coding` (split pane + editor), `reading` (textbook layout), `quiz`, or `test`. */
   type: ModuleType;
   languages: Language[];
   defaultLanguage: Language;
@@ -240,6 +276,8 @@ export interface Problem extends ProblemMeta {
   requirementsPath?: string;
   /** Pre-computed expected stdout per language (from expected_output/<lang>.txt). */
   expectedOutput?: Record<Language, string>;
-  /** Present only for type: quiz modules. Loaded from quiz.yaml. */
+  /** Present only for type: quiz/test modules. Loaded from quiz.yaml. */
   quizQuestions?: QuizQuestion[];
+  /** Present only for type: drill modules. Loaded from drill.yaml. */
+  drill?: DrillConfig;
 }

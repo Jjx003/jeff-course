@@ -1,0 +1,141 @@
+questions:
+  - id: q_ecosystem_roles
+    type: multiple_choice
+    stem: "Which pairing best matches a semiconductor ecosystem role to its usual responsibility?"
+    options:
+      - "Foundry: manufactures wafers for chip designers"
+      - "EDA vendor: operates hyperscale data centers"
+      - "OSAT: designs transistor process nodes"
+      - "Fabless designer: sells lithography scanners"
+    correct: 0
+    explanation: "A foundry manufactures wafers for customers. EDA vendors provide design software, OSAT firms handle assembly/test services, and fabless designers create chips without owning high-volume fabs."
+
+  - id: q_process_flow
+    type: multiple_choice
+    stem: "A simplified chip production flow is closest to:"
+    options:
+      - "Packaging -> architecture -> lithography -> market sizing -> EDA"
+      - "Design -> wafer fabrication -> sort/test -> packaging -> final test"
+      - "Final test -> wafer fabrication -> design -> packaging -> mask writing"
+      - "HBM stacking -> software install -> ion implantation -> architecture"
+    correct: 1
+    explanation: "The simplified flow starts with design, then wafer fabrication, wafer sort/test, packaging, and final test. Real flows loop and overlap, but this sequence is the core manufacturing path."
+
+  - id: q_yield_true_false
+    type: true_false
+    stem: "For a fixed wafer size and defect density, larger dies usually have lower yield because each die has more area where a defect can land."
+    correct: true
+    explanation: "Correct. Larger die area increases exposure to random defects. Redundancy and binning help, but die size remains a major yield variable."
+
+  - id: q_lithography
+    type: multiple_choice
+    stem: "Why can advanced DUV restrictions matter even when EUV is the headline technology?"
+    options:
+      - "DUV tools only inspect finished packages"
+      - "DUV tools are unrelated to patterning"
+      - "Advanced DUV immersion can be needed for mature-node expansion and multipatterning flows"
+      - "DUV restrictions only affect software compilers"
+    correct: 2
+    explanation: "Advanced DUV immersion tools remain important for many process layers, mature-node capacity, and multipatterning approaches. Lithography constraints are not limited to EUV."
+
+  - id: q_packaging_hbm
+    type: multiple_choice
+    stem: "In an AI accelerator module, why is HBM usually placed close to the compute die in an advanced package?"
+    options:
+      - "To replace all need for networking"
+      - "To make the compute die independent of wafer fabrication"
+      - "To eliminate power-delivery constraints"
+      - "To provide a very wide, short memory interface with high bandwidth"
+    correct: 3
+    explanation: "HBM sits close to the compute die so the memory interface can be extremely wide and energy efficient. It improves memory bandwidth, but it does not remove networking, wafer, or power constraints."
+
+  - id: q_roofline_memory_bound
+    type: true_false
+    stem: "In a roofline model, a workload with low arithmetic intensity can be memory-bandwidth-bound even on a chip with very high peak compute."
+    correct: true
+    explanation: "Correct. Roofline reasoning compares peak compute with memory bandwidth times arithmetic intensity. Low arithmetic intensity often makes data movement the limiting factor."
+
+  - id: q_export_controls
+    type: multiple_choice
+    stem: "Why do performance thresholds appear in AI accelerator export controls?"
+    options:
+      - "They measure only the physical size of the package"
+      - "They target capabilities that may be available across several product names or configurations"
+      - "They are used only for mature-node automotive chips"
+      - "They remove the need to analyze end markets"
+    correct: 1
+    explanation: "Thresholds focus on capability, such as processing performance or related system features, rather than only on a brand name. Analysts then map products and redesigns against the controlled capability."
+
+  - id: q_mature_nodes
+    type: multiple_choice
+    stem: "Which statement about mature-node capacity is most accurate?"
+    options:
+      - "It automatically solves leading-edge AI accelerator parity"
+      - "It is irrelevant because only EUV nodes ship products"
+      - "It can be strategically important for industrial, automotive, analog, and mixed-signal chips"
+      - "It only matters for consumer software companies"
+    correct: 2
+    explanation: "Mature nodes support many essential products and can affect pricing, resilience, and domestic supply. They do not automatically provide leading-edge AI compute efficiency."
+
+  - id: q_yield_parametric
+    type: parametric
+    stem_template: "A line starts {{starts}} wafers. Each wafer has {{dies}} gross dies, and final yield is {{yieldPct}}%. About how many good dies ship?"
+    params:
+      starts: { min: 800, max: 1600, step: 200 }
+      dies: { min: 40, max: 80, step: 10 }
+      yieldPct: { min: 50, max: 80, step: 10 }
+    correct_formula: "Math.round(starts * dies * yieldPct / 100)"
+    distractor_formulas:
+      - "Math.round(starts * dies)"
+      - "Math.round(starts * yieldPct / 100)"
+      - "Math.round(dies * yieldPct)"
+    answer_suffix: " good dies"
+    explanation_template: >-
+      Good dies = wafer starts x gross dies per wafer x yield =
+      {{starts}} x {{dies}} x {{yieldPct}}% =
+      {{Math.round(starts * dies * yieldPct / 100)}} good dies.
+
+  - id: q_capacity_parametric
+    type: parametric
+    stem_template: "A packaging line can assemble {{capacity}} accelerator modules per month. Demand is {{demand}} modules per month. What is utilization, rounded to the nearest percent?"
+    params:
+      capacity: { min: 60, max: 140, step: 20 }
+      demand: { min: 80, max: 180, step: 20 }
+    correct_formula: "Math.round(demand / capacity * 100)"
+    distractor_formulas:
+      - "Math.round(capacity / demand * 100)"
+      - "Math.round((demand - capacity) / capacity * 100)"
+      - "Math.round((capacity + demand) / capacity * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      Utilization = demand / capacity = {{demand}} / {{capacity}} =
+      {{Math.round(demand / capacity * 100)}}%. Values above 100% mean demand exceeds current capacity.
+
+  - id: q_roofline_parametric
+    type: parametric
+    stem_template: "An accelerator has {{peak}} TFLOP/s peak compute and {{bandwidth}} TB/s memory bandwidth. A workload has arithmetic intensity {{intensity}} FLOP/byte. Using bandwidth x intensity, what is the memory roof in TFLOP/s?"
+    params:
+      peak: { min: 200, max: 800, step: 100 }
+      bandwidth: { min: 2, max: 8, step: 1 }
+      intensity: { min: 20, max: 80, step: 10 }
+    correct_formula: "bandwidth * intensity"
+    distractor_formulas:
+      - "bandwidth * intensity + 25"
+      - "Math.max(1, bandwidth * intensity - 25)"
+      - "bandwidth * 10"
+    answer_suffix: " TFLOP/s"
+    explanation_template: >-
+      1 TB/s x 1 FLOP/byte corresponds to 1 TFLOP/s. The memory roof is
+      {{bandwidth}} x {{intensity}} = {{bandwidth * intensity}} TFLOP/s.
+      The usable roofline limit is the lower of this value and the {{peak}} TFLOP/s compute peak.
+
+  - id: q_bottleneck_reasoning
+    type: multiple_choice
+    stem: "An accelerator vendor has enough compute dies, but shipments lag because HBM stacks and advanced packaging slots are scarce. What is the best analyst conclusion?"
+    options:
+      - "The compute die must have no value"
+      - "Networking is always the only bottleneck"
+      - "The finished-system bottleneck is outside the compute die"
+      - "Yield no longer matters"
+    correct: 2
+    explanation: "The compute die can be valuable and available while the finished system is constrained by memory or packaging. Analysts need to track the whole bill of materials."

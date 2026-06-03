@@ -128,6 +128,8 @@
   function moduleKind(problem: ProblemMeta): string {
     if (problem.type === 'reading') return 'Read';
     if (problem.type === 'quiz') return 'Quiz';
+    if (problem.type === 'test') return 'Test';
+    if (problem.type === 'drill') return 'Drill';
     return 'Code';
   }
 </script>

@@ -1,0 +1,106 @@
+questions:
+  - id: hbond_geometry
+    type: multiple_choice
+    stem: "Which description best captures a strong protein hydrogen bond?"
+    options:
+      - "A donor and acceptor placed at a reasonable distance with the donor-H-acceptor atoms close to linear"
+      - "Any contact between two electronegative atoms, regardless of hydrogen position"
+      - "A covalent bond between a backbone carbonyl oxygen and an amide nitrogen"
+      - "A hydrophobic contact that excludes water from a nonpolar patch"
+    correct: 0
+    explanation: "Hydrogen bonds depend on both distance and geometry. The hydrogen should point toward the acceptor lone-pair region; nearly linear donor-H-acceptor arrangements are usually stronger."
+
+  - id: buried_unsatisfied_polar
+    type: true_false
+    stem: "Burying a polar group inside a protein is always stabilizing because it removes the group from water."
+    correct: false
+    explanation: "A buried polar group loses favorable interactions with water. It is usually stabilizing only if the protein supplies good replacement interactions, such as hydrogen bonds or salt bridges."
+
+  - id: dielectric
+    type: multiple_choice
+    stem: "Why can a salt bridge be stronger in a protein interior than on a water-exposed surface?"
+    options:
+      - "The protein interior often has a lower effective dielectric, so charge-charge interactions are less screened"
+      - "Water makes all ionic interactions irreversible"
+      - "Salt bridges are covalent bonds in hydrophobic environments"
+      - "The charges disappear when buried, so there is no desolvation cost"
+    correct: 0
+    explanation: "Water screens electrostatic interactions strongly. A lower-dielectric protein interior can strengthen charge-charge attraction, although burying charges also carries desolvation costs."
+
+  - id: vdw_distance
+    type: multiple_choice
+    stem: "What happens when two nonbonded atoms are pushed much closer than the sum of their van der Waals radii?"
+    options:
+      - "They usually create a favorable hydrophobic interaction"
+      - "They experience strong steric repulsion"
+      - "They form a salt bridge"
+      - "They become a hydrogen-bond donor-acceptor pair"
+    correct: 1
+    explanation: "Van der Waals attraction is favorable at close-but-not-overlapping distances. If atoms are forced too close, electron-cloud repulsion dominates."
+
+  - id: cation_pi
+    type: multiple_choice
+    stem: "A lysine ammonium group packs against the face of a phenylalanine ring. Which interaction is most directly being described?"
+    options:
+      - "Cation-pi interaction"
+      - "Disulfide bond"
+      - "Backbone peptide resonance"
+      - "Hydrolysis"
+    correct: 0
+    explanation: "A positively charged group can interact favorably with the electron-rich face of an aromatic pi system. Lys, Arg, and sometimes protonated His can participate."
+
+  - id: desolvation_tradeoff
+    type: true_false
+    stem: "Before a ligand and binding pocket form direct contacts, each may need to give up favorable contacts with water."
+    correct: true
+    explanation: "This is the desolvation cost. Binding is favorable only if the new ligand-protein contacts, entropy changes, and solvent rearrangements compensate for what was lost."
+
+  - id: inverse_square
+    type: parametric
+    stem_template: "Using a simple Coulomb intuition, two opposite charges are {{d1}} Angstrom apart. If the distance increases to {{d2}} Angstrom, the attractive energy magnitude changes by about what factor? Assume energy magnitude scales as $1/r$."
+    params:
+      d1: { min: 3, max: 6, step: 1 }
+      d2: { min: 8, max: 12, step: 1 }
+    correct_formula: "Number((d1 / d2).toFixed(2))"
+    distractor_formulas:
+      - "Number((d2 / d1).toFixed(2))"
+      - "Number(((d1 * d1) / (d2 * d2)).toFixed(2))"
+      - "Number(((d2 * d2) / (d1 * d1)).toFixed(2))"
+    answer_suffix: "x"
+    explanation_template: "With the simplified $1/r$ scaling, the new magnitude divided by the old magnitude is $(1/{{d2}})/(1/{{d1}}) = {{d1}}/{{d2}} = {{Number((d1 / d2).toFixed(2))}}$. Larger separation weakens the interaction."
+
+  - id: pi_stacking
+    type: multiple_choice
+    stem: "Which pair is most likely to make an aromatic pi-stacking contact in a protein?"
+    options:
+      - "Phenylalanine and tryptophan side chains"
+      - "Glycine and alanine side chains"
+      - "Aspartate and glutamate side chains"
+      - "Serine hydroxyl and water"
+    correct: 0
+    explanation: "Aromatic residues such as Phe, Tyr, Trp, and His can form edge-to-face or face-to-face pi interactions, depending on geometry."
+
+  - id: salt_bridge_context
+    type: multiple_choice
+    stem: "Which statement is the safest rule for salt bridges in proteins?"
+    options:
+      - "They are context-dependent: geometry, solvent exposure, pKa shifts, and desolvation all matter"
+      - "They are always stabilizing, regardless of environment"
+      - "They only occur between backbone atoms"
+      - "They require two aromatic rings"
+    correct: 0
+    explanation: "Salt bridges can stabilize a fold, but burying charges costs energy unless the interaction and environment compensate. Surface salt bridges are often screened by water."
+
+  - id: distance_units
+    type: parametric
+    stem_template: "A hydrogen-bond donor and acceptor heavy atom distance changes from {{near}} Angstrom to {{far}} Angstrom. By how many Angstrom did the heavy-atom distance increase?"
+    params:
+      near: { min: 2, max: 3, step: 1 }
+      far: { min: 5, max: 7, step: 1 }
+    correct_formula: "far - near"
+    distractor_formulas:
+      - "far + near"
+      - "near"
+      - "far"
+    answer_suffix: " Angstrom"
+    explanation_template: "The increase is final minus initial: {{far}} - {{near}} = {{far - near}} Angstrom. Real hydrogen-bond strength also depends on angle and chemical environment, not distance alone."

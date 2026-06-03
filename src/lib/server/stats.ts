@@ -329,7 +329,7 @@ function evalAchievement(id: AchievementId, ctx: AchievementContext): Achievemen
       let bestTotal = 0;
       for (const t of ctx.tracks) {
         const codingProblems = t.problems.filter((p) => p.type === 'coding');
-        const readings = t.problems.filter((p) => p.type === 'reading');
+        const readings = t.problems.filter((p) => p.type === 'reading' || p.type === 'quiz' || p.type === 'test' || p.type === 'drill');
         const total = codingProblems.length + readings.length;
         if (total === 0) continue;
         const solved =
@@ -465,7 +465,7 @@ function computeTrackProgress(tracks: Track[], facts: ActivityFacts): TrackProgr
     for (const p of t.problems) {
       const pid = `${t.slug}/${p.slug}`;
       const isDone =
-        p.type === 'reading'
+        p.type === 'reading' || p.type === 'quiz' || p.type === 'test' || p.type === 'drill'
           ? facts.readingCompletedAt.has(pid)
           : facts.firstSolveAt.has(pid);
       if (isDone) completed++;
@@ -489,7 +489,7 @@ function computePoints(tracks: Track[], facts: ActivityFacts): number {
       const pid = `${t.slug}/${p.slug}`;
       if (p.type === 'coding' && facts.firstSolveAt.has(pid)) {
         total += pointsForCoding(p.difficulty);
-      } else if (p.type === 'reading' && facts.readingCompletedAt.has(pid)) {
+      } else if ((p.type === 'reading' || p.type === 'quiz' || p.type === 'test' || p.type === 'drill') && facts.readingCompletedAt.has(pid)) {
         total += READING_POINTS;
       }
     }
@@ -562,7 +562,7 @@ export async function getStatsSummary(): Promise<StatsSummary> {
     for (const p of t.problems) {
       const pid = `${t.slug}/${p.slug}`;
       if (p.type === 'coding' && facts.firstSolveAt.has(pid)) problemsSolved++;
-      else if (p.type === 'reading' && facts.readingCompletedAt.has(pid)) readingsCompleted++;
+      else if ((p.type === 'reading' || p.type === 'quiz' || p.type === 'test' || p.type === 'drill') && facts.readingCompletedAt.has(pid)) readingsCompleted++;
     }
   }
   const totalPoints = computePoints(tracks, facts);
@@ -703,12 +703,23 @@ export async function isReadingCompleted(problemId: string): Promise<boolean> {
  * strict enough that random clicking doesn't farm completions.
  */
 export const QUIZ_PASS_THRESHOLD = 0.7;
+export const DRILL_TARGET_ACCURACY = 0.8;
 
 type QuizAttemptRow = {
   problem_id: string;
   total: number;
   correct: number;
   passed: boolean | number;
+  duration_ms: number;
+  completed_at: number;
+};
+
+type DrillAttemptRow = {
+  problem_id: string;
+  total: number;
+  correct: number;
+  avg_ms: number;
+  best_streak: number;
   duration_ms: number;
   completed_at: number;
 };
@@ -833,5 +844,147 @@ export async function getQuizProgress(problemId: string): Promise<{
     hasPassed: passedAt !== null,
     passedAt,
     passThreshold: QUIZ_PASS_THRESHOLD
+  };
+}
+
+export async function recordDrillAttempt(args: {
+  id: string;
+  problemId: string;
+  total: number;
+  correct: number;
+  avgMs: number;
+  bestStreak: number;
+  durationMs: number;
+  targetAccuracy?: number;
+}): Promise<{
+  passed: boolean;
+  bestCorrect: number;
+  bestTotal: number;
+  bestAccuracy: number;
+  bestAvgMs: number | null;
+  bestStreak: number;
+  attempts: number;
+  wasNewCompletion: boolean;
+}> {
+  await dbReady;
+
+  const safeTotal = Math.max(0, Math.floor(args.total));
+  const safeCorrect = Math.max(0, Math.min(safeTotal, Math.floor(args.correct)));
+  const safeAvgMs = Math.max(0, Math.floor(args.avgMs));
+  const safeBestStreak = Math.max(0, Math.floor(args.bestStreak));
+  const safeDurationMs = Math.max(0, Math.floor(args.durationMs));
+  const target = args.targetAccuracy ?? DRILL_TARGET_ACCURACY;
+  const accuracy = safeTotal === 0 ? 0 : safeCorrect / safeTotal;
+  const passed = safeTotal > 0 && accuracy >= target;
+  const now = Date.now();
+
+  await dbRun(
+    `INSERT INTO drill_attempts (id, problem_id, total, correct, avg_ms, best_streak, duration_ms, completed_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [args.id, args.problemId, safeTotal, safeCorrect, safeAvgMs, safeBestStreak, safeDurationMs, now]
+  );
+
+  let wasNewCompletion = false;
+  if (passed) {
+    const existing = await dbAll<{ problem_id: string }>(
+      'SELECT problem_id FROM reading_completions WHERE problem_id = ?',
+      [args.problemId]
+    );
+    if (existing.length === 0) {
+      await dbRun(
+        'INSERT INTO reading_completions (problem_id, completed_at) VALUES (?, ?)',
+        [args.problemId, now]
+      );
+      wasNewCompletion = true;
+    }
+  }
+
+  const progress = await getDrillProgress(args.problemId, target);
+  return {
+    passed,
+    bestCorrect: progress.bestCorrect ?? safeCorrect,
+    bestTotal: progress.bestTotal ?? safeTotal,
+    bestAccuracy: progress.bestAccuracy ?? accuracy,
+    bestAvgMs: progress.bestAvgMs,
+    bestStreak: progress.bestStreak ?? safeBestStreak,
+    attempts: progress.attempts,
+    wasNewCompletion
+  };
+}
+
+export async function getDrillProgress(problemId: string, targetAccuracy = DRILL_TARGET_ACCURACY): Promise<{
+  problemId: string;
+  attempts: number;
+  bestCorrect: number | null;
+  bestTotal: number | null;
+  bestAccuracy: number | null;
+  bestAvgMs: number | null;
+  bestStreak: number | null;
+  hasPassed: boolean;
+  passedAt: number | null;
+  targetAccuracy: number;
+}> {
+  await dbReady;
+  const rows = await dbAll<DrillAttemptRow>(
+    `SELECT problem_id, total, correct, avg_ms, best_streak, duration_ms, completed_at
+       FROM drill_attempts
+      WHERE problem_id = ?
+      ORDER BY completed_at ASC`,
+    [problemId]
+  );
+
+  if (rows.length === 0) {
+    return {
+      problemId,
+      attempts: 0,
+      bestCorrect: null,
+      bestTotal: null,
+      bestAccuracy: null,
+      bestAvgMs: null,
+      bestStreak: null,
+      hasPassed: false,
+      passedAt: null,
+      targetAccuracy
+    };
+  }
+
+  let bestCorrect = 0;
+  let bestTotal = 0;
+  let bestAccuracy = -1;
+  let bestAvgMs: number | null = null;
+  let bestStreak = 0;
+  let passedAt: number | null = null;
+
+  for (const row of rows) {
+    const total = Number(row.total);
+    const correct = Number(row.correct);
+    const accuracy = total === 0 ? 0 : correct / total;
+    const avgMs = Number(row.avg_ms);
+    if (
+      accuracy > bestAccuracy ||
+      (accuracy === bestAccuracy && (bestAvgMs === null || avgMs < bestAvgMs))
+    ) {
+      bestAccuracy = accuracy;
+      bestCorrect = correct;
+      bestTotal = total;
+      bestAvgMs = avgMs;
+    }
+    bestStreak = Math.max(bestStreak, Number(row.best_streak));
+    if (accuracy >= targetAccuracy && passedAt === null) {
+      passedAt = Number(row.completed_at);
+    }
+  }
+
+  return {
+    problemId,
+    attempts: rows.length,
+    bestCorrect,
+    bestTotal,
+    bestAccuracy,
+    bestAvgMs,
+    bestStreak,
+    hasPassed: passedAt !== null,
+    passedAt,
+    targetAccuracy
   };
 }

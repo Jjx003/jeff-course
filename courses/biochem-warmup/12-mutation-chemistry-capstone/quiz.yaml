@@ -1,0 +1,127 @@
+questions:
+  - id: core_val_to_asp
+    type: multiple_choice
+    stem: "A buried valine in a hydrophobic core is mutated to aspartate. What outcome is most likely?"
+    options:
+      - "Destabilization from burying a charged/polar side chain without compensation"
+      - "Automatic stabilization by a new disulfide"
+      - "No effect because valine and aspartate have the same polarity"
+      - "Faster folding because all charged residues prefer cores"
+    correct: 0
+    explanation: "Hydrophobic cores favor nonpolar packing. A buried aspartate is costly unless it forms compensating interactions or has an unusual protonation state."
+
+  - id: salt_bridge_remove
+    type: multiple_choice
+    stem: "A surface salt bridge between glutamate and lysine is disrupted by Lys $\\rightarrow$ Ala. What interaction is directly lost?"
+    options:
+      - "Electrostatic attraction between opposite charges"
+      - "A peptide bond"
+      - "An aromatic stacking interaction"
+      - "A disulfide bond"
+    correct: 0
+    explanation: "Glutamate is usually negative and lysine positive near pH 7. Replacing lysine with alanine removes the cationic partner."
+
+  - id: disulfide_environment
+    type: true_false
+    stem: "A new Cys-Cys pair is more likely to form a stable disulfide in an oxidizing extracellular environment than in the reducing cytosol."
+    correct: true
+    explanation: "True. Disulfides are favored in oxidizing environments and often reduced in the cytosol."
+
+  - id: pka_buried_asp
+    type: multiple_choice
+    stem: "A buried aspartate sits near no hydrogen-bond donors or positive charges. What may happen to reduce the cost of burial?"
+    options:
+      - "Its apparent pKa may shift upward, making the neutral protonated form more populated."
+      - "It must become aromatic."
+      - "It becomes a proline."
+      - "It forms a peptide bond with water."
+    correct: 0
+    explanation: "Local environments can shift pKa values. Burying an uncompensated charge is unfavorable, so the neutral form may become more favorable than expected."
+
+  - id: gly_to_pro_loop
+    type: multiple_choice
+    stem: "A flexible glycine in a tight loop is mutated to proline. Which concern is most direct?"
+    options:
+      - "Proline may impose a backbone geometry the loop cannot accommodate."
+      - "Proline adds a negative charge."
+      - "Proline creates a guaranteed disulfide."
+      - "Proline makes the side chain smaller than hydrogen."
+    correct: 0
+    explanation: "Glycine is very permissive; proline is restrictive. Gly to Pro can sharply alter loop geometry."
+
+  - id: pro_to_gly_helix
+    type: multiple_choice
+    stem: "A proline that kinks a helix is mutated to glycine. What is a plausible consequence?"
+    options:
+      - "The local backbone constraint is relaxed, potentially changing helix shape or dynamics."
+      - "A new salt bridge always forms."
+      - "The residue becomes phosphorylated by default."
+      - "The protein gains a thioether."
+    correct: 0
+    explanation: "Removing proline removes a strong conformational constraint. Glycine also increases local flexibility."
+
+  - id: ser_to_ala_phospho
+    type: multiple_choice
+    stem: "A regulatory serine phosphorylation site is mutated to alanine. What capability is most directly removed?"
+    options:
+      - "Addition of a phosphate at that side chain"
+      - "Formation of a cystine disulfide"
+      - "Aromatic stacking with phenylalanine"
+      - "Positive charge from an ammonium group"
+    correct: 0
+    explanation: "Alanine lacks the hydroxyl group required for serine phosphorylation."
+
+  - id: lys_to_arg
+    type: multiple_choice
+    stem: "A solvent-exposed lysine in a salt bridge is mutated to arginine. Why might the interaction persist?"
+    options:
+      - "Arginine is also usually positively charged and can make strong electrostatic/hydrogen-bonding contacts."
+      - "Arginine is hydrophobic like leucine."
+      - "Arginine removes all charge from the site."
+      - "Arginine forms disulfides with glutamate."
+    correct: 0
+    explanation: "Lysine and arginine are both basic residues. The geometry changes, but a positive charge remains."
+
+  - id: aromatic_core
+    type: multiple_choice
+    stem: "A buried phenylalanine is mutated to serine. Which effect is most likely?"
+    options:
+      - "Loss of hydrophobic aromatic packing and introduction of a polar hydroxyl"
+      - "Gain of a larger aromatic ring"
+      - "Formation of a new peptide terminus"
+      - "Guaranteed increase in core packing"
+    correct: 0
+    explanation: "Phenylalanine contributes bulky hydrophobic packing. Serine is smaller and polar, which can create a packing defect or unsatisfied polar group."
+
+  - id: asn_to_asp
+    type: multiple_choice
+    stem: "An asparagine that donates and accepts hydrogen bonds is mutated to aspartate. What chemical change is most important near pH 7?"
+    options:
+      - "A neutral amide is replaced by a usually negative carboxylate."
+      - "A sulfur atom is introduced."
+      - "The side chain becomes purely hydrophobic."
+      - "The backbone is converted to D-amino acid geometry."
+    correct: 0
+    explanation: "Asn and Asp are similar in size, but Asp is usually negatively charged while Asn is neutral."
+
+  - id: disulfide_to_ser
+    type: multiple_choice
+    stem: "One cysteine in a stabilizing disulfide is mutated to serine. What is the direct structural consequence?"
+    options:
+      - "The covalent disulfide crosslink can no longer form at that pair."
+      - "The protein gains a second disulfide automatically."
+      - "Serine becomes negatively charged at pH 7."
+      - "The peptide backbone is cleaved."
+    correct: 0
+    explanation: "Serine has an oxygen-containing hydroxyl rather than a thiol, so it cannot replace cysteine in a disulfide bond."
+
+  - id: folding_prep
+    type: multiple_choice
+    stem: "Which mutation is most conservative for a buried hydrophobic core position?"
+    options:
+      - "Leucine $\\rightarrow$ isoleucine"
+      - "Leucine $\\rightarrow$ glutamate"
+      - "Leucine $\\rightarrow$ lysine"
+      - "Leucine $\\rightarrow$ aspartate"
+    correct: 0
+    explanation: "Leucine and isoleucine are both bulky hydrophobic residues, so this is more conservative than replacing leucine with a charged residue."

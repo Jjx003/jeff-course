@@ -1,0 +1,9 @@
+real tokens: 3488
+naive padded tokens: 6760
+packed tokens: 4096
+waste reduction: 39.4%
+pack 1: used=1006 items=kinase_A,mini_helix
+pack 2: used=972 items=receptor_C,binder_1,peptide_x
+pack 3: used=990 items=enzyme_B,domain_D
+pack 4: used=520 items=antibody_frag
+

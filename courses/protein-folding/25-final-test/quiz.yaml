@@ -1,0 +1,145 @@
+questions:
+  - id: final_q1_hydrophobic_core
+    type: multiple_choice
+    stem: "Across the whole course, which statement best connects amino-acid chemistry to folded structure?"
+    options:
+      - "Backbone atoms alone determine every side-chain packing interaction."
+      - "Side-chain chemistry influences which contacts are favorable, helping shape the folded free-energy basin."
+      - "All polar residues must be buried and all hydrophobic residues must remain solvent-exposed."
+      - "Amino-acid order matters only for language models, not for physical folding."
+    correct: 1
+    explanation: "The sequence fixes the side-chain chemistry available along the chain. Those chemical preferences influence packing, hydrogen bonding, electrostatics, solvent exposure, and therefore the free-energy landscape of folding."
+
+  - id: final_q2_msa_signal
+    type: true_false
+    stem: "MSA-based structure predictors can use correlated mutations as evidence that two residue positions may be spatially coupled."
+    correct: true
+    explanation: "Co-evolutionary signal is one of the key reasons MSAs are powerful. If mutations at two positions covary across homologs, that can indicate structural or functional coupling."
+
+  - id: final_q3_outer_product_mean
+    type: multiple_choice
+    stem: "In AlphaFold2-style reasoning, what is the purpose of the outer product mean update?"
+    options:
+      - "It turns per-column MSA information into pairwise residue features that can encode co-evolution."
+      - "It converts a PDB file into a FASTA sequence."
+      - "It masks low-confidence residues before pLDDT is calculated."
+      - "It samples new amino-acid sequences for a fixed backbone."
+    correct: 0
+    explanation: "The outer product mean summarizes relationships between MSA columns and updates the pair representation. This gives the model an explicit route from evolutionary variation to residue-pair features."
+
+  - id: final_q4_evoformer_axes
+    type: multiple_choice
+    stem: "Which description best matches the two-axis attention idea in the AlphaFold2 Evoformer?"
+    options:
+      - "Attention alternates between DNA codons and RNA codons."
+      - "Attention acts along sequence positions and across homologous sequences in the MSA."
+      - "Attention is used only after final atomic coordinates are produced."
+      - "Attention is replaced entirely by edit distance."
+    correct: 1
+    explanation: "The Evoformer processes MSA information both along rows and columns, letting it reason within sequences and across homologs while interacting with a pair representation."
+
+  - id: final_q5_esmfold_tradeoff
+    type: multiple_choice
+    stem: "What is the central trade-off when ESMFold replaces an explicit MSA pipeline with a large protein language model?"
+    options:
+      - "It can be much faster and simpler to run, but may lose accuracy when deep evolutionary information is essential."
+      - "It requires wet-lab screening before every forward pass."
+      - "It can only predict quaternary assemblies, not single chains."
+      - "It uses no learned sequence representations."
+    correct: 0
+    explanation: "ESMFold can fold from a single sequence using representations learned by a large PLM, avoiding expensive MSA search. The trade-off is that explicit MSA signal can still matter, especially for difficult targets."
+
+  - id: final_q6_plddt_mean_parametric
+    type: parametric
+    stem_template: "An ESMFold prediction has {{high}} residues with pLDDT 90 and {{low}} residues with pLDDT 60. What is the mean pLDDT?"
+    params:
+      high: { min: 20, max: 80, step: 20 }
+      low: { min: 10, max: 50, step: 10 }
+    correct_formula: "Math.round((high * 90 + low * 60) / (high + low))"
+    distractor_formulas:
+      - "Math.round((high * 90 + low * 60) / (high + low)) + 5"
+      - "Math.round((high * 90 + low * 60) / (high + low)) - 5"
+      - "Math.round((high * 90 + low * 60) / (high + low)) - 15"
+    answer_suffix: ""
+    explanation_template: "The mean is residue-weighted: ({{high}} x 90 + {{low}} x 60) / ({{high}} + {{low}}) = {{Math.round((high * 90 + low * 60) / (high + low))}}."
+
+  - id: final_q7_rmsd_vs_tm
+    type: multiple_choice
+    stem: "Why do structure-comparison workflows often report more than one metric, such as RMSD and TM-score?"
+    options:
+      - "They are identical metrics with different names."
+      - "Different metrics emphasize different failure modes, such as local coordinate deviations versus global fold similarity."
+      - "RMSD can be computed only for RNA, while TM-score can be computed only for proteins."
+      - "TM-score requires no structural alignment or coordinate comparison."
+    correct: 1
+    explanation: "RMSD is sensitive to coordinate deviations and outliers, while TM-score-like measures are designed to be more interpretable for global fold similarity. Reporting both gives a fuller quality picture."
+
+  - id: final_q8_pseudo_log_likelihood_parametric
+    type: parametric
+    stem_template: "A wild-type sequence has pseudo-log-likelihood {{wt}}, and a mutant has pseudo-log-likelihood {{mut}}. Using delta = mutant - wild type, what is the mutation score?"
+    params:
+      wt: { min: -90, max: -50, step: 10 }
+      mut: { min: -100, max: -60, step: 10 }
+    correct_formula: "mut - wt"
+    distractor_formulas:
+      - "mut - wt + 10"
+      - "mut - wt - 10"
+      - "wt - mut + 5"
+    answer_suffix: ""
+    explanation_template: "With delta defined as mutant - wild type, the score is {{mut}} - ({{wt}}) = {{mut - wt}}. A less negative mutant likelihood than wild type would give a positive delta; a more negative one gives a negative delta."
+
+  - id: final_q9_variant_scoring
+    type: true_false
+    stem: "Pseudo-log-likelihood variant scoring with a masked protein language model is a zero-shot proxy; it can prioritize mutations, but it is not a substitute for experimental fitness measurements."
+    correct: true
+    explanation: "PLM likelihoods are useful computational signals, especially before labels exist, but they are proxies. Real fitness depends on assay conditions, expression, stability, function, and many biological details."
+
+  - id: final_q10_proteinmpnn
+    type: multiple_choice
+    stem: "What task is ProteinMPNN mainly used for in the course?"
+    options:
+      - "Predicting a backbone structure from an unaligned sequence"
+      - "Designing or sampling sequences that fit a fixed protein backbone"
+      - "Computing MSA column entropy from a FASTA alignment"
+      - "Rendering word-level timings for reading narration"
+    correct: 1
+    explanation: "ProteinMPNN is an inverse-folding model: given a backbone geometry, it proposes sequences compatible with that structure."
+
+  - id: final_q11_lead_optimization_loop
+    type: multiple_choice
+    stem: "In a modern protein lead-optimization loop, why is wet-lab feedback still central?"
+    options:
+      - "It is the only way to tokenize amino-acid sequences."
+      - "It provides measured outcomes that update or validate the computational scoring and design process."
+      - "It replaces all pretrained models with hand-written rules."
+      - "It guarantees that every generated variant is improved."
+    correct: 1
+    explanation: "Computational models propose and rank candidates, but experimental measurements reveal what actually works in the target assay. Those data can validate, calibrate, or update the next design round."
+
+  - id: final_q12_frontier_models
+    type: multiple_choice
+    stem: "What distinguishes AlphaFold3-class systems from the earlier AlphaFold2 focus in this course?"
+    options:
+      - "They remove pair representations entirely."
+      - "They broaden the modeling target toward biomolecular complexes and use newer generative structure modules such as diffusion."
+      - "They operate only on raw FASTA files and cannot represent ligands."
+      - "They are inverse-folding models for fixed backbones only."
+    correct: 1
+    explanation: "AlphaFold3-class models extend the prediction target beyond single protein chains toward complexes involving proteins, nucleic acids, ligands, and other molecules, with newer architectures including diffusion-style coordinate generation."
+
+  - id: final_q13_scaling_walls
+    type: true_false
+    stem: "The later modules argue that simply making sequence-only protein language models larger is not the whole story; structure-aware, MSA-conditioned, multimodal, and task-specific systems remain important."
+    correct: true
+    explanation: "The frontier discussion emphasizes that scale helps but has limits. Modern progress also comes from better data modalities, structural inductive biases, MSA conditioning, diffusion/generative methods, and specialized design objectives."
+
+  - id: final_q14_system_choice
+    type: multiple_choice
+    stem: "You need many quick approximate structures for single sequences before selecting a small set for deeper analysis. Which choice best matches the course's speed/accuracy trade-off discussion?"
+    options:
+      - "Use a fast single-sequence model such as ESMFold for triage, then reserve heavier MSA- or complex-aware methods for selected cases."
+      - "Use ProteinMPNN first, because inverse folding predicts structures from sequence."
+      - "Compute edit distance only; structural models are irrelevant."
+      - "Avoid confidence metrics because they cannot help prioritize predictions."
+    correct: 0
+    explanation: "For triage, a fast single-sequence structure predictor can be practical. More expensive methods, additional metrics, and experimental follow-up can then be focused on candidates where accuracy matters most."

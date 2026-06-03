@@ -1,0 +1,9 @@
+title: "Quantization checkpoint"
+slug: "quantization-quiz"
+description: "Check your understanding of weight, activation, and KV-cache quantization."
+order: 5
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [quantization, quiz]
+type: quiz
+

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 390" role="img" aria-labelledby="title desc">
+  <title id="title">Peptide bond formation</title>
+  <desc id="desc">Two amino acids condense into a dipeptide and water, forming a planar amide peptide bond.</desc>
+  <rect width="900" height="390" fill="#f8fafc"/>
+  <text x="450" y="46" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">Peptide bonds are amides made by condensation</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="24" fill="#0f172a" stroke-linecap="round">
+    <text x="70" y="164">H2N-CHR1-C</text>
+    <text x="224" y="132">O</text>
+    <line x1="218" y1="142" x2="218" y2="116" stroke="#0f172a" stroke-width="3"/>
+    <line x1="228" y1="142" x2="228" y2="116" stroke="#0f172a" stroke-width="3"/>
+    <text x="224" y="164">-OH</text>
+    <text x="310" y="164">+</text>
+    <text x="358" y="164">H2N-CHR2-COO-</text>
+    <path d="M600 155 H720" stroke="#2563eb" stroke-width="5"/>
+    <path d="M720 155 l-22 -14 M720 155 l-22 14" stroke="#2563eb" stroke-width="5"/>
+    <text x="625" y="126" font-size="18" fill="#475569">loss of H2O</text>
+    <text x="80" y="292">H2N-CHR1-C</text>
+    <text x="234" y="260">O</text>
+    <line x1="228" y1="270" x2="228" y2="244" stroke="#0f172a" stroke-width="3"/>
+    <line x1="238" y1="270" x2="238" y2="244" stroke="#0f172a" stroke-width="3"/>
+    <rect x="254" y="256" width="118" height="46" rx="8" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="266" y="288" fill="#1d4ed8">-NH-</text>
+    <text x="350" y="292">CHR2-COO-</text>
+    <text x="590" y="292">+</text>
+    <text x="635" y="292">H2O</text>
+    <text x="284" y="334" font-size="18" fill="#475569">peptide bond</text>
+  </g>
+</svg>

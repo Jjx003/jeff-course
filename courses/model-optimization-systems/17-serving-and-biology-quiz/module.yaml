@@ -1,0 +1,9 @@
+title: "Serving and biology checkpoint"
+slug: "serving-and-biology-quiz"
+description: "Review kernels, serving tricks, and protein-model optimization tradeoffs."
+order: 17
+difficulty: advanced
+estimatedMinutes: 18
+tags: [serving, protein-folding, quiz]
+type: quiz
+

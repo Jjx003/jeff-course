@@ -1,0 +1,8 @@
+title: "Final test: protein folding and design"
+slug: "protein-folding-final"
+description: "A cumulative assessment spanning sequence foundations, protein language models, AlphaFold-style structure prediction, confidence metrics, inverse folding, variant scoring, and modern protein design systems."
+order: 25
+difficulty: advanced
+estimatedMinutes: 40
+tags: [assessment, protein-folding, structure-prediction, protein-design]
+type: test

@@ -1,0 +1,9 @@
+title: "Attention kernels and fusion"
+slug: "attention-kernels-and-fusion"
+description: "Learn why FlashAttention, fused MLPs, and layout-aware kernels move the bottleneck."
+order: 9
+difficulty: advanced
+estimatedMinutes: 40
+tags: [kernels, flashattention, fusion, gpu]
+type: reading
+

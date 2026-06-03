@@ -3,15 +3,12 @@
   import { onMount } from 'svelte';
   import MarkdownRenderer from '$lib/components/MarkdownRenderer.svelte';
   import ProblemNav from '$lib/components/ProblemNav.svelte';
-  import ReadingAudioPlayer from '$lib/components/ReadingAudioPlayer.svelte';
-  import type { ReadingAudioClip } from '$lib/types/audio.js';
   import type { ProblemMeta } from '$lib/types/course.js';
   import type { GradualReadStep } from '$lib/reading/gradualReader.js';
 
   interface Props {
     steps: GradualReadStep[];
     activeIndex: number;
-    audioClips?: ReadingAudioClip[];
     trackSlug: string;
     prevProblem: ProblemMeta | null;
     nextProblem: ProblemMeta | null;
@@ -19,21 +16,18 @@
     isMarking: boolean;
     onIndexChange: (index: number) => void;
     onMarkComplete: () => void;
-    onAudioWordChange?: (clip: ReadingAudioClip, clipIndex: number, wordIndex: number) => void;
   }
 
   let {
     steps,
     activeIndex,
-    audioClips = [],
     trackSlug,
     prevProblem,
     nextProblem,
     isComplete,
     isMarking,
     onIndexChange,
-    onMarkComplete,
-    onAudioWordChange
+    onMarkComplete
   }: Props = $props();
 
   let currentStep = $derived(steps[activeIndex] ?? steps[0]);
@@ -92,16 +86,6 @@
         <div class="reader-progress-fill" style={`width: ${progressPercent}%`}></div>
       </div>
     </div>
-
-    <ReadingAudioPlayer
-      clips={audioClips}
-      activeIndex={activeIndex}
-      syncToActiveIndex={true}
-      onWordChange={onAudioWordChange}
-      onAdvance={(index) => {
-        if (index < stepCount) goTo(index);
-      }}
-    />
 
     <article class="reader-card">
       <div class="reader-card-header">

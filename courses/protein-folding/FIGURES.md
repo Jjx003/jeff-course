@@ -27,6 +27,9 @@ Use this attribution pattern in course prose or release notes:
 | External URL | n/a | Hemoglobin-family protein sequence alignment | Wikimedia Commons: `https://commons.wikimedia.org/wiki/File:Protein_alignment.svg` |
 | External URL | n/a | BLOSUM62 substitution matrix | Wikimedia Commons: `https://commons.wikimedia.org/wiki/File:BLOSUM62.png` |
 | External URL | `2QIP` | Protein contact map | Wikimedia Commons: `https://commons.wikimedia.org/wiki/File:Protein_Contact_Map,_2-Color,_2QIP-A.png` |
+| External URL | n/a | Glycine structural formula | Wikimedia Commons: `https://commons.wikimedia.org/wiki/File:Glycin_-_Glycine.svg` |
+| External URL | n/a | L-proline structural formula | Wikimedia Commons: `https://commons.wikimedia.org/wiki/File:L-Prolin_-_L-Proline.svg` |
+| External URL | n/a | Cystine structural formula with disulfide bond | Wikimedia Commons: `https://commons.wikimedia.org/wiki/File:(R,R)-Cystine_BLUE_Structural_Formulae.svg` |
 
 RCSB notes that PDB archive data is CC0 and that structure images should cite
 the PDB entry and RCSB PDB where possible. PDBe PDBImages renders are generated

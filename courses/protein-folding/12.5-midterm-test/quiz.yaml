@@ -1,0 +1,128 @@
+questions:
+  - id: midterm_q1_side_chain_chemistry
+    type: multiple_choice
+    stem: "Which side-chain property most directly explains why hydrophobic residues are often buried in a folded globular protein?"
+    options:
+      - "They form the strongest covalent bonds with backbone atoms."
+      - "They avoid ordered water exposure, making burial entropically favorable for the solvent."
+      - "They always carry opposite charges that neutralize the protein core."
+      - "They make peptide bonds more flexible than polar residues do."
+    correct: 1
+    explanation: "The hydrophobic effect is largely about water. Burying nonpolar side chains reduces the amount of ordered water around them, which can increase solvent entropy and help stabilize the folded state."
+
+  - id: midterm_q2_structure_levels
+    type: multiple_choice
+    stem: "A beta sheet formed by hydrogen bonding between distant segments of the same polypeptide is primarily an example of which structural level?"
+    options:
+      - "Primary structure"
+      - "Secondary structure"
+      - "Quaternary structure"
+      - "A post-translational modification"
+    correct: 1
+    explanation: "Alpha helices and beta sheets are secondary-structure motifs. The segments may be far apart in sequence, but the repeated backbone hydrogen-bonding pattern is what defines the beta sheet."
+
+  - id: midterm_q3_anfinsen
+    type: true_false
+    stem: "Anfinsen's dogma says that, for many small proteins under suitable conditions, the native fold is encoded by the amino-acid sequence itself."
+    correct: true
+    explanation: "Anfinsen's classic refolding experiments support the idea that sequence contains enough information to specify the native structure, though cells often use chaperones and folding can be condition-dependent."
+
+  - id: midterm_q4_folding_funnel
+    type: multiple_choice
+    stem: "In the folding-funnel picture, what does the bottom of the funnel represent?"
+    options:
+      - "A high-entropy ensemble of fully extended chains"
+      - "The lowest-free-energy native or near-native basin"
+      - "A state with no side-chain packing interactions"
+      - "The set of all possible primary sequences"
+    correct: 1
+    explanation: "The funnel summarizes movement toward lower free energy. Its bottom corresponds to the native or near-native basin, where favorable interactions and reduced conformational freedom balance into a stable folded state."
+
+  - id: midterm_q5_fasta_sequence
+    type: multiple_choice
+    stem: "In a FASTA record, what is the main role of the line beginning with `>`?"
+    options:
+      - "It stores the per-residue pLDDT confidence values."
+      - "It identifies or describes the sequence record."
+      - "It marks the start of a PDB coordinate block."
+      - "It encodes the substitution matrix used for alignment."
+    correct: 1
+    explanation: "The header line beginning with `>` names or describes the sequence. The following non-header lines contain the sequence characters."
+
+  - id: midterm_q6_edit_distance_parametric
+    type: parametric
+    stem_template: "Two aligned protein fragments have length {{length}} and contain {{mismatches}} substitutions and {{gaps}} gap positions. If the simplified edit distance counts each substitution or gap position as 1, what is the edit distance?"
+    params:
+      length: { min: 12, max: 24, step: 3 }
+      mismatches: { min: 2, max: 6, step: 1 }
+      gaps: { min: 1, max: 4, step: 1 }
+    correct_formula: "mismatches + gaps"
+    distractor_formulas:
+      - "length"
+      - "length + 1"
+      - "length + 2"
+    answer_suffix: ""
+    explanation_template: "Under this simplified scoring rule, each substitution and each gap position contributes 1. The distance is {{mismatches}} + {{gaps}} = {{mismatches + gaps}}."
+
+  - id: midterm_q7_entropy_conservation
+    type: multiple_choice
+    stem: "In an MSA conservation analysis, which column has the lowest Shannon entropy?"
+    options:
+      - "A column where every sequence has the same residue"
+      - "A column where all 20 amino acids appear equally often"
+      - "A column made entirely of gaps and unknown residues"
+      - "A column where residues are randomly sampled from the background distribution"
+    correct: 0
+    explanation: "Entropy is minimized when there is no uncertainty. If every sequence has the same residue at a column, the residue distribution is concentrated on one symbol, so the entropy is lowest."
+
+  - id: midterm_q8_contact_map_parametric
+    type: parametric
+    stem_template: "A toy protein has {{residues}} residues. You build a symmetric contact map and ignore the diagonal. How many unique residue pairs could possibly be contacts before applying a distance cutoff?"
+    params:
+      residues: { min: 8, max: 20, step: 2 }
+    correct_formula: "residues * (residues - 1) / 2"
+    distractor_formulas:
+      - "residues * residues"
+      - "residues * (residues - 1)"
+      - "residues + (residues - 1)"
+    answer_suffix: ""
+    explanation_template: "A symmetric map counts each unordered pair once and excludes self-pairs. The number of possible pairs is n(n - 1)/2 = {{residues}} x {{residues - 1}} / 2 = {{residues * (residues - 1) / 2}}."
+
+  - id: midterm_q9_tokenization
+    type: true_false
+    stem: "Protein language model tokenizers may add special tokens, so token indices in the model input are not always identical to residue positions in the raw sequence."
+    correct: true
+    explanation: "Models such as ESM use special tokens around or within encoded sequences. Code that maps predictions back to residues must account for this offset."
+
+  - id: midterm_q10_attention_model
+    type: multiple_choice
+    stem: "Why is an encoder transformer a useful mental model for continuous fuzzy matching over protein sequences?"
+    options:
+      - "It compares residues only by exact character equality."
+      - "It uses attention and learned embeddings to mix information from related sequence contexts."
+      - "It replaces every sequence with a single hydrophobicity score."
+      - "It can only operate on precomputed 3D coordinates."
+    correct: 1
+    explanation: "Attention lets a token representation gather evidence from other positions, while embeddings make similarity continuous rather than exact-match only. That supports a learned analogue of fuzzy sequence comparison."
+
+  - id: midterm_q11_masked_prediction
+    type: multiple_choice
+    stem: "When using a masked protein language model to predict one hidden residue, what is the model estimating?"
+    options:
+      - "A probability distribution over possible residues at the masked position"
+      - "The exact experimental structure for the entire protein"
+      - "The FASTA header line"
+      - "The number of chains in a biological assembly"
+    correct: 0
+    explanation: "Masked language modeling asks the network to assign probabilities to candidate tokens at the masked position, conditioned on the surrounding sequence context."
+
+  - id: midterm_q12_cosine_similarity
+    type: multiple_choice
+    stem: "Two per-residue embedding vectors have high cosine similarity. What is the safest interpretation?"
+    options:
+      - "The residues are represented as similar in the model's learned feature space."
+      - "The residues must be adjacent in the 3D structure."
+      - "The residues must be chemically identical."
+      - "The corresponding proteins must have the same quaternary structure."
+    correct: 0
+    explanation: "Cosine similarity measures the angle between learned vectors. A high value suggests similar model representations, but it does not by itself prove identity, spatial contact, or shared assembly state."

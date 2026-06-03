@@ -1,0 +1,8 @@
+title: "Poker Theory Final"
+slug: "poker-theory-final"
+description: "A cumulative final test spanning the full course: math foundations, ranges, GTO, MDF, sizing, board texture, multi-street planning, and ICM."
+order: 21
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [test, gto, mdf, bet-sizing, board-texture, icm]
+type: test

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 480" role="img" aria-labelledby="title desc">
+  <title id="title">English amino acid charge curve</title>
+  <desc id="desc">A schematic titration-style curve showing low pH positive charge, neutral zwitterion region, and high pH negative charge.</desc>
+  <rect width="760" height="480" fill="#f8fafc"/>
+  <rect x="78" y="48" width="612" height="342" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+  <line x1="120" y1="340" x2="650" y2="340" stroke="#475569" stroke-width="2"/>
+  <line x1="120" y1="340" x2="120" y2="86" stroke="#475569" stroke-width="2"/>
+  <text x="375" y="435" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" fill="#0f172a">pH increases</text>
+  <text x="42" y="220" text-anchor="middle" transform="rotate(-90 42 220)" font-family="Inter, Arial, sans-serif" font-size="22" fill="#0f172a">net charge</text>
+  <text x="98" y="96" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="18" fill="#334155">+1</text>
+  <text x="98" y="218" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="18" fill="#334155">0</text>
+  <text x="98" y="344" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="18" fill="#334155">-1</text>
+  <line x1="120" y1="218" x2="650" y2="218" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="8 8"/>
+  <path d="M130 104 C185 104 194 108 218 135 C246 166 247 205 286 214 C332 224 417 213 458 222 C498 231 507 272 535 303 C562 332 600 336 646 336" fill="none" stroke="#2563eb" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="224" cy="145" r="6" fill="#f97316"/>
+  <circle cx="510" cy="282" r="6" fill="#f97316"/>
+  <line x1="224" y1="340" x2="224" y2="145" stroke="#f97316" stroke-width="2" stroke-dasharray="6 6"/>
+  <line x1="510" y1="340" x2="510" y2="282" stroke="#f97316" stroke-width="2" stroke-dasharray="6 6"/>
+  <text x="224" y="372" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="18" fill="#334155">pKa 1</text>
+  <text x="510" y="372" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="18" fill="#334155">pKa 2</text>
+  <text x="162" y="80" font-family="Inter, Arial, sans-serif" font-size="18" fill="#0f172a">mostly protonated</text>
+  <text x="302" y="203" font-family="Inter, Arial, sans-serif" font-size="18" fill="#0f172a">zwitterion region</text>
+  <text x="486" y="320" font-family="Inter, Arial, sans-serif" font-size="18" fill="#0f172a">mostly deprotonated</text>
+  <path d="M170 254 h78" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+  <text x="209" y="247" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#0f172a">NH3+</text>
+  <text x="209" y="285" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#0f172a">COOH</text>
+  <path d="M340 254 h78" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+  <text x="379" y="247" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#0f172a">NH3+</text>
+  <text x="379" y="285" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#0f172a">COO-</text>
+  <path d="M552 254 h78" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+  <text x="591" y="247" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#0f172a">NH2</text>
+  <text x="591" y="285" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#0f172a">COO-</text>
+</svg>

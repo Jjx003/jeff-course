@@ -1,0 +1,13 @@
+title: "Midterm Test: Tensor Foundations"
+slug: "midterm-test"
+description: "Check your understanding of shapes, strides, matrix multiplication, broadcasting, and activation functions."
+order: 4.5
+difficulty: intermediate
+estimatedMinutes: 30
+tags:
+  - tensors
+  - strides
+  - matmul
+  - broadcasting
+  - activations
+type: test

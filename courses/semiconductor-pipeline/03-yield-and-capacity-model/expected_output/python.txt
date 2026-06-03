@@ -1,0 +1,4 @@
+edge_ai_soc: dies/wafer=528, yield=0.908, good/month=21585105
+datacenter_gpu: dies/wafer=62, yield=0.664, good/month=1851584
+mature_mcu: dies/wafer=1218, yield=0.972, good/month=82839534
+bottleneck: cmp at 49000 wafers/month

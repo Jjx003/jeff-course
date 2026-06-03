@@ -156,8 +156,8 @@
 .prose.markdown-study img {
   display: block;
   width: auto;
-  max-width: min(100%, 42rem);
-  max-height: 26rem;
+  max-width: min(100%, 60rem);
+  max-height: 38rem;
   margin: 1.75rem auto 0.75rem;
   object-fit: contain;
   border-radius: 8px;
@@ -166,8 +166,8 @@
 }
 
 .prose.markdown-study img {
-  max-width: min(100%, 34rem);
-  max-height: 20rem;
+  max-width: min(100%, 46rem);
+  max-height: 28rem;
 }
 
 .prose.markdown-study {

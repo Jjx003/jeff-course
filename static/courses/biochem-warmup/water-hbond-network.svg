@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 460" role="img" aria-labelledby="title desc">
+  <title id="title">Water hydrogen bond network</title>
+  <desc id="desc">Water molecules shown as polar donors and acceptors connected by dashed hydrogen bonds.</desc>
+  <rect width="820" height="460" fill="#f8fafc"/>
+  <text x="410" y="46" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">Water is a directional hydrogen-bond network</text>
+  <g stroke-linecap="round" font-family="Inter, Arial, sans-serif">
+    <g stroke="#38bdf8" stroke-width="4" stroke-dasharray="10 12">
+      <line x1="220" y1="152" x2="370" y2="222"/>
+      <line x1="450" y1="222" x2="600" y2="152"/>
+      <line x1="220" y1="310" x2="370" y2="242"/>
+      <line x1="450" y1="242" x2="600" y2="310"/>
+    </g>
+    <g>
+      <circle cx="170" cy="130" r="34" fill="#ef4444"/>
+      <circle cx="125" cy="105" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+      <circle cx="205" cy="92" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+      <circle cx="410" cy="230" r="38" fill="#ef4444"/>
+      <circle cx="360" cy="205" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+      <circle cx="455" cy="195" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+      <circle cx="650" cy="130" r="34" fill="#ef4444"/>
+      <circle cx="610" cy="96" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+      <circle cx="696" cy="108" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+      <circle cx="170" cy="330" r="34" fill="#ef4444"/>
+      <circle cx="125" cy="355" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+      <circle cx="205" cy="372" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+      <circle cx="650" cy="330" r="34" fill="#ef4444"/>
+      <circle cx="610" cy="365" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+      <circle cx="696" cy="352" r="18" fill="#e0f2fe" stroke="#0284c7"/>
+    </g>
+    <text x="410" y="312" text-anchor="middle" font-size="22" fill="#0f172a">O accepts, O-H donates</text>
+    <text x="410" y="348" text-anchor="middle" font-size="18" fill="#475569">Geometry matters: good hydrogen bonds are directional.</text>
+  </g>
+</svg>

@@ -1,0 +1,151 @@
+questions:
+  - id: q_index_choice
+    type: multiple_choice
+    stem: "A workload frequently runs `WHERE user_id = ?` and never needs ordered iteration or range predicates on `user_id`. Which index shape is the best default from this course?"
+    options:
+      - "An extendible hash index, because equality lookup is its natural strength."
+      - "A B+ tree, because range scans are required for every equality predicate."
+      - "A sequential scan, because indexes cannot support point lookups."
+      - "A slotted page tombstone list, because it sorts keys by deletion time."
+    correct: 0
+    explanation: "Hash indexes are ideal for equality-only lookups. A B+ tree is more general when ordering or range predicates matter."
+
+  - id: q_hash_range_scan
+    type: true_false
+    stem: "An extendible hash index is a good physical access path for `WHERE price BETWEEN 10 AND 20 ORDER BY price`."
+    correct: false
+    explanation: "Extendible hashing has no key order, so it cannot naturally support range scans or ordered iteration. A B+ tree is the better fit."
+
+  - id: q_extendible_directory_size
+    type: parametric
+    stem_template: "An extendible hash directory has global depth {{g}}. How many directory entries does it contain?"
+    params:
+      g: { min: 2, max: 6, step: 1 }
+    correct_formula: "Math.pow(2, g)"
+    distractor_formulas:
+      - "g * 2"
+      - "Math.pow(2, g - 1)"
+      - "Math.pow(2, g + 1)"
+    answer_suffix: " entries"
+    explanation_template: "Global depth is the number of hash bits used for directory lookup, so the directory contains 2^{{g}} = {{Math.pow(2, g)}} entries."
+
+  - id: q_local_depth_sharing
+    type: multiple_choice
+    stem: "In extendible hashing, what does it mean when a bucket's local depth is less than the directory global depth?"
+    options:
+      - "Multiple directory entries point to that same bucket."
+      - "The bucket must be empty."
+      - "The directory cannot double again."
+      - "Every lookup must fall back to a B+ tree."
+    correct: 0
+    explanation: "A bucket with local depth `l` is distinguished by fewer bits than the directory uses globally, so several directory entries can share the bucket pointer."
+
+  - id: q_tuple_offsets
+    type: parametric
+    stem_template: "A schema stores fixed-size columns of {{a}}, {{b}}, and {{c}} bytes in that order. What is the byte offset of the third column?"
+    params:
+      a: { min: 4, max: 12, step: 4 }
+      b: { min: 4, max: 16, step: 4 }
+      c: { min: 4, max: 8, step: 4 }
+    correct_formula: "a + b"
+    distractor_formulas:
+      - "a + b + c"
+      - "b + c"
+      - "a"
+    answer_suffix: " bytes"
+    explanation_template: "The offset of column i is the sum of all earlier column sizes. The third column starts after the first two: {{a}} + {{b}} = {{a + b}} bytes."
+
+  - id: q_variant_value
+    type: multiple_choice
+    stem: "Why is `std::variant` a reasonable representation for this course's `Value` type?"
+    options:
+      - "The set of SQL value types is fixed, and `std::variant` records which alternative is active."
+      - "It serializes directly to a page without any schema information."
+      - "It lets the optimizer ignore column types."
+      - "It makes every string value fixed-width."
+    correct: 0
+    explanation: "`std::variant` is type-safe for a known set of alternatives. The schema and tuple layout still determine how values become bytes."
+
+  - id: q_volcano_next
+    type: true_false
+    stem: "In the Volcano iterator model, the root operator repeatedly calls `Next()`, and those calls pull tuples from child operators on demand."
+    correct: true
+    explanation: "Volcano execution is pull-based. Each `Next()` call may recursively ask child operators for the next tuple, enabling pipelined execution."
+
+  - id: q_hash_join_build_side
+    type: multiple_choice
+    stem: "For an in-memory hash join, which input should usually be used as the build side?"
+    options:
+      - "The smaller input after filters, because the build hash table consumes memory."
+      - "The larger input, because bigger tables hash faster."
+      - "The input with more columns, regardless of row count."
+      - "Whichever input appears syntactically first in the SQL text."
+    correct: 0
+    explanation: "The build side is materialized into a hash table, so optimizers prefer the smaller estimated input to reduce memory use and spill risk."
+
+  - id: q_join_cost
+    type: parametric
+    stem_template: "Using the course's simplified nested-loop join cost model, a left child estimates {{left}} tuples and a right child estimates {{right}} tuples. What is the join cost?"
+    params:
+      left: { min: 100, max: 500, step: 100 }
+      right: { min: 20, max: 100, step: 20 }
+    correct_formula: "left * right"
+    distractor_formulas:
+      - "left + right"
+      - "Math.max(left, right)"
+      - "left * right + left"
+    answer_suffix: " tuple pairs"
+    explanation_template: "The simplified nested-loop cost multiplies the child cardinalities: {{left}} * {{right}} = {{left * right}} tuple pairs."
+
+  - id: q_predicate_pushdown_safety
+    type: multiple_choice
+    stem: "A filter above a join can be pushed below the join only when:"
+    options:
+      - "the predicate references columns from one side of the join only."
+      - "the predicate references columns from both sides of the join."
+      - "the join is implemented as nested-loop join but not hash join."
+      - "the filter appears after projection in the SQL text."
+    correct: 0
+    explanation: "A predicate can move below a join when it depends only on columns from one input. If it references both sides, it must wait until the join has combined the tuples."
+
+  - id: q_selectivity_eq
+    type: parametric
+    stem_template: "A table has {{rows}} rows and a column has {{ndv}} distinct values. Under the uniform equality assumption, about how many rows match `col = value`?"
+    params:
+      rows: { min: 1000, max: 5000, step: 1000 }
+      ndv: { min: 10, max: 50, step: 10 }
+    correct_formula: "rows / ndv"
+    distractor_formulas:
+      - "rows * ndv"
+      - "rows - ndv"
+      - "ndv"
+    answer_suffix: " rows"
+    explanation_template: "Equality selectivity is 1 / NDV, so the estimated output is {{rows}} / {{ndv}} = {{rows / ndv}} rows."
+
+  - id: q_pipeline_breaker
+    type: multiple_choice
+    stem: "Why is a simple hash join considered a pipeline breaker?"
+    options:
+      - "It must build the hash table from one input before it can probe and emit joined rows."
+      - "It requires the parser to finish tokenizing every query in the database."
+      - "It forces all table pages to be compacted before scanning."
+      - "It cannot be represented as an executor."
+    correct: 0
+    explanation: "The build phase materializes one input into a hash table. Rows from the probe side cannot flow through until that build state exists."
+
+  - id: q_query_lifecycle_order
+    type: multiple_choice
+    stem: "Which sequence best matches the final module's simplified SQL lifecycle?"
+    options:
+      - "Tokenizer, parser, binder, logical planner, optimizer, physical planner, executor."
+      - "Executor, optimizer, tokenizer, disk manager, binder, parser."
+      - "Buffer pool, B+ tree, parser, fsync, renderer, executor."
+      - "Optimizer, parser, tokenizer, executor, binder, physical planner."
+    correct: 0
+    explanation: "SQL text is first tokenized and parsed, then names are bound, plans are built and optimized, physical operators are chosen, and the executor produces results."
+
+  - id: q_optimizer_estimates
+    type: true_false
+    stem: "A cost-based optimizer can choose a much worse plan when cardinality estimates are badly wrong, even if every physical operator implementation is correct."
+    correct: true
+    explanation: "The optimizer depends on estimates to compare alternatives. Bad estimates can lead it to choose the wrong join order, access path, or build side."

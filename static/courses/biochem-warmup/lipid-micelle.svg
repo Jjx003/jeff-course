@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 520" role="img" aria-labelledby="title desc">
+  <title id="title">Lipid micelle</title>
+  <desc id="desc">Amphipathic molecules assemble with hydrophilic heads facing water and hydrophobic tails buried inside.</desc>
+  <rect width="760" height="520" fill="#f8fafc"/>
+  <text x="380" y="46" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">Amphipathic molecules hide nonpolar surface</text>
+  <circle cx="380" cy="270" r="150" fill="#fff7ed" stroke="#fed7aa" stroke-width="4"/>
+  <circle cx="380" cy="270" r="88" fill="#fdba74" opacity="0.55"/>
+  <g stroke-linecap="round" stroke-width="8">
+    <g stroke="#ea580c">
+      <line x1="380" y1="122" x2="380" y2="244"/>
+      <line x1="466" y1="149" x2="410" y2="252"/>
+      <line x1="523" y1="214" x2="426" y2="270"/>
+      <line x1="523" y1="326" x2="426" y2="286"/>
+      <line x1="466" y1="391" x2="410" y2="288"/>
+      <line x1="380" y1="418" x2="380" y2="296"/>
+      <line x1="294" y1="391" x2="350" y2="288"/>
+      <line x1="237" y1="326" x2="334" y2="286"/>
+      <line x1="237" y1="214" x2="334" y2="270"/>
+      <line x1="294" y1="149" x2="350" y2="252"/>
+    </g>
+    <g fill="#38bdf8" stroke="#0284c7" stroke-width="3">
+      <circle cx="380" cy="122" r="24"/>
+      <circle cx="466" cy="149" r="24"/>
+      <circle cx="523" cy="214" r="24"/>
+      <circle cx="523" cy="326" r="24"/>
+      <circle cx="466" cy="391" r="24"/>
+      <circle cx="380" cy="418" r="24"/>
+      <circle cx="294" cy="391" r="24"/>
+      <circle cx="237" cy="326" r="24"/>
+      <circle cx="237" cy="214" r="24"/>
+      <circle cx="294" cy="149" r="24"/>
+    </g>
+  </g>
+  <g font-family="Inter, Arial, sans-serif" font-size="20">
+    <text x="84" y="120" fill="#0284c7" font-weight="700">hydrophilic heads</text>
+    <path d="M250 138 C214 104 170 104 118 116" fill="none" stroke="#0284c7" stroke-width="3"/>
+    <text x="498" y="282" fill="#9a3412" font-weight="700">hydrophobic core</text>
+    <path d="M488 292 C456 306 432 306 410 294" fill="none" stroke="#9a3412" stroke-width="3"/>
+    <text x="380" y="482" text-anchor="middle" fill="#475569">Clustering lowers exposed nonpolar area and releases ordered water.</text>
+  </g>
+</svg>

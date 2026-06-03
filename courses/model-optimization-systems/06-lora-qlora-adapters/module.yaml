@@ -1,0 +1,9 @@
+title: "LoRA, QLoRA, and adapter systems"
+slug: "lora-qlora-adapters"
+description: "See how low-rank updates and quantized base weights change fine-tuning economics."
+order: 6
+difficulty: intermediate
+estimatedMinutes: 35
+tags: [lora, qlora, fine-tuning, adapters]
+type: reading
+

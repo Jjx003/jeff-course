@@ -1,0 +1,143 @@
+questions:
+  - id: buried_charge_tradeoff
+    type: multiple_choice
+    stem: "A buried aspartate with no nearby hydrogen-bond donors or positive charges is usually problematic because:"
+    options:
+      - "Burying an uncompensated charge has a large desolvation cost."
+      - "Aspartate is purely hydrophobic."
+      - "Aspartate always forms a disulfide."
+      - "The peptide backbone becomes D-chiral."
+    correct: 0
+    explanation: "A charged carboxylate is well solvated by water. Moving it into a nonpolar core is costly unless the protein supplies compensating interactions or shifts its pKa."
+
+  - id: salt_bridge_context
+    type: true_false
+    stem: "A salt bridge is automatically stabilizing by the same amount in every protein environment."
+    correct: false
+    explanation: "False. Geometry, solvent exposure, dielectric environment, desolvation cost, and pKa shifts all influence whether a salt bridge stabilizes a structure."
+
+  - id: two_state_population
+    type: parametric
+    stem_template: "A two-state folder has unfolded/folded ratio {{ratio}}:1 at equilibrium. What percent of molecules are folded?"
+    params:
+      ratio: { min: 2, max: 5, step: 1 }
+    correct_formula: "Math.round(100 / (ratio + 1))"
+    distractor_formulas:
+      - "Math.round(100 * ratio / (ratio + 1))"
+      - "Math.round(100 / ratio)"
+      - "ratio * 10"
+    answer_suffix: "%"
+    explanation_template: "If unfolded:folded is {{ratio}}:1, the folded fraction is $1/({{ratio}}+1)$, or about {{Math.round(100 / (ratio + 1))}}%."
+
+  - id: activation_barrier
+    type: multiple_choice
+    stem: "What does an enzyme most directly change to speed a reaction?"
+    options:
+      - "It lowers the activation free-energy barrier for the reaction path."
+      - "It makes the reaction's equilibrium constant infinite."
+      - "It changes every substrate into a covalent disulfide."
+      - "It removes the need for molecular collisions."
+    correct: 0
+    explanation: "Catalysts accelerate approach to equilibrium by stabilizing transition states or alternate pathways. They do not change the equilibrium constant for the net reaction."
+
+  - id: catalyst_equilibrium
+    type: true_false
+    stem: "A catalyst speeds both forward and reverse reactions and therefore does not change the final equilibrium constant."
+    correct: true
+    explanation: "True. A catalyst changes kinetics, not the thermodynamic position of equilibrium."
+
+  - id: disulfide_environment
+    type: multiple_choice
+    stem: "Where is a stable protein disulfide generally more likely to persist?"
+    options:
+      - "An oxidizing extracellular environment"
+      - "A strongly reducing cytosol"
+      - "Inside a purely hydrocarbon solvent with no protein"
+      - "Only inside DNA bases"
+    correct: 0
+    explanation: "Disulfides are favored in oxidizing environments. The cytosol is usually reducing, which disfavors persistent disulfide crosslinks."
+
+  - id: cysteine_count
+    type: parametric
+    stem_template: "If {{cys}} cysteine residues are paired into disulfides with no cysteine left over, how many disulfide bonds are formed?"
+    params:
+      cys: { min: 4, max: 12, step: 2 }
+    correct_formula: "cys / 2"
+    distractor_formulas:
+      - "cys"
+      - "cys - 1"
+      - "cys / 4"
+    answer_suffix: ""
+    explanation_template: "Each disulfide uses two cysteine side chains, so {{cys}} cysteines form {{cys / 2}} disulfide bonds when all are paired."
+
+  - id: histidine_catalysis
+    type: multiple_choice
+    stem: "Why is histidine often useful in enzyme active sites?"
+    options:
+      - "Its side-chain pKa can be close enough to neutral pH for proton transfer."
+      - "It is always permanently negative."
+      - "It is the only amino acid with no side chain."
+      - "It forms peptide bonds with substrates automatically."
+    correct: 0
+    explanation: "Histidine's imidazole can often switch protonation state near physiological pH, making it useful for general acid/base catalysis."
+
+  - id: conservative_core_mutation
+    type: multiple_choice
+    stem: "Which mutation is most conservative for a buried hydrophobic core site?"
+    options:
+      - "Leucine to isoleucine"
+      - "Leucine to aspartate"
+      - "Valine to lysine"
+      - "Phenylalanine to glutamate"
+    correct: 0
+    explanation: "Leucine and isoleucine are both bulky hydrophobic residues. The other substitutions introduce charged or strongly polar groups into a likely nonpolar environment."
+
+  - id: aromatic_interaction
+    type: multiple_choice
+    stem: "A lysine ammonium group packs against the face of a tryptophan ring. Which interaction is most directly suggested?"
+    options:
+      - "Cation-pi interaction"
+      - "Disulfide exchange"
+      - "Peptide resonance"
+      - "Hydrolysis of an ester"
+    correct: 0
+    explanation: "A positively charged group can interact favorably with the electron-rich pi face of an aromatic side chain."
+
+  - id: phosphorylation_effect
+    type: multiple_choice
+    stem: "Phosphorylating a serine side chain most directly adds:"
+    options:
+      - "A bulky, negatively charged phosphate group"
+      - "A hydrophobic methyl group"
+      - "A covalent disulfide"
+      - "A new alpha carbon"
+    correct: 0
+    explanation: "Serine phosphorylation adds phosphate, introducing negative charge, hydrogen-bonding capacity, and steric bulk."
+
+  - id: folding_delta_g_sign
+    type: multiple_choice
+    stem: "For the folding reaction U -> F, what does a negative Delta G under the stated conditions mean?"
+    options:
+      - "Folding is thermodynamically favorable under those conditions."
+      - "Folding is impossible."
+      - "The activation barrier must be zero."
+      - "The protein cannot unfold."
+    correct: 0
+    explanation: "A negative Delta G means the folded state is favored relative to the unfolded state under the stated conditions. It does not imply the rate is fast or the barrier is absent."
+
+  - id: gly_pro_loop
+    type: multiple_choice
+    stem: "A tight turn loses a glycine and gains a proline. Which concern is most chemically direct?"
+    options:
+      - "The backbone conformational preferences may change sharply."
+      - "A negative carboxylate side chain is introduced."
+      - "A disulfide must form."
+      - "The residue becomes aromatic."
+    correct: 0
+    explanation: "Glycine is unusually flexible, while proline is conformationally restrictive. Substituting one for the other can strongly alter local backbone geometry."
+
+  - id: hbond_burial
+    type: true_false
+    stem: "Burying a polar group is usually safer when the folded structure provides replacement hydrogen bonds or electrostatic partners."
+    correct: true
+    explanation: "True. A buried polar group loses water contacts, so internal partners can compensate for that desolvation cost."

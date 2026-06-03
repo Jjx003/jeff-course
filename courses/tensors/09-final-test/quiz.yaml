@@ -1,0 +1,150 @@
+questions:
+  - id: q1_storage_metadata
+    type: multiple_choice
+    stem: "Which fields are enough to describe a basic dense tensor view over a one-dimensional storage buffer?"
+    options:
+      - "Storage, shape, strides, and optionally a storage offset"
+      - "Only the shape"
+      - "Only the data type and device"
+      - "The computation graph and gradient function"
+    correct: 0
+    explanation: "A tensor view needs the underlying storage plus metadata that maps logical indices to storage positions: shape, strides, and often an offset."
+
+  - id: q2_contiguous_offset
+    type: parametric
+    stem_template: "A contiguous row-major tensor has shape $({{a}}, {{b}}, {{c}})$. What is the flat offset for index $({{i}}, {{j}}, {{k}})$?"
+    params:
+      a: { min: 3, max: 5, step: 1 }
+      b: { min: 4, max: 6, step: 1 }
+      c: { min: 5, max: 7, step: 1 }
+      i: { min: 1, max: 2, step: 1 }
+      j: { min: 1, max: 3, step: 1 }
+      k: { min: 2, max: 4, step: 1 }
+    correct_formula: "i * b * c + j * c + k"
+    distractor_formulas:
+      - "i + j + k"
+      - "i * a + j * b + k"
+      - "k * a * b + j * a + i"
+    answer_suffix: ""
+    explanation_template: "Row-major strides are $({{b * c}}, {{c}}, 1)$, so offset = ${{i}} \\times {{b * c}} + {{j}} \\times {{c}} + {{k}} = {{i * b * c + j * c + k}}$."
+
+  - id: q3_matmul_backward_a
+    type: multiple_choice
+    stem: "For $C = AB$ and upstream gradient $G = \\partial L / \\partial C$, what is $\\partial L / \\partial A$?"
+    options:
+      - "$G B^T$"
+      - "$A^T G$"
+      - "$B G^T$"
+      - "$G^T A$"
+    correct: 0
+    explanation: "The gradient with respect to the left operand of matmul is the upstream gradient multiplied by the transpose of the right operand: $G B^T$."
+
+  - id: q4_matmul_backward_b
+    type: multiple_choice
+    stem: "For $C = AB$ and upstream gradient $G = \\partial L / \\partial C$, what is $\\partial L / \\partial B$?"
+    options:
+      - "$A^T G$"
+      - "$G B^T$"
+      - "$A G$"
+      - "$B^T A$"
+    correct: 0
+    explanation: "The gradient with respect to the right operand is the left operand transposed times the upstream gradient: $A^T G$."
+
+  - id: q5_broadcast_reduce
+    type: parametric
+    stem_template: "A tensor with shape $(1, {{n}}, 1)$ is broadcast to $({{b}}, {{n}}, {{m}})$ in the forward pass. How many upstream gradient elements contribute to each original element during backward?"
+    params:
+      b: { min: 2, max: 5, step: 1 }
+      n: { min: 3, max: 6, step: 1 }
+      m: { min: 4, max: 8, step: 1 }
+    correct_formula: "b * m"
+    distractor_formulas:
+      - "n"
+      - "b + m"
+      - "b * n * m"
+    answer_suffix: ""
+    explanation_template: "Axes 0 and 2 were broadcast from size 1 to sizes ${{b}}$ and ${{m}}$. For each fixed middle index, backward sums over ${{b}} \\times {{m}} = {{b * m}}$ upstream elements."
+
+  - id: q6_bce_gradient_sign
+    type: true_false
+    stem: "For binary cross-entropy, if the label is $1$ and the prediction is too small, gradient descent should push the prediction upward."
+    correct: true
+    explanation: "With label 1, the loss contains $-\\log(p)$. Its derivative with respect to $p$ is negative, so subtracting the gradient increases $p$."
+
+  - id: q7_mse_gradient
+    type: multiple_choice
+    stem: "For mean squared error $L = \\frac{1}{n}\\sum_i (\\hat y_i - y_i)^2$, what is $\\partial L / \\partial \\hat y_i$?"
+    options:
+      - "$\\frac{2}{n}(\\hat y_i - y_i)$"
+      - "$2(y_i - \\hat y_i)$"
+      - "$\\hat y_i(1 - \\hat y_i)$"
+      - "$-\\frac{y_i}{\\hat y_i}$"
+    correct: 0
+    explanation: "Differentiate the squared residual and keep the mean factor: $\\partial L / \\partial \\hat y_i = 2(\\hat y_i - y_i)/n$."
+
+  - id: q8_chain_rule
+    type: multiple_choice
+    stem: "If $z = x y + \\sin(x)$, which local derivative is needed to send gradient from $z$ back to $x$?"
+    options:
+      - "$\\frac{\\partial z}{\\partial x} = y + \\cos(x)$"
+      - "$\\frac{\\partial z}{\\partial x} = x + \\cos(y)$"
+      - "$\\frac{\\partial z}{\\partial x} = xy$"
+      - "$\\frac{\\partial z}{\\partial x} = y - \\sin(x)$"
+    correct: 0
+    explanation: "Differentiate each term with respect to $x$: $xy$ contributes $y$, and $\\sin(x)$ contributes $\\cos(x)$."
+
+  - id: q9_gradient_accumulation
+    type: true_false
+    stem: "When the same value is used by two downstream operations in a computation graph, its gradient contributions must be added together."
+    correct: true
+    explanation: "Reverse-mode autodiff accumulates all paths from the output back to a value. Shared nodes receive the sum of their downstream contributions."
+
+  - id: q10_topological_order
+    type: multiple_choice
+    stem: "Why does a scalar autograd engine usually traverse the computation graph in reverse topological order during backward?"
+    options:
+      - "So every node receives all downstream gradient contributions before its local backward function runs"
+      - "So forward values can be recomputed without storing them"
+      - "So gradients are always positive"
+      - "So the graph can ignore shared subexpressions"
+    correct: 0
+    explanation: "Reverse topological order ensures children closer to the loss propagate into a node before that node sends gradients to its own parents."
+
+  - id: q11_relu_backward_mask
+    type: multiple_choice
+    stem: "In tensor autograd, why does ReLU backward need information from the forward input or output?"
+    options:
+      - "It needs a mask identifying which elements were positive"
+      - "It needs to know the original tensor's storage pointer only"
+      - "It needs the learning rate"
+      - "It needs the batch size to normalize every gradient"
+    correct: 0
+    explanation: "ReLU passes upstream gradient only where the forward input was positive and sends zero where the input was non-positive."
+
+  - id: q12_sum_backward
+    type: multiple_choice
+    stem: "If $y = x.sum()$ for a tensor $x$ with shape $(2, 3)$ and the upstream gradient for scalar $y$ is $g$, what is the gradient shape for $x$?"
+    options:
+      - "$(2, 3)$, filled with $g$"
+      - "$()$, a scalar $g$"
+      - "$(3, 2)$, filled with $g$"
+      - "$(2,)$, one value per row"
+    correct: 0
+    explanation: "A full reduction maps every element of $x$ into one scalar sum, so the scalar upstream gradient broadcasts back to every element of $x$."
+
+  - id: q13_inplace_risk
+    type: true_false
+    stem: "In-place mutation of values needed for backward can make autograd results incorrect unless the engine tracks or prevents the mutation."
+    correct: true
+    explanation: "Backward formulas often depend on saved forward values. If those values are mutated, the stored graph may no longer represent the computation that produced the loss."
+
+  - id: q14_numerical_stability
+    type: multiple_choice
+    stem: "Which implementation detail improves numerical stability for sigmoid or binary cross-entropy code?"
+    options:
+      - "Avoiding direct overflow-prone exponentials or clipping probabilities away from exactly 0 and 1"
+      - "Using integer division for probabilities"
+      - "Dropping all negative examples"
+      - "Replacing every logarithm with a square root"
+    correct: 0
+    explanation: "Stable implementations avoid overflow in exponentials and avoid taking $\\log(0)$, often through algebraic rewrites or small clamps."

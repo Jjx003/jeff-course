@@ -1,0 +1,8 @@
+title: "Final Test: Number Theory"
+slug: "final-test"
+description: "A cumulative final assessment spanning divisibility, congruences, reciprocity, quadratic forms, continued fractions, Pell equations, partitions, p-adics, and Dirichlet series."
+order: 33
+difficulty: advanced
+estimatedMinutes: 45
+tags: [number-theory, assessment, final, cumulative]
+type: test

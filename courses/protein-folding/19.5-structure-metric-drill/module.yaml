@@ -1,0 +1,8 @@
+title: "Structure Metric Speed Drill"
+slug: "structure-metric-speed-drill"
+description: "Practice quick interpretation of RMSD, pLDDT-style confidence, and contact precision metrics."
+order: 19.5
+difficulty: intermediate
+estimatedMinutes: 8
+tags: [structure-quality, metrics, drill]
+type: drill

@@ -104,6 +104,10 @@ uv run --directory tools/tts --python 3.11 qwen_tts_pipeline.py render `
 For the faster engine, clips are rendered one at a time because
 `faster-qwen3-tts` exposes a single-text generation API. `--max-new-tokens 1536`
 should fit most gradual steps; use `2048` for unusually long mini sections.
+On an RTX 2070 Super, keep `--dtype auto` or pass `--dtype float16`; BF16 is
+substantially slower on this card. Reducing `--max-seq-len` can improve some
+short sections, but values below `2048` can truncate long course chunks, so test
+the generated duration/content before using a smaller cache for a full track.
 
 ## Benchmarking Qwen vs. faster-qwen3-tts
 

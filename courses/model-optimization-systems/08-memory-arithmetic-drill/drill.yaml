@@ -1,0 +1,53 @@
+title: "Model Memory Arithmetic"
+instructions: "Type the nearest whole-number answer."
+roundSeconds: 120
+targetAccuracy: 0.85
+itemsPerRound: 20
+items:
+  - id: bf16_weight_gb
+    prompt_template: "A model has {{params}}B parameters stored in BF16. About how many GB are the weights?"
+    params:
+      params: { min: 7, max: 70, step: 7 }
+    correct_formula: "params * 2"
+    answer_suffix: " GB"
+    tolerance: 0
+    explanation_template: "BF16 is 2 bytes per parameter, so {{params}}B parameters need about {{params * 2}} GB."
+  - id: int4_weight_gb
+    prompt_template: "A model has {{params}}B parameters stored in raw INT4. About how many GB are the weights before metadata?"
+    params:
+      params: { min: 8, max: 72, step: 8 }
+    correct_formula: "Math.round(params * 0.5)"
+    answer_suffix: " GB"
+    tolerance: 0
+    explanation_template: "INT4 is 0.5 bytes per parameter, so {{params}}B parameters need about {{Math.round(params * 0.5)}} GB."
+  - id: lora_params_m
+    prompt_template: "One LoRA adapter targets a {{d}} by {{d}} matrix with rank {{r}}. How many thousands of adapter parameters?"
+    params:
+      d: { min: 1024, max: 8192, step: 1024 }
+      r: { min: 4, max: 32, step: 4 }
+    correct_formula: "Math.round((r * (d + d)) / 1000)"
+    answer_suffix: "k"
+    tolerance: 1
+    explanation_template: "LoRA params are r(d_in + d_out) = {{r}} * ({{d}} + {{d}})."
+  - id: kv_cache_mb
+    prompt_template: "KV cache: {{layers}} layers, {{heads}} KV heads, head dim 128, context {{tokens}}, BF16. About how many MB for one request?"
+    params:
+      layers: { min: 16, max: 64, step: 16 }
+      heads: { min: 4, max: 16, step: 4 }
+      tokens: { min: 1024, max: 8192, step: 1024 }
+    correct_formula: "Math.round(layers * heads * 128 * 2 * tokens * 2 / 1000000)"
+    answer_suffix: " MB"
+    tolerance: 2
+    explanation_template: "Use layers * KV heads * head dim * K/V * tokens * bytes."
+  - id: padding_waste
+    prompt_template: "A batch has real sequence lengths {{a}}, {{b}}, {{c}}, {{d}} and is padded to the max length. What percent of padded tokens are waste?"
+    params:
+      a: { min: 128, max: 512, step: 128 }
+      b: { min: 128, max: 512, step: 128 }
+      c: { min: 512, max: 1024, step: 128 }
+      d: { min: 512, max: 1024, step: 128 }
+    correct_formula: "Math.round(((Math.max(a,b,c,d) * 4 - (a+b+c+d)) / (Math.max(a,b,c,d) * 4)) * 100)"
+    answer_suffix: "%"
+    tolerance: 1
+    explanation_template: "Padded tokens are 4 times the max length. Waste is padded minus real tokens."
+

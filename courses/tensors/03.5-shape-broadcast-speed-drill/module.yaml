@@ -1,0 +1,8 @@
+title: "Shape and Broadcast Speed Drill"
+slug: "shape-broadcast-speed-drill"
+description: "Practice tensor shape, broadcasting, and matrix dimension checks under light time pressure."
+order: 3.5
+difficulty: beginner
+estimatedMinutes: 8
+tags: [shapes, broadcasting, matrix-multiply, drill]
+type: drill

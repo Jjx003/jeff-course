@@ -101,6 +101,21 @@ Three of those special cases are worth remembering because they break the
   **disulfide bond** with another cysteine. These bonds act like staples that
   pin distant parts of the chain together.
 
+![Glycine structural formula](https://commons.wikimedia.org/wiki/Special:Redirect/file/Glycin_-_Glycine.svg)
+
+*Glycine: the side chain is only hydrogen. Image from Wikimedia Commons,
+NEUROtiker, public domain.*
+
+![L-proline structural formula](https://commons.wikimedia.org/wiki/Special:Redirect/file/L-Prolin_-_L-Proline.svg)
+
+*Proline: the side chain loops back onto the backbone nitrogen. Image from
+Wikimedia Commons, NEUROtiker, public domain.*
+
+![Cystine structural formula with disulfide bond](https://commons.wikimedia.org/wiki/Special:Redirect/file/%28R%2CR%29-Cystine_BLUE_Structural_Formulae.svg)
+
+*Cystine: two cysteines joined by a disulfide bond. Image from Wikimedia
+Commons, Jü, public domain.*
+
 Most of what a protein language model "learns" is the statistical pattern of
 which side chains tend to appear in which contexts. The biochemistry above is
 the underlying reason those patterns exist.

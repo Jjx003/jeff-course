@@ -1,0 +1,7 @@
+scale: 2.0
+dense params: 6
+adapter params: 10
+adapter percent: 166.7%
+delta: [[0.4, -0.5, 0.2], [0.1, 0.4, -0.3]]
+merged: [[1.4, -2.5, 0.7], [0.1, 1.9, -1.3]]
+

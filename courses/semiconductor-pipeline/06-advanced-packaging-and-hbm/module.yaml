@@ -1,0 +1,8 @@
+title: "Advanced packaging and HBM"
+slug: "advanced-packaging-and-hbm"
+description: "Understand why AI accelerators depend on substrates, interposers, CoWoS-style integration, and high-bandwidth memory stacks."
+order: 6
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [packaging, hbm, cowos, ai-accelerators]
+type: reading

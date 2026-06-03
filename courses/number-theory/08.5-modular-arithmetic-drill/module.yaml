@@ -1,0 +1,8 @@
+title: "Modular Arithmetic Speed Drill"
+slug: "modular-arithmetic-speed-drill"
+description: "Build fluency with remainders, reductions, and small modular products."
+order: 8.5
+difficulty: beginner
+estimatedMinutes: 8
+tags: [modular-arithmetic, congruences, drill]
+type: drill

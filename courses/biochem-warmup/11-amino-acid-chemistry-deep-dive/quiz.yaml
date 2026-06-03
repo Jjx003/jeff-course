@@ -1,0 +1,107 @@
+questions:
+  - id: charged_basic
+    type: multiple_choice
+    stem: "Which residue is most likely to carry a positive side-chain charge near pH 7?"
+    options: ["Aspartate", "Glutamate", "Lysine", "Serine"]
+    correct: 2
+    explanation: "Lysine has an ammonium side chain that is usually protonated and positively charged near pH 7. Aspartate and glutamate are usually negatively charged."
+
+  - id: histidine_special
+    type: multiple_choice
+    stem: "Why is histidine especially useful in enzyme active sites?"
+    options:
+      - "Its side-chain pKa is close enough to neutral pH that it can often donate or accept a proton."
+      - "It is permanently negatively charged."
+      - "It forms disulfide bonds more readily than cysteine."
+      - "It removes all backbone flexibility."
+    correct: 0
+    explanation: "Histidine's imidazole side chain can switch protonation state near physiological pH, making it useful for acid/base catalysis."
+
+  - id: aromatic_set
+    type: multiple_choice
+    stem: "Which set contains only aromatic amino acids?"
+    options:
+      - "Phenylalanine, tyrosine, tryptophan"
+      - "Leucine, isoleucine, valine"
+      - "Serine, threonine, cysteine"
+      - "Aspartate, glutamate, asparagine"
+    correct: 0
+    explanation: "Phenylalanine, tyrosine, and tryptophan contain aromatic rings. Tyrosine also has a phenolic hydroxyl."
+
+  - id: sulfur_pair
+    type: multiple_choice
+    stem: "Which pair contains the two standard sulfur-containing amino acids?"
+    options: ["Serine and threonine", "Cysteine and methionine", "Lysine and arginine", "Tyrosine and tryptophan"]
+    correct: 1
+    explanation: "Cysteine contains a thiol that can form disulfides. Methionine contains a thioether."
+
+  - id: disulfide
+    type: true_false
+    stem: "Two cysteine side chains can oxidize to form a covalent disulfide bond."
+    correct: true
+    explanation: "True. A disulfide bond links two cysteine residues and can stabilize extracellular or oxidizing-environment proteins."
+
+  - id: glycine_flex
+    type: multiple_choice
+    stem: "Why does glycine often appear in tight turns or flexible regions?"
+    options:
+      - "Its side chain is only hydrogen, so it has unusually little steric bulk."
+      - "It is always positively charged."
+      - "It has an aromatic ring that stacks with DNA."
+      - "It forms the strongest salt bridges."
+    correct: 0
+    explanation: "Glycine's tiny side chain allows backbone angles that would clash for most other residues."
+
+  - id: proline_constraint
+    type: multiple_choice
+    stem: "What is a major structural consequence of proline?"
+    options:
+      - "It constrains the backbone because its side chain loops back to the backbone nitrogen."
+      - "It adds a permanent negative charge."
+      - "It forms disulfide bonds with methionine."
+      - "It behaves like a flexible glycine replacement."
+    correct: 0
+    explanation: "Proline's ring restricts backbone geometry and its backbone nitrogen lacks a normal amide hydrogen donor."
+
+  - id: hbond_acceptor
+    type: multiple_choice
+    stem: "Which side chain is a good hydrogen-bond acceptor but not a hydrogen-bond donor in its deprotonated common state?"
+    options: ["Aspartate carboxylate", "Lysine ammonium", "Phenylalanine ring", "Alanine methyl"]
+    correct: 0
+    explanation: "A carboxylate oxygen can accept hydrogen bonds. Deprotonated aspartate is not a donor."
+
+  - id: phosphorylation
+    type: multiple_choice
+    stem: "Phosphorylation of serine, threonine, or tyrosine most directly adds what chemical feature?"
+    options:
+      - "A bulky, negatively charged phosphate group"
+      - "A disulfide bond"
+      - "A hydrophobic alkyl chain"
+      - "A new peptide bond"
+    correct: 0
+    explanation: "Phosphorylation adds a phosphate group, introducing negative charge, hydrogen-bonding capacity, and steric bulk."
+
+  - id: hydrophobic_mutation
+    type: multiple_choice
+    stem: "A buried leucine is mutated to aspartate. What is the most likely direct chemical problem?"
+    options:
+      - "A charged polar group is introduced into a hydrophobic core."
+      - "An aromatic ring is removed from the protein surface."
+      - "A disulfide bond must form immediately."
+      - "Backbone chirality changes from L to D."
+    correct: 0
+    explanation: "Aspartate is usually negatively charged near pH 7. Burying that charge in a nonpolar core is often destabilizing unless compensated."
+
+  - id: amide_sidechains
+    type: multiple_choice
+    stem: "Which residues have neutral amide side chains that can both donate and accept hydrogen bonds?"
+    options: ["Asparagine and glutamine", "Aspartate and glutamate", "Lysine and arginine", "Valine and leucine"]
+    correct: 0
+    explanation: "Asparagine and glutamine are neutral amides. Their side chains contain both a carbonyl acceptor and an amide donor."
+
+  - id: tyrosine_vs_phenylalanine
+    type: multiple_choice
+    stem: "Compared with phenylalanine, tyrosine adds which important side-chain feature?"
+    options: ["A phenolic hydroxyl group", "A thiol", "A guanidinium group", "A branched aliphatic side chain"]
+    correct: 0
+    explanation: "Tyrosine is aromatic like phenylalanine, but it also has a phenolic OH that can hydrogen bond and be phosphorylated."

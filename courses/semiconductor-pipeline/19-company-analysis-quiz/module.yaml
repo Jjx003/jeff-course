@@ -1,0 +1,8 @@
+title: "Company Analysis Capstone Quiz"
+slug: "company-analysis-quiz"
+description: "Test whether you can reason from company evidence to semiconductor bottleneck theses."
+order: 19
+difficulty: advanced
+estimatedMinutes: 22
+tags: [company-analysis, quiz, nvidia, tsmc, asml, hbm, intel]
+type: quiz

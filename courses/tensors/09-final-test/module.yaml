@@ -1,0 +1,13 @@
+title: "Final Test: Tensor Systems and Autograd"
+slug: "final-test"
+description: "A cumulative assessment covering tensor layout, broadcasting, losses, gradients, scalar autograd, and tensor autograd."
+order: 9
+difficulty: advanced
+estimatedMinutes: 40
+tags:
+  - tensors
+  - broadcasting
+  - gradients
+  - autograd
+  - backpropagation
+type: test

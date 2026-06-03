@@ -1,0 +1,10 @@
+title: "Build an analyst bottleneck dashboard"
+slug: "analyst-dashboard"
+description: "Implement pure-Python helpers that rank semiconductor pipeline bottlenecks by utilization, backlog, and strategic constraint score."
+order: 11
+difficulty: intermediate
+estimatedMinutes: 40
+tags: [python, analytics, capacity, bottlenecks, dashboards]
+type: coding
+languages: [python]
+defaultLanguage: python

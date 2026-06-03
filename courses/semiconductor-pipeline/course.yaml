@@ -1,0 +1,9 @@
+title: "Semiconductor Pipeline and Ecosystem"
+slug: "semiconductor-pipeline"
+description: >
+  Learn how chips move from design intent through fabs, packaging, capacity
+  constraints, ecosystem bottlenecks, and real-company case studies across
+  NVIDIA, TSMC, ASML, HBM suppliers, and Intel.
+tags: [semiconductors, manufacturing, supply-chain, ai-infrastructure]
+difficulty: intermediate
+order: 7

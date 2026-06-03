@@ -1,0 +1,8 @@
+title: "Semiconductor pipeline capstone quiz"
+slug: "semiconductor-pipeline-capstone-quiz"
+description: "Test cumulative understanding of ecosystem roles, process flow, yield, capacity, lithography, packaging, HBM, roofline reasoning, export controls, and bottleneck analysis."
+order: 12
+difficulty: intermediate
+estimatedMinutes: 22
+tags: [quiz, semiconductors, capstone, supply-chain]
+type: quiz

@@ -1,0 +1,7 @@
+Delta G -5.7 kJ/mol -> K = 9.968
+K 10.0 -> Delta G = -5.708 kJ/mol
+State probabilities: 0.708, 0.258, 0.034
+Delta G_U-F  -5.0 kJ/mol -> folded fraction 0.117
+Delta G_U-F   0.0 kJ/mol -> folded fraction 0.500
+Delta G_U-F   5.0 kJ/mol -> folded fraction 0.883
+Delta G_U-F  10.0 kJ/mol -> folded fraction 0.983

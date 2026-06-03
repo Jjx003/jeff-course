@@ -1,0 +1,146 @@
+questions:
+  - id: midterm_combo_ak
+    type: multiple_choice
+    stem: "Before any blockers are known, how many total combinations of Ace-King are there?"
+    options:
+      - "4"
+      - "12"
+      - "16"
+      - "24"
+    correct: 2
+    explanation: "There are 4 aces and 4 kings, so Ace-King has 4 * 4 = 16 total combinations. Of these, 4 are suited and 12 are offsuit."
+
+  - id: midterm_pair_combos
+    type: multiple_choice
+    stem: "How many combinations does one specific pocket pair, such as QQ, have before blockers?"
+    options:
+      - "4"
+      - "6"
+      - "12"
+      - "16"
+    correct: 1
+    explanation: "A pocket pair chooses 2 suits from 4: C(4,2) = 6. That is why each specific pair has 6 combos."
+
+  - id: midterm_rule_of_4
+    type: true_false
+    stem: "With two cards to come, the Rule of 4 gives a quick equity estimate by multiplying outs by 4."
+    correct: true
+    explanation: "True. With flop-to-river equity, outs * 4 is the usual rough estimate. With one card to come, use outs * 2."
+
+  - id: midterm_pot_odds_call
+    type: parametric
+    stem_template: "The pot is ${{pot}} and villain bets ${{bet}}. What break-even equity do you need to call?"
+    params:
+      pot: { min: 80, max: 320, step: 40 }
+      bet: { min: 20, max: 160, step: 20 }
+    correct_formula: "Math.round(bet / (pot + 2 * bet) * 100)"
+    distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
+      - "Math.round(pot / (pot + 2 * bet) * 100)"
+      - "Math.round(bet / pot * 100)"
+    answer_suffix: "%"
+    explanation_template: >-
+      Your call is {{bet}} into a final pot of {{pot + 2 * bet}}: the original pot {{pot}}, villain's bet {{bet}}, and your call {{bet}}.
+      Break-even equity = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet/(pot+2*bet)*100)}}%.
+
+  - id: midterm_draw_margin
+    type: parametric
+    stem_template: "You have {{outs}} outs on the flop with two cards to come. The pot is ${{pot}} and villain bets ${{bet}}. Using the Rule of 4, by how many percentage points does your estimated equity exceed your pot odds?"
+    params:
+      outs: { min: 5, max: 12, step: 1 }
+      pot: { min: 90, max: 270, step: 30 }
+      bet: { min: 30, max: 120, step: 30 }
+    correct_formula: "(outs * 4) - Math.round(bet / (pot + 2 * bet) * 100)"
+    distractor_formulas:
+      - "(outs * 2) - Math.round(bet / (pot + 2 * bet) * 100)"
+      - "(outs * 4) - Math.round(bet / (pot + bet) * 100)"
+      - "Math.round(bet / (pot + 2 * bet) * 100) - (outs * 4)"
+    answer_suffix: " pts"
+    explanation_template: >-
+      Estimated equity = {{outs}} * 4 = {{outs * 4}}%.
+      Pot odds = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet/(pot+2*bet)*100)}}%.
+      Margin = {{outs * 4}} - {{Math.round(bet/(pot+2*bet)*100)}} = {{(outs * 4) - Math.round(bet/(pot+2*bet)*100)}} percentage points.
+
+  - id: midterm_bluff_ev
+    type: parametric
+    stem_template: "You bluff ${{bet}} into a pot of ${{pot}} with no showdown equity. Villain folds {{fold_pct}}% of the time. What is the EV of the bluff?"
+    params:
+      pot: { min: 80, max: 240, step: 40 }
+      bet: { min: 40, max: 160, step: 40 }
+      fold_pct: { min: 30, max: 70, step: 10 }
+    correct_formula: "Math.round((fold_pct / 100) * pot - (1 - fold_pct / 100) * bet)"
+    distractor_formulas:
+      - "Math.round((fold_pct / 100) * (pot + bet) - (1 - fold_pct / 100) * bet)"
+      - "Math.round((fold_pct / 100) * pot - (1 - fold_pct / 100) * pot)"
+      - "Math.round((1 - fold_pct / 100) * pot - (fold_pct / 100) * bet)"
+    answer_suffix: " chips"
+    explanation_template: >-
+      With no showdown equity, EV = fold% * pot - call% * bet.
+      EV = {{fold_pct / 100}} * {{pot}} - {{1 - fold_pct / 100}} * {{bet}} = {{Math.round((fold_pct / 100) * pot - (1 - fold_pct / 100) * bet)}} chips.
+
+  - id: midterm_call_ev
+    type: parametric
+    stem_template: "You call ${{call}} to win a final pot of ${{final_pot}} and estimate your equity at {{equity}}%. What is the EV of calling?"
+    params:
+      call: { min: 20, max: 100, step: 20 }
+      final_pot: { min: 140, max: 420, step: 40 }
+      equity: { min: 25, max: 65, step: 5 }
+    correct_formula: "Math.round((equity / 100) * final_pot - call)"
+    distractor_formulas:
+      - "Math.round((equity / 100) * (final_pot - call) - call)"
+      - "Math.round((equity / 100) * final_pot)"
+      - "Math.round((1 - equity / 100) * final_pot - call)"
+    answer_suffix: " chips"
+    explanation_template: >-
+      Calling EV = equity * final pot - cost to call.
+      EV = {{equity}}% * {{final_pot}} - {{call}} = {{Math.round((equity / 100) * final_pot - call)}} chips.
+
+  - id: midterm_range_advantage
+    type: multiple_choice
+    stem: "Which statement best describes range advantage?"
+    options:
+      - "Having the single best possible hand on a board"
+      - "Having more total equity across the whole range on a board"
+      - "Having more blockers to villain's bluffs"
+      - "Having position on every future street"
+    correct: 1
+    explanation: "Range advantage means one player's entire range performs better on the board. Nut advantage is about who owns more of the strongest possible hands."
+
+  - id: midterm_nut_advantage
+    type: multiple_choice
+    stem: "On A-K-7 rainbow after a preflop 3-bet, the 3-bettor often has nut advantage because:"
+    options:
+      - "The caller can never have top pair"
+      - "The 3-bettor retains more AA, KK, AK, and other very strong hands"
+      - "Rainbow boards always favor the aggressor"
+      - "Nut advantage only depends on position"
+    correct: 1
+    explanation: "The 3-bettor usually has more premium combos such as AA, KK, and AK. The caller can still have strong hands, but the top of the range is denser for the 3-bettor."
+
+  - id: midterm_blocker_effect
+    type: true_false
+    stem: "Holding the ace of a flush suit can make a hand a better bluff candidate because it blocks villain's strongest flushes."
+    correct: true
+    explanation: "True. A blocker reduces the number of strong hands villain can hold, which can increase the profitability of a bluff in suitable spots."
+
+  - id: midterm_gto_goal
+    type: multiple_choice
+    stem: "What is the central goal of a GTO strategy?"
+    options:
+      - "Win every individual pot"
+      - "Maximize exploitative adjustment against one known leak"
+      - "Choose a strategy that cannot be improved against by an opponent after seeing it"
+      - "Always play every hand at the same frequency"
+    correct: 2
+    explanation: "A GTO or equilibrium strategy is designed to be unexploitable: if the opponent knows it, they cannot gain EV by counter-adjusting."
+
+  - id: midterm_indifference
+    type: multiple_choice
+    stem: "In GTO analysis, the indifference principle is used to:"
+    options:
+      - "Make an opponent's mixed options have equal EV"
+      - "Force every hand in your range to bet"
+      - "Ignore blockers when ranges are balanced"
+      - "Replace EV calculations with table feel"
+    correct: 0
+    explanation: "Mixed strategies arise when an opponent is made indifferent between actions. If one action had clearly higher EV, they would choose it pure instead of mixing."

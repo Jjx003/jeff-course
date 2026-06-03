@@ -1,0 +1,38 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "Which tensor grows linearly with context length during autoregressive decoding?"
+    options: ["Model weights", "KV cache", "Tokenizer vocabulary", "LoRA adapter weights"]
+    correct: 1
+    explanation: "The KV cache stores previous keys and values for each layer, so it grows with context length and active requests."
+  - id: q2
+    type: true_false
+    stem: "QLoRA usually trains the entire base model in 4-bit precision."
+    correct: false
+    explanation: "QLoRA keeps the base model quantized and trains small adapter weights rather than updating every base parameter."
+  - id: q3
+    type: multiple_choice
+    stem: "Why can groupwise INT4 outperform one global INT4 scale?"
+    options: ["It removes all rounding error", "It adapts scales to local value ranges", "It makes weights sparse", "It avoids storing metadata"]
+    correct: 1
+    explanation: "Smaller groups reduce the damage from local outliers, at the cost of more scale metadata."
+  - id: q4
+    type: multiple_choice
+    stem: "What is the main reason FP8/FP4 deployment is hardware-sensitive?"
+    options: ["Floating point is always slower than integer math", "The speedup depends on native tensor-core support and serving kernels", "They cannot represent negative numbers", "They require tokenizers to change"]
+    correct: 1
+    explanation: "Low-bit floating formats become compelling when the GPU and inference engine have optimized kernels for them."
+  - id: q5
+    type: parametric
+    stem_template: "A model has {{params}} billion parameters. How many GB do the weights take at {{bytes}} bytes per parameter? Ignore metadata."
+    params:
+      params: { min: 7, max: 70, step: 7 }
+      bytes: { min: 1, max: 2, step: 1 }
+    correct_formula: "params * bytes"
+    distractor_formulas:
+      - "params / bytes"
+      - "params * bytes * 2"
+      - "Math.round(params * bytes / 2)"
+    answer_suffix: " GB"
+    explanation_template: "{{params}} billion parameters times {{bytes}} bytes is {{params * bytes}} GB in decimal units."
+

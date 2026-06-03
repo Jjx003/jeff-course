@@ -889,6 +889,7 @@ def cmd_render(args: argparse.Namespace) -> int:
             "engine": args.engine,
             "dtype": str(dtype).replace("torch.", ""),
             "attn": args.attn,
+            "max_seq_len": args.max_seq_len,
             "gpu": runtime_gpu,
             "generation": gen_kwargs,
             "batch_size": args.batch_size,

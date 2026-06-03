@@ -1,0 +1,37 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "What does FlashAttention avoid materializing?"
+    options: ["The token IDs", "The full attention matrix in high-bandwidth memory", "All model weights", "The output logits"]
+    correct: 1
+    explanation: "FlashAttention streams blocks and keeps online softmax statistics instead of writing the full attention matrix."
+  - id: q2
+    type: true_false
+    stem: "PagedAttention is mainly a model-quality improvement."
+    correct: false
+    explanation: "PagedAttention is a serving memory-management technique for KV cache, not a quality method."
+  - id: q3
+    type: multiple_choice
+    stem: "Which metric is especially important for interactive LLM serving?"
+    options: ["Only final perplexity", "Time to first token", "Number of training epochs", "Amino acid hydrophobicity"]
+    correct: 1
+    explanation: "Interactive users feel time to first token and per-token latency strongly."
+  - id: q4
+    type: multiple_choice
+    stem: "What makes sequence packing useful for protein language models?"
+    options: ["It replaces padding tokens with real sequence tokens", "It changes amino acids into nucleotides", "It removes the need for validation", "It guarantees better structure accuracy"]
+    correct: 0
+    explanation: "Packing reduces padding waste when multiple variable-length sequences are processed together."
+  - id: q5
+    type: parametric
+    stem_template: "A speculative decoder drafts {{k}} tokens and accepts each with probability {{p}}%. What is the expected number of accepted drafted tokens, rounded, using a simple independent model?"
+    params:
+      k: { min: 2, max: 6, step: 1 }
+      p: { min: 50, max: 90, step: 10 }
+    correct_formula: "Math.round((p / 100) * (1 - Math.pow(p / 100, k)) / (1 - p / 100))"
+    distractor_formulas:
+      - "Math.round(k * p / 100)"
+      - "k"
+      - "Math.round((p / 100) * (p / 100))"
+    answer_suffix: " tokens"
+    explanation_template: "The simple model sums p^1 through p^k, with p = {{p}}%."

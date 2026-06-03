@@ -1,0 +1,210 @@
+questions:
+  - id: q_nvidia_systems
+    type: multiple_choice
+    stem: "Why is NVIDIA better analyzed as an AI infrastructure systems company than as only a GPU die vendor?"
+    options:
+      - "Because finished AI deployments depend on accelerators, HBM, packaging, networking, software, power, cooling, and customer data-center readiness"
+      - "Because NVIDIA owns every leading-edge fab that manufactures its chips"
+      - "Because GPUs do not require memory bandwidth"
+      - "Because export controls only affect software companies"
+    correct: 0
+    explanation: "NVIDIA captures value across accelerator architecture, software, networking, and systems integration, while still depending on upstream manufacturing, HBM, and packaging."
+
+  - id: q_tsmc_cowos
+    type: multiple_choice
+    stem: "Why does CoWoS-like advanced packaging change how analysts read TSMC?"
+    options:
+      - "It makes TSMC irrelevant to AI accelerators"
+      - "It means package capacity can govern AI accelerator output alongside wafer capacity"
+      - "It eliminates the need for HBM"
+      - "It converts TSMC into a pure EDA company"
+    correct: 1
+    explanation: "AI accelerator shipments can be limited by advanced packaging even when compute die wafers are available."
+
+  - id: q_asml_duv
+    type: true_false
+    stem: "DUV lithography can still matter strategically even though EUV is the leading-edge headline technology."
+    correct: true
+    explanation: "Correct. DUV remains important for many layers, mature-node capacity, and multipatterning flows, which is why advanced DUV tools can appear in policy analysis."
+
+  - id: q_hbm_qualification
+    type: multiple_choice
+    stem: "For an HBM supplier, why is customer qualification a central part of the thesis?"
+    options:
+      - "Because unqualified stacks may not be usable in the target accelerator package, regardless of raw DRAM capacity"
+      - "Because all HBM stacks are interchangeable commodities"
+      - "Because HBM does not use DRAM dies"
+      - "Because qualification only affects consumer SSDs"
+    correct: 0
+    explanation: "HBM must meet customer requirements for power, thermals, reliability, integration, and delivery schedule."
+
+  - id: q_intel_foundry
+    type: multiple_choice
+    stem: "What evidence would most strengthen the Intel Foundry turnaround case?"
+    options:
+      - "A large external customer committing meaningful volume to a future Intel node after validating PDK, yield, cost, and schedule"
+      - "A press release saying Intel owns fabs"
+      - "A decline in all semiconductor capex"
+      - "A decision to stop serving external customers"
+    correct: 0
+    explanation: "The core open question is whether Intel can convert technology and domestic capacity into trusted external foundry volume."
+
+  - id: q_capacity_parametric
+    type: parametric
+    stem_template: "A company can ship {{logic}} accelerator dies, has HBM for {{hbm}} modules, and packaging capacity for {{pkg}} modules. Ignoring all other constraints, how many complete modules can ship?"
+    params:
+      logic: { min: 80, max: 160, step: 20 }
+      hbm: { min: 70, max: 150, step: 20 }
+      pkg: { min: 60, max: 140, step: 20 }
+    correct_formula: "Math.min(logic, hbm, pkg)"
+    distractor_formulas:
+      - "Math.max(logic, hbm, pkg)"
+      - "logic + hbm + pkg"
+      - "Math.round((logic + hbm + pkg) / 3)"
+    answer_suffix: " modules"
+    explanation_template: "Finished modules are constrained by the scarcest required input: min({{logic}}, {{hbm}}, {{pkg}}) = {{Math.min(logic, hbm, pkg)}}."
+
+  - id: q_disconfirming_signal
+    type: multiple_choice
+    stem: "Which is the best example of a disconfirming signal for an AI-capacity scarcity thesis?"
+    options:
+      - "A supplier announces a logo redesign"
+      - "Multiple bottleneck suppliers expand capacity faster than demand while customer capex slows"
+      - "A company repeats that AI is important"
+      - "A mature-node automotive chip uses DUV"
+    correct: 1
+    explanation: "Scarcity weakens when capacity expands faster than real demand, especially across several required links at once."
+
+  - id: q_mix_shift
+    type: true_false
+    stem: "A company's revenue can rise while gross margin falls if the product mix shifts toward more complex, lower-margin systems or if inventory charges hit the quarter."
+    correct: true
+    explanation: "Correct. Revenue growth and margin expansion are related but not identical. Mix, charges, utilization, and product transition costs matter."
+
+  - id: q_hbm_evidence_ladder
+    type: multiple_choice
+    stem: "Which HBM evidence is strongest if you are trying to prove near-term revenue, not just technical readiness?"
+    options:
+      - "A supplier says it has sampled HBM4 to customers"
+      - "A supplier has volume shipments into a named accelerator program after qualification"
+      - "A supplier has the largest total DRAM revenue"
+      - "A supplier says AI is a strategic priority"
+    correct: 1
+    explanation: "Sampling matters, but volume shipments after customer qualification are much closer to revenue proof. Total DRAM scale alone does not prove qualified HBM share."
+
+  - id: q_hbm_leading_indicator
+    type: multiple_choice
+    stem: "Which signal is usually more leading for an HBM share thesis than reported HBM revenue?"
+    options:
+      - "Customer qualification for a coming accelerator generation"
+      - "Last quarter's total company revenue"
+      - "A broad statement that memory demand was healthy"
+      - "A historical gross-margin chart with no product detail"
+    correct: 0
+    explanation: "Qualification can determine who is eligible for future premium shipments before revenue appears. Revenue confirms after qualification, allocation, packaging, and shipment."
+
+  - id: q_hbm_packaging_constraint
+    type: multiple_choice
+    stem: "A memory supplier says HBM output is ready, but the accelerator customer's finished module shipments are not increasing. What is the best next question?"
+    options:
+      - "Is advanced packaging, substrate supply, logic die output, or system integration the binding constraint?"
+      - "Did the supplier change its logo?"
+      - "Can commodity NAND prices explain all HBM revenue?"
+      - "Does HBM avoid the need for customer qualification?"
+    correct: 0
+    explanation: "HBM monetization depends on the full accelerator module. Packaging or system constraints can cap shipments even when memory output improves."
+
+  - id: q_hbm_customer_concentration
+    type: multiple_choice
+    stem: "Why is customer concentration a real risk for an HBM leader?"
+    options:
+      - "A dominant customer can dual-source, change stack requirements, delay a platform, or use qualification to pressure pricing"
+      - "HBM customers never negotiate prices"
+      - "Customer concentration only matters for consumer phones"
+      - "HBM suppliers sell directly to retail PC buyers"
+    correct: 0
+    explanation: "Premium HBM can be very attractive while capacity is scarce, but a small number of large customers can gain leverage once alternatives qualify."
+
+  - id: q_intel_internal_external
+    type: multiple_choice
+    stem: "Which distinction is most important when evaluating Intel Foundry?"
+    options:
+      - "Internal Intel product volume can help debug and fill a node, but external customer volume proves merchant foundry trust"
+      - "Internal volume and external foundry trust are the same thing"
+      - "External customers do not need PDKs"
+      - "A foundry can ignore customer schedules if its transistor is advanced"
+    correct: 0
+    explanation: "Intel using its own fabs is useful evidence, but it does not automatically prove that independent customers will trust Intel with their roadmap, IP, and schedules."
+
+  - id: q_intel_pdk_ecosystem
+    type: multiple_choice
+    stem: "What would most directly reduce customer adoption risk for a new Intel Foundry node?"
+    options:
+      - "Stable PDKs, EDA support, proven IP, external tapeouts, and predictable schedule execution"
+      - "Only a larger marketing budget"
+      - "A statement that Intel has many buildings"
+      - "A decision to hide all design rules until after tapeout"
+    correct: 0
+    explanation: "A foundry customer needs a usable design ecosystem. The transistor is only one component of a successful foundry offering."
+
+  - id: q_intel_losses
+    type: multiple_choice
+    stem: "Intel Foundry operating losses narrow year over year. Which follow-up best distinguishes a true business improvement from an accounting or one-time effect?"
+    options:
+      - "Did utilization, good wafer output, customer volume, or gross margin improve after adjusting for impairments and accelerated depreciation?"
+      - "Did the company use the word turnaround?"
+      - "Did total semiconductor demand exist somewhere in the world?"
+      - "Did the stock price rise that day?"
+    correct: 0
+    explanation: "Losses can narrow because one-time charges fade. A stronger signal is better utilization, yield, customer volume, and underlying margin."
+
+  - id: q_installed_base_new_systems
+    type: multiple_choice
+    stem: "Why should analysts separate installed-base demand from new-system demand in AI infrastructure?"
+    options:
+      - "Installed-base software, networking, service, and upgrade demand can grow differently from shipments of new accelerator systems"
+      - "Installed base and new systems are always identical"
+      - "Installed-base demand eliminates all hardware bottlenecks"
+      - "New-system demand does not depend on packaging or HBM"
+    correct: 0
+    explanation: "A company can benefit from servicing and expanding an installed base even when new hardware shipments face different constraints, cycles, or bottlenecks."
+
+  - id: q_disconfirming_intel
+    type: multiple_choice
+    stem: "Which would be the clearest disconfirming evidence for a strong Intel Foundry bull case?"
+    options:
+      - "Intel wins a named external customer with committed 14A wafer volume"
+      - "Intel product teams increasingly outsource key leading-edge tiles while external customers remain vague and foundry utilization stays low"
+      - "Intel mentions government support"
+      - "Intel explains what PowerVia means"
+    correct: 1
+    explanation: "If even Intel's product groups avoid internal leading-edge nodes while external customers do not commit, the foundry-scale thesis weakens."
+
+  - id: q_utilization_parametric
+    type: parametric
+    stem_template: "A fab has fixed quarterly costs of USD {{fixed}} million and ships {{wafers}} thousand good wafers. Ignoring variable cost, what fixed cost is allocated to each good wafer?"
+    params:
+      fixed: { min: 600, max: 1800, step: 300 }
+      wafers: { min: 30, max: 90, step: 15 }
+    correct_formula: "Math.round(fixed * 1000 / wafers)"
+    distractor_formulas:
+      - "Math.round(fixed / wafers)"
+      - "Math.round(wafers * 1000 / fixed)"
+      - "Math.round((fixed + wafers) * 100)"
+    answer_suffix: " dollars"
+    explanation_template: "The fixed cost is USD {{fixed}} million spread over {{wafers}} thousand wafers: {{fixed * 1000000}} / {{wafers * 1000}} = {{Math.round(fixed * 1000 / wafers)}} dollars per good wafer."
+
+  - id: q_hbm_attach_parametric
+    type: parametric
+    stem_template: "An accelerator program ships {{accelerators}} thousand units, uses {{stacks}} HBM stacks per accelerator, and one supplier has {{share}}% of the qualified stack allocation. How many HBM stacks does that supplier ship?"
+    params:
+      accelerators: { min: 100, max: 400, step: 100 }
+      stacks: { min: 4, max: 8, step: 2 }
+      share: { min: 25, max: 75, step: 25 }
+    correct_formula: "Math.round(accelerators * 1000 * stacks * share / 100)"
+    distractor_formulas:
+      - "Math.round(accelerators * stacks * share / 100)"
+      - "Math.round(accelerators * 1000 * share / 100)"
+      - "Math.round(accelerators * 1000 * stacks)"
+    answer_suffix: " stacks"
+    explanation_template: "{{accelerators}} thousand accelerators means {{accelerators * 1000}} units. At {{stacks}} stacks each and {{share}}% allocation, supplier stacks = {{accelerators * 1000}} x {{stacks}} x {{share}}% = {{Math.round(accelerators * 1000 * stacks * share / 100)}}."

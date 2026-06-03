@@ -1,0 +1,9 @@
+title: "Quantization formats that matter"
+slug: "quantization-formats"
+description: "Understand INT8, INT4, NF4, FP8, FP4, and KV-cache quantization."
+order: 3
+difficulty: advanced
+estimatedMinutes: 35
+tags: [quantization, fp8, int4, kv-cache]
+type: reading
+

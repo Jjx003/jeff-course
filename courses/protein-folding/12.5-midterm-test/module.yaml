@@ -1,0 +1,8 @@
+title: "Midterm test: protein folding foundations"
+slug: "protein-folding-midterm"
+description: "A checkpoint on amino-acid chemistry, structure, thermodynamics, alignment, MSAs, PDB parsing, tokenization, masked prediction, and embedding similarity."
+order: 12.5
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [assessment, foundations, protein-folding]
+type: test

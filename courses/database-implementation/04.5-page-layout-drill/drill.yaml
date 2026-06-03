@@ -1,0 +1,23 @@
+title: "Page Layout Arithmetic Drill"
+instructions: "Answer with an integer."
+roundSeconds: 120
+targetAccuracy: 0.8
+itemsPerRound: 18
+items:
+  - id: tuple_capacity
+    prompt_template: "A page has {{page}} bytes, a {{header}} byte header, and fixed {{tuple}} byte tuples. Ignoring slots, how many tuples fit?"
+    params:
+      page: { min: 1024, max: 8192, step: 1024 }
+      header: { min: 32, max: 128, step: 16 }
+      tuple: { min: 16, max: 128, step: 8 }
+    correct_formula: "Math.floor((page - header) / tuple)"
+    tolerance: 0
+    explanation_template: "Usable bytes are {{page - header}}; divide by tuple width {{tuple}}."
+  - id: slot_directory_bytes
+    prompt_template: "{{slots}} tuple slots each use {{slotBytes}} bytes in the slot directory. How many bytes does the slot directory use?"
+    params:
+      slots: { min: 8, max: 96, step: 4 }
+      slotBytes: { min: 4, max: 12, step: 4 }
+    correct_formula: "slots * slotBytes"
+    tolerance: 0
+    explanation_template: "Slot directory cost is slots times bytes per slot."

@@ -1,0 +1,8 @@
+title: Database Implementation Midterm
+slug: database-implementation-midterm
+description: Check your understanding of C++ ownership, memory allocation, page storage, disk I/O, buffer pools, and B+ tree indexes before moving into query execution.
+order: 7.5
+difficulty: advanced
+estimatedMinutes: 35
+tags: [databases, c++, storage, indexing, assessment]
+type: test

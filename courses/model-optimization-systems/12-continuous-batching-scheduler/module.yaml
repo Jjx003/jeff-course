@@ -1,0 +1,11 @@
+title: "Continuous batching scheduler"
+slug: "continuous-batching-scheduler"
+description: "Simulate a token-level scheduler that admits new requests while old ones decode."
+order: 12
+difficulty: intermediate
+estimatedMinutes: 40
+tags: [serving, batching, scheduling]
+type: coding
+languages: [python]
+defaultLanguage: python
+

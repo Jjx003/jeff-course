@@ -1,0 +1,8 @@
+title: "AI accelerator bill of materials"
+slug: "ai-accelerator-bom"
+description: "Open the box on an AI accelerator system, from compute die and HBM to optics, power, cooling, racks, and the supply-chain dependencies behind each layer."
+order: 9
+difficulty: intermediate
+estimatedMinutes: 30
+tags: [ai-accelerators, hbm, packaging, networking, supply-chain]
+type: reading

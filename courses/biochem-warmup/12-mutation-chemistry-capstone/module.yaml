@@ -1,0 +1,8 @@
+title: "Mutation Chemistry Capstone"
+slug: "mutation-chemistry-capstone"
+description: "Apply side-chain chemistry to folding scenarios involving cores, salt bridges, disulfides, pKa shifts, and backbone constraints."
+order: 12
+difficulty: beginner
+estimatedMinutes: 20
+tags: [mutations, protein-folding, quiz]
+type: quiz

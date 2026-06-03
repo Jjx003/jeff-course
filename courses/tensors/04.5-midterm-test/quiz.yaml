@@ -1,0 +1,126 @@
+questions:
+  - id: q1_row_major_strides
+    type: multiple_choice
+    stem: "For a contiguous row-major tensor with shape $(2, 3, 4)$, what are the element strides?"
+    options:
+      - "$(12, 4, 1)$"
+      - "$(1, 2, 6)$"
+      - "$(4, 3, 1)$"
+      - "$(24, 8, 2)$"
+    correct: 0
+    explanation: "In row-major layout, the last axis has stride 1. Moving along axis 1 skips 4 elements, and moving along axis 0 skips $3 \\times 4 = 12$ elements."
+
+  - id: q2_flat_offset
+    type: parametric
+    stem_template: "A row-major tensor has shape $({{rows}}, {{cols}})$. What flat storage offset holds element $({{i}}, {{j}})$?"
+    params:
+      rows: { min: 4, max: 8, step: 1 }
+      cols: { min: 5, max: 9, step: 1 }
+      i: { min: 1, max: 3, step: 1 }
+      j: { min: 2, max: 4, step: 1 }
+    correct_formula: "i * cols + j"
+    distractor_formulas:
+      - "j * rows + i"
+      - "i + j"
+      - "i * rows + j"
+    answer_suffix: ""
+    explanation_template: "For a row-major matrix, strides are $({{cols}}, 1)$, so offset = ${{i}} \\times {{cols}} + {{j}} = {{i * cols + j}}$."
+
+  - id: q3_view_semantics
+    type: true_false
+    stem: "A reshape can be implemented as a view whenever the new shape is compatible with the same underlying contiguous storage order."
+    correct: true
+    explanation: "A reshape does not need to copy data when the requested shape can be represented by metadata over the same contiguous buffer."
+
+  - id: q4_matmul_shape
+    type: multiple_choice
+    stem: "If $A$ has shape $(5, 3)$ and $B$ has shape $(3, 7)$, what shape does $A B$ have?"
+    options:
+      - "$(5, 7)$"
+      - "$(3, 3)$"
+      - "$(7, 5)$"
+      - "$(5, 3, 7)$"
+    correct: 0
+    explanation: "The shared inner dimension 3 is summed out, leaving the outer dimensions from $A$ and $B$: $(5, 7)$."
+
+  - id: q5_matmul_work
+    type: parametric
+    stem_template: "A naive matrix multiply computes $C = AB$ where $A$ is ${{m}} \\times {{k}}$ and $B$ is ${{k}} \\times {{n}}$. How many scalar multiply-add terms are accumulated across all outputs?"
+    params:
+      m: { min: 2, max: 6, step: 1 }
+      k: { min: 3, max: 7, step: 1 }
+      n: { min: 4, max: 8, step: 1 }
+    correct_formula: "m * k * n"
+    distractor_formulas:
+      - "m * n"
+      - "m * k + k * n"
+      - "m + k + n"
+    answer_suffix: ""
+    explanation_template: "There are ${{m}} \\times {{n}}$ outputs, and each output sums ${{k}}$ products, so total work is ${{m}} \\times {{n}} \\times {{k}} = {{m * n * k}}$."
+
+  - id: q6_broadcast_result
+    type: multiple_choice
+    stem: "What is the broadcast result shape for operands with shapes $(2, 1, 4)$ and $(3, 4)$?"
+    options:
+      - "$(2, 3, 4)$"
+      - "$(2, 1, 4)$"
+      - "$(3, 2, 4)$"
+      - "The shapes are incompatible"
+    correct: 0
+    explanation: "Align dimensions from the right: $(2,1,4)$ with $(1,3,4)$ broadcasts to $(2,3,4)$."
+
+  - id: q7_broadcast_invalid
+    type: true_false
+    stem: "Shapes $(2, 3)$ and $(3, 2)$ are broadcast-compatible because they contain the same dimension sizes."
+    correct: false
+    explanation: "Broadcasting compares aligned dimensions. The trailing dimensions 3 and 2 differ and neither is 1, so the shapes are incompatible."
+
+  - id: q8_broadcast_grad
+    type: multiple_choice
+    stem: "When a tensor of shape $(1, 3)$ is broadcast to $(4, 3)$ during a forward add, what must the backward pass do to recover the gradient shape for the original tensor?"
+    options:
+      - "Sum the upstream gradient over axis 0"
+      - "Sum the upstream gradient over axis 1"
+      - "Transpose the upstream gradient"
+      - "Keep the upstream gradient unchanged"
+    correct: 0
+    explanation: "The original axis 0 was expanded from size 1 to size 4, so backward must reduce over that broadcasted axis."
+
+  - id: q9_relu_derivative
+    type: multiple_choice
+    stem: "Using the common convention for this course, what is the derivative of ReLU at a positive input?"
+    options:
+      - "$1$"
+      - "$0$"
+      - "$x$"
+      - "$\\sigma(x)(1 - \\sigma(x))$"
+    correct: 0
+    explanation: "For $x > 0$, $\\operatorname{ReLU}(x) = x$, so its derivative is 1."
+
+  - id: q10_sigmoid_range
+    type: true_false
+    stem: "The sigmoid function always returns values strictly between 0 and 1 for finite real inputs."
+    correct: true
+    explanation: "$\\sigma(x) = 1/(1 + e^{-x})$ is positive and less than 1 for any finite real $x$."
+
+  - id: q11_elementwise_shape
+    type: multiple_choice
+    stem: "For element-wise addition, which condition is most important after applying broadcasting rules?"
+    options:
+      - "Every output element must be computable from one element of each operand"
+      - "Both operands must have the same number of dimensions before alignment"
+      - "Both operands must be contiguous"
+      - "The left operand must have more elements than the right operand"
+    correct: 0
+    explanation: "Element-wise operations define one output value per broadcasted output index, drawing the corresponding value from each operand."
+
+  - id: q12_tanh_derivative
+    type: multiple_choice
+    stem: "Which expression gives the derivative of $\\tanh(x)$ in terms of its output $y = \\tanh(x)$?"
+    options:
+      - "$1 - y^2$"
+      - "$y(1 - y)$"
+      - "$\\max(0, y)$"
+      - "$e^y$"
+    correct: 0
+    explanation: "The derivative of $\\tanh(x)$ is $1 - \\tanh^2(x)$, so if $y = \\tanh(x)$ it is $1 - y^2$."

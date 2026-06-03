@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Functional groups overview</title>
+  <desc id="desc">A grid of common biomolecular functional groups and their typical chemical behavior.</desc>
+  <rect width="900" height="520" fill="#f8fafc"/>
+  <text x="450" y="48" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">Functional groups are reusable chemistry</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="18">
+    <g transform="translate(60 88)">
+      <rect width="240" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="22" y="32" font-weight="700" fill="#0f172a">Alcohol</text>
+      <text x="22" y="65" font-size="26" fill="#2563eb">R-OH</text>
+      <text x="22" y="92" fill="#475569">H-bond donor/acceptor</text>
+    </g>
+    <g transform="translate(330 88)">
+      <rect width="240" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="22" y="32" font-weight="700" fill="#0f172a">Amine</text>
+      <text x="22" y="65" font-size="26" fill="#2563eb">R-NH2</text>
+      <text x="22" y="92" fill="#475569">often protonated</text>
+    </g>
+    <g transform="translate(600 88)">
+      <rect width="240" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="22" y="32" font-weight="700" fill="#0f172a">Carboxylate</text>
+      <text x="22" y="65" font-size="26" fill="#2563eb">R-COO-</text>
+      <text x="22" y="92" fill="#475569">negative near pH 7</text>
+    </g>
+    <g transform="translate(60 228)">
+      <rect width="240" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="22" y="32" font-weight="700" fill="#0f172a">Amide</text>
+      <text x="22" y="65" font-size="26" fill="#2563eb">R-CO-NH-R</text>
+      <text x="22" y="92" fill="#475569">planar, polar</text>
+    </g>
+    <g transform="translate(330 228)">
+      <rect width="240" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="22" y="32" font-weight="700" fill="#0f172a">Thiol</text>
+      <text x="22" y="65" font-size="26" fill="#2563eb">R-SH</text>
+      <text x="22" y="92" fill="#475569">redox, nucleophile</text>
+    </g>
+    <g transform="translate(600 228)">
+      <rect width="240" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="22" y="32" font-weight="700" fill="#0f172a">Phosphate</text>
+      <text x="22" y="65" font-size="26" fill="#2563eb">R-O-PO3--</text>
+      <text x="22" y="92" fill="#475569">charged handle</text>
+    </g>
+    <g transform="translate(195 368)">
+      <rect width="240" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="22" y="32" font-weight="700" fill="#0f172a">Carbonyl</text>
+      <text x="22" y="65" font-size="26" fill="#2563eb">C=O</text>
+      <text x="22" y="92" fill="#475569">polar acceptor</text>
+    </g>
+    <g transform="translate(465 368)">
+      <rect width="240" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="22" y="32" font-weight="700" fill="#0f172a">Aromatic ring</text>
+      <text x="22" y="65" font-size="26" fill="#2563eb">flat pi system</text>
+      <text x="22" y="92" fill="#475569">stacking, hydrophobicity</text>
+    </g>
+  </g>
+</svg>

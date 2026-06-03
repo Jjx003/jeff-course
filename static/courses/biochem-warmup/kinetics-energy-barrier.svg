@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 450" role="img" aria-labelledby="title desc">
+  <title id="title">Activation energy barrier</title>
+  <desc id="desc">A reaction coordinate diagram comparing uncatalyzed and catalyzed activation energy barriers.</desc>
+  <rect width="860" height="450" fill="#f8fafc"/>
+  <text x="430" y="48" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">Catalysts lower barriers, not the final equilibrium</text>
+  <line x1="115" y1="360" x2="760" y2="360" stroke="#475569" stroke-width="2"/>
+  <line x1="115" y1="360" x2="115" y2="84" stroke="#475569" stroke-width="2"/>
+  <text x="46" y="222" text-anchor="middle" transform="rotate(-90 46 222)" font-family="Inter, Arial, sans-serif" font-size="20" fill="#0f172a">free energy</text>
+  <text x="430" y="410" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#0f172a">reaction coordinate</text>
+  <path d="M145 300 C260 300 294 86 430 86 C566 86 590 230 720 230" fill="none" stroke="#dc2626" stroke-width="6"/>
+  <path d="M145 300 C255 300 306 190 430 190 C554 190 594 230 720 230" fill="none" stroke="#2563eb" stroke-width="6"/>
+  <g font-family="Inter, Arial, sans-serif">
+    <text x="468" y="100" font-size="18" fill="#dc2626">uncatalyzed</text>
+    <text x="468" y="206" font-size="18" fill="#2563eb">enzyme path</text>
+    <text x="145" y="332" text-anchor="middle" font-size="19" fill="#0f172a">reactants</text>
+    <text x="720" y="262" text-anchor="middle" font-size="19" fill="#0f172a">products</text>
+    <line x1="348" y1="300" x2="348" y2="92" stroke="#dc2626" stroke-width="3" stroke-dasharray="8 8"/>
+    <line x1="385" y1="300" x2="385" y2="192" stroke="#2563eb" stroke-width="3" stroke-dasharray="8 8"/>
+    <text x="305" y="164" font-size="18" fill="#dc2626">higher Ea</text>
+    <text x="398" y="258" font-size="18" fill="#2563eb">lower Ea</text>
+  </g>
+</svg>

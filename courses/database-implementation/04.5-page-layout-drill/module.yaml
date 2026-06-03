@@ -1,0 +1,8 @@
+title: "Page Layout Arithmetic Drill"
+slug: "page-layout-arithmetic-drill"
+description: "Build speed on page capacity, slot directory, and tuple storage arithmetic."
+order: 4.5
+difficulty: beginner
+estimatedMinutes: 8
+tags: [page-layout, storage, arithmetic, drill]
+type: drill

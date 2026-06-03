@@ -1,0 +1,10 @@
+title: "Thermodynamics and Equilibrium"
+slug: "thermodynamics-and-equilibrium"
+description: "Compute Delta G, equilibrium constants, Boltzmann weights, and two-state folding populations."
+order: 9
+difficulty: beginner
+estimatedMinutes: 35
+tags: [thermodynamics, equilibrium, protein-folding]
+type: coding
+languages: [python]
+defaultLanguage: python
