@@ -5,6 +5,7 @@
    * Top navigation bar. Shows the app name, a breadcrumb trail, a streak
    * pill that links to /stats, and a small "Stats" tab.
    */
+  import { APP_NAME } from '$lib/config/app.js';
   import StreakBadge from './StreakBadge.svelte';
   import SessionPill from './SessionPill.svelte';
 
@@ -23,7 +24,7 @@
 <header class="h-12 flex items-center px-4 border-b border-slate-700 bg-surface-900 flex-shrink-0 z-10">
   <!-- Logo / home link -->
   <a href="/" class="flex items-center gap-2 mr-4 no-underline">
-    <span class="text-accent-400 font-bold text-base tracking-tight">ML&nbsp;Course</span>
+    <span class="text-accent-400 font-bold text-base tracking-tight">{APP_NAME}</span>
   </a>
 
   <!-- Breadcrumbs -->
