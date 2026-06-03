@@ -28,15 +28,15 @@ This is symmetric to the pot-odds formula for calling: both are ratios of the "i
 
 ## EV of a Mixed Strategy
 
-In game theory, players often randomise their actions. If you bluff with probability $\alpha$ and value bet with probability $1-\alpha$:
+In game theory, players often randomise their actions. If your betting range is a fraction $b$ bluffs and $1-b$ value bets:
 
-$$\text{EV(mixed)} = \alpha \cdot \text{EV(bluff)} + (1-\alpha) \cdot \text{EV(value bet)}$$
+$$\text{EV(mixed)} = b \cdot \text{EV(bluff)} + (1-b) \cdot \text{EV(value bet)}$$
 
-When the opponent plays optimally (correctly exploiting your mix), both actions have equal EV — this is the Nash Equilibrium condition. The equilibrium bluffing frequency that makes the opponent indifferent to calling or folding can be derived from the opponent's EV equations:
+When the opponent plays optimally, both of *their* actions (call and fold) must have equal EV against your range — this is the Nash equilibrium condition. The equilibrium bluff fraction that makes villain indifferent comes from villain's call EV. When villain calls, they win the pot **plus** your bet ($P+B$) against a bluff, and lose their call $B$ against a value hand:
 
-$$\text{EV(villain call)} = \alpha \cdot (-B) + (1-\alpha) \cdot (-B) = \text{EV(villain fold)} = 0$$
+$$\text{EV(villain call)} = b\,(P+B) - (1-b)\,B = \text{EV(villain fold)} = 0$$
 
-Solving: villain is indifferent when you bluff at the frequency that sets villain's call EV = 0. This gives the GTO bluffing frequency — covered in depth in Module 09 (Game Theory Optimal).
+Solving gives $b = \dfrac{B}{P+2B}$ — the GTO bluff fraction, which is exactly the pot odds villain is being laid. Note this is **different** from the break-even *fold* frequency $f^* = B/(P+B)$ derived above: the bluff share of your betting range and the defender's fold frequency are distinct quantities. Both are developed in depth in Module 09 (Game Theory Optimal).
 
 ## Multi-Street EV: Backward Induction
 

@@ -83,4 +83,3 @@ For a flush draw with $x=9$, $N=47$, $n=2$ (turn + river combined), the probabil
 $$1 - P(X=0) = 1 - \frac{\binom{9}{0}\binom{38}{2}}{\binom{47}{2}} = 1 - \frac{703}{1{,}081} \approx 34.97\%$$
 
 This is the exact number we computed earlier by the sequential approach — both methods agree.
-methods agree.

@@ -1,4 +1,4 @@
-# Amino Acid Chemistry Deep Dive
+## From names to chemical tools
 
 This quiz checks whether amino-acid names have become chemical tools rather than flashcards.
 

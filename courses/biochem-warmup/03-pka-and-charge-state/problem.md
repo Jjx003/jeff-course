@@ -5,7 +5,7 @@ proton and become negative. An amine can gain a proton and become positive.
 Proteins contain many such groups, so even a simple pH shift can change
 solubility, binding, and folding stability.
 
-![English amino-acid charge curve](/courses/biochem-warmup/glycine-titration-curve.svg)
+![Amino-acid charge versus pH curve](/courses/biochem-warmup/glycine-titration-curve.svg)
 
 In this exercise, you will implement a small charge calculator using the
 Henderson-Hasselbalch relationship.

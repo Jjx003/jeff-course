@@ -3,8 +3,21 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
-#include <span>
 #include <string_view>
+
+// ---------------------------------------------------------------------------
+// ByteSpan — a minimal non-owning view over a run of bytes.
+// (std::span is C++20; this keeps the module compilable under -std=c++17.)
+// ---------------------------------------------------------------------------
+
+struct ByteSpan {
+    const std::byte* ptr{nullptr};
+    size_t           len{0};
+
+    const std::byte* data() const { return ptr; }
+    size_t           size() const { return len; }
+    bool             empty() const { return len == 0; }
+};
 
 // ---------------------------------------------------------------------------
 // Page — slotted-page layout
@@ -34,7 +47,7 @@ public:
         return ns;
     }
 
-    std::span<const std::byte> GetTuple(uint16_t slot_id) const {
+    ByteSpan GetTuple(uint16_t slot_id) const {
         if (slot_id >= GetNumSlots()) return {};
         Slot s = GetSlot(slot_id);
         if (s.length == 0) return {};

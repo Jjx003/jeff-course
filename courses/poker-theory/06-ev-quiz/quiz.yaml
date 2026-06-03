@@ -97,15 +97,15 @@ questions:
       bet: { min: 40, max: 160, step: 20 }
       call_pct: { min: 40, max: 80, step: 10 }
       equity_pct: { min: 60, max: 95, step: 5 }
-    correct_formula: "Math.round(call_pct/100 * (equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet))"
+    correct_formula: "Math.round(call_pct/100 * (2 * equity_pct/100 - 1) * bet)"
     distractor_formulas:
-      - "Math.round(equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet)"
-      - "Math.round(call_pct/100 * equity_pct/100 * pot)"
+      - "Math.round(call_pct/100 * (equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet))"
       - "Math.round(call_pct/100 * bet)"
+      - "Math.round(call_pct/100 * equity_pct/100 * bet)"
     answer_suffix: ""
     explanation_template: >-
-      EV(value bet) = c × [q × (P + B) − (1 − q) × B]
-      where c = {{call_pct}}% = {{call_pct/100}}, q = {{equity_pct}}% = {{equity_pct/100}}, P = ${{pot}}, B = ${{bet}}.
-      Inside the brackets: {{equity_pct/100}} × {{pot + bet}} − {{1 - equity_pct/100}} × {{bet}} = ${{Math.round((equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet) * 10)/10}}.
-      Multiplied by call frequency: {{call_pct/100}} × ${{Math.round((equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet) * 10)/10}} = ${{Math.round(call_pct/100 * (equity_pct/100 * (pot + bet) - (1 - equity_pct/100) * bet))}}.
-      When villain folds you simply win the existing pot — that's already yours, so it contributes \$0 to the *bet's* EV.
+      Ignoring the pot you already own, the bet only changes chips when villain calls.
+      When called, you win villain's ${{bet}} call with probability q = {{equity_pct}}% and lose your own ${{bet}} with probability (1 − q).
+      EV(value bet) = c × [q×B − (1 − q)×B] = c × (2q − 1) × B
+      = {{call_pct/100}} × (2 × {{equity_pct/100}} − 1) × {{bet}} = ${{Math.round(call_pct/100 * (2 * equity_pct/100 - 1) * bet)}}.
+      When villain folds you simply keep the pot that was already yours — that contributes \$0 to the bet's marginal EV, so the pot size does not enter this calculation. (A common trap is to multiply by the whole pot P+B.)

@@ -1,9 +1,5 @@
 # Structure Quality Metrics
 
-<p align="center">
-  <img src="/images/protein-folding/plddt.svg" alt="AlphaFold pLDDT Confidence Scale" />
-</p>
-
 ## RMSD: the deceptively simple metric
 
 For two structures with $N$ atom pairs, RMSD is the root-mean-square

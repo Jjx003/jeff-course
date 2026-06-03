@@ -1,4 +1,4 @@
-# Mutation Chemistry Capstone
+## Reason from chemistry to behavior
 
 This capstone quiz asks you to reason from chemistry to protein behavior.
 

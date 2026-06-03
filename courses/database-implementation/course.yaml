@@ -1,6 +1,6 @@
 title: Database Implementation in C++
 slug: database-implementation
-description: Build a relational database engine from scratch in C++20. Starting from RAII and memory management, you will implement a storage engine with slotted pages and a buffer pool, B+ tree and hash indexes, a Volcano-model query executor with sequential scan and hash join, a rule-based optimizer with predicate pushdown, and finally a mini SQL query planner that ties every layer together.
+description: Build a relational database engine from scratch in C++17. Starting from RAII and memory management, you will implement a storage engine with slotted pages and a buffer pool, B+ tree and hash indexes, a Volcano-model query executor with sequential scan and hash join, a rule-based optimizer with predicate pushdown, and finally a mini SQL query planner that ties every layer together.
 tags: [databases, c++, storage, indexing, query-execution, systems]
 difficulty: advanced
 order: 2

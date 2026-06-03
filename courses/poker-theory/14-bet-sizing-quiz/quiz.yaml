@@ -75,13 +75,14 @@ questions:
     stem: "You make a 2× pot overbet on the river. To keep your betting range balanced (making villain indifferent to calling or folding), approximately what fraction of your betting range must be bluffs?"
     options:
       - "33% — one bluff for every two value combos"
+      - "40% — two bluffs for every three value combos"
       - "50% — one bluff for every value combo"
       - "67% — two bluffs for every value combo"
-      - "75% — three bluffs for every value combo"
-    correct: 2
+    correct: 1
     explanation: >-
-      Alpha = B / (P + B) = 2P / (P + 2P) = 2/3 ≈ 67%. Two thirds of your overbet range must be bluffs.
-      This high bluff requirement is why overbets are only viable when you have a large number of strong bluff candidates (e.g. missed draws that block villain's calling range).
+      Bluff share = B / (P + 2B) = 2P / (P + 4P) = 2/5 = 40%. Equivalently value:bluff = (P+B):B = 3P:2P = 3:2 — three value combos for every two bluffs.
+      The classic mistake is to answer 67%, which is alpha (B/(P+B), the defender's max fold frequency) — not the bluff share of the betting range.
+      Overbets still demand many bluffs, so they are only viable when you hold a large number of strong bluff candidates (e.g. missed draws that block villain's calling range).
 
   - id: q_geometric_tf
     type: true_false

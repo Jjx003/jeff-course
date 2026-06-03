@@ -67,29 +67,29 @@ Both players are solving the same equation. Alpha and MDF are mathematically dua
 
 MDF tells the *defender* how often to call. But it also constrains the *bettor*'s range construction. If your betting range contains too many bluffs, the defender can exploit you by always calling. If it contains too few bluffs, the defender can exploit you by always folding.
 
-At GTO equilibrium, the fraction of your betting range that should be **bluffs** equals alpha:
+At GTO equilibrium, the fraction of your betting range that should be **bluffs** equals the pot odds you lay the caller:
 
-$$\frac{\text{bluffs}}{\text{bluffs} + \text{value combos}} = \alpha = \frac{B}{P + B}$$
+$$\frac{\text{bluffs}}{\text{bluffs} + \text{value combos}} = \frac{B}{P + 2B}$$
 
-Equivalently, the **value combo fraction** of your betting range equals MDF:
+This is a *different* number from $\alpha$. The handy quantity that *does* equal $\alpha$ is the **bluff-to-value ratio**:
 
-$$\frac{\text{value combos}}{\text{bluffs} + \text{value combos}} = \text{MDF} = \frac{P}{P + B}$$
+$$\frac{\text{bluffs}}{\text{value combos}} = \frac{B}{P + B} = \alpha \quad\Longrightarrow\quad \text{bluffs} = \text{value} \times \alpha$$
 
 ### Example: Half-pot bet ($B = 0.5P$)
 
-$$\alpha = \frac{0.5P}{P + 0.5P} = \frac{0.5}{1.5} = \frac{1}{3}$$
+$$\alpha = \frac{0.5P}{P + 0.5P} = \frac{1}{3} \quad\Rightarrow\quad \text{bluffs} = \text{value} \times \tfrac{1}{3}$$
 
-So exactly **1 bluff for every 2 value combos** in your betting range — a 1:2 bluff-to-value ratio.
+So **1 bluff for every 3 value combos** — a 3:1 value-to-bluff ratio. The bluff share of the betting range is $B/(P+2B) = 0.5/2 = 25\%$.
 
 ### Example: Pot-sized bet ($B = P$)
 
-$$\alpha = \frac{P}{P + P} = \frac{1}{2}$$
+$$\alpha = \frac{P}{P + P} = \frac{1}{2} \quad\Rightarrow\quad \text{bluffs} = \text{value} \times \tfrac{1}{2}$$
 
-**1 bluff for every 1 value combo** — a 1:1 ratio. Pot-sized bets require the most balanced construction.
+**1 bluff for every 2 value combos** — a 2:1 value-to-bluff ratio. The bluff share of the betting range is $B/(P+2B) = 1/3 \approx 33\%$.
 
 ### Counting Combos
 
-In practice you count hand combinations (covered in module 07 on range theory). Suppose on the river you have 15 value combos (sets, straights, flushes). For a half-pot bet, you may include at most $15 \times \frac{1}{2} = 7.5 \approx 7$ bluff combos. Adding more bluffs makes calling profitable for the defender; adding fewer means the defender should always fold.
+In practice you count hand combinations (covered in module 07 on range theory). Suppose on the river you have 15 value combos (sets, straights, flushes). For a half-pot bet, you may include at most $15 \times \frac{1}{3} = 5$ bluff combos. Adding more bluffs makes calling profitable for the defender; adding fewer means the defender should always fold.
 
 ---
 
@@ -141,9 +141,10 @@ flowchart LR
 |---|---|
 | Alpha (max fold %) | $\alpha = \dfrac{B}{P + B}$ |
 | MDF (min call %) | $\text{MDF} = \dfrac{P}{P + B} = 1 - \alpha$ |
-| Bluff fraction of betting range | $= \alpha = \dfrac{B}{P + B}$ |
-| Value fraction of betting range | $= \text{MDF} = \dfrac{P}{P + B}$ |
-| Max bluff combos given $V$ value combos | $\leq V \times \dfrac{\alpha}{1 - \alpha} = V \times \dfrac{B}{P}$ |
+| Bluff fraction of betting range | $= \dfrac{B}{P + 2B}$ (the pot odds you lay the caller) |
+| Value fraction of betting range | $= \dfrac{P + B}{P + 2B}$ |
+| Bluff-to-value ratio | $= \dfrac{B}{P + B} = \alpha$ |
+| Bluff combos given $V$ value combos | $= V \times \alpha = V \times \dfrac{B}{P + B}$ |
 | Three-street showdown fraction | $= \text{MDF}_1 \times \text{MDF}_2 \times \text{MDF}_3$ |
 
 ---
@@ -151,10 +152,10 @@ flowchart LR
 ## Recap
 
 - **MDF = P / (P + B)**: the minimum fraction of your range you must continue with to prevent bluffs from being immediately profitable.
-- **Alpha = B / (P + B)**: the break-even fold frequency — equivalently, the correct bluff fraction in your betting range.
+- **Alpha = B / (P + B)**: the break-even fold frequency — equivalently, the bluff-to-value *ratio* (bluffs per value combo). The bluff *fraction* of the whole betting range is the smaller $B/(P+2B)$.
 - MDF and alpha are duals: $\text{MDF} + \alpha = 1$.
 - Larger bets → lower MDF → more fold equity for the bettor and a tighter defense requirement for the defender.
-- Balanced betting ranges contain bluffs in proportion to alpha — one bluff per $P/B$ value combos.
+- Balanced betting ranges contain $\alpha$ bluffs per value combo — one bluff per $(P+B)/B$ value combos (2 value combos per bluff for a pot-sized bet).
 - Multi-street MDF compounds: the fraction of your range that calls down three streets equals the product of all three MDFs.
 
 **Next:** Module 12 drills MDF and alpha calculations on randomised numbers; Module 13 then builds on these frequencies to explain how to *choose* the right bet size — when to use 33% pot versus pot-sized versus an overbet — and how geometric sizing allows you to build towards a commitment point across multiple streets.

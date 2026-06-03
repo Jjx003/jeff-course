@@ -12,6 +12,12 @@ better process control can print smaller features.
 
 This formula is not a complete manufacturing model, but it explains why EUV's
 13.5 nm wavelength matters and why high-NA EUV is an important next step.
+Concretely, current production EUV scanners (the TWINSCAN NXE series) have a
+numerical aperture of about 0.33, while high-NA EUV (the EXE series) raises $NA$
+to about 0.55. A higher $NA$ shrinks the achievable feature size for the same
+wavelength and $k_1$, at the cost of a smaller printable field, which is one
+reason high-NA tools change reticle and stitching strategy as well as
+resolution.
 
 ## Throughput and critical layers
 

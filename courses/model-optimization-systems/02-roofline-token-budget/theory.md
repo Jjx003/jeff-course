@@ -111,6 +111,28 @@ Suppose your estimate says:
 | memory lower bound: tens of ms | floor from bandwidth |
 | compute lower bound: fractions of ms | floor from peak BF16 |
 
+You can make the verdict quantitative instead of qualitative. With the
+exercise constants, the arithmetic intensity of one decode step is:
+
+$$
+I = \frac{F}{B} = \frac{140 \times 10^9\ \text{FLOP}}{140 \times 10^9\ \text{bytes}}
+= 1\ \text{FLOP/byte}
+$$
+
+while the machine's ridge point is:
+
+$$
+I_\text{ridge} = \frac{989 \times 10^{12}}{3350 \times 10^9}
+\approx 295\ \text{FLOP/byte}
+$$
+
+Because $I \approx 1$ is roughly two orders of magnitude below the ridge, this
+step is firmly on the memory-bound side of the roofline. The same conclusion
+falls out of the time floors: $41.79\ \text{ms}$ from bandwidth versus
+$0.142\ \text{ms}$ from compute, a ratio of about 295. That the two ratios
+agree is not a coincidence — the time-floor ratio $t_\text{memory}/t_\text{compute}$
+equals $I_\text{ridge}/I$ exactly.
+
 The immediate conclusion is not "the model will take exactly tens of
 milliseconds per token." The conclusion is "for this simplified small-batch
 decode model, reducing bytes or increasing reuse is probably more valuable than

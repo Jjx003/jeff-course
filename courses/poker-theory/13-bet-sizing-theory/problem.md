@@ -119,11 +119,11 @@ An **overbet** is a bet exceeding 100% of the pot. Against a 2× pot overbet:
 
 $$\text{MDF} = \frac{P}{P + 2P} = \frac{1}{3} \approx 33\%$$
 
-Villain must call only 33% of their range. This sounds like a gift to the defender, but the bettor's construction is equally constrained:
+Villain must call only 33% of their range. This sounds like a gift to the defender, but the bettor's construction is equally constrained. The bluff *fraction* of your overbet range is the pot odds you lay the caller:
 
-$$\alpha = \frac{2P}{3P} = 67\%$$
+$$\text{bluff fraction} = \frac{B}{P + 2B} = \frac{2P}{5P} = 40\%$$
 
-Two-thirds of your overbet range must be bluffs to remain unexploitable. That is a demanding requirement. Overbets only make sense when your range can actually supply that many strong bluff candidates.
+So about 40% of your overbet range must be bluffs (a 3:2 value-to-bluff ratio) to remain unexploitable. That is a demanding requirement. Overbets only make sense when your range can actually supply that many strong bluff candidates. (The defender's maximum fold frequency here is $\alpha = 2P/3P = 67\%$ — a fold frequency, which is not the same as your bluff share.)
 
 **When to overbet:**
 
@@ -173,7 +173,7 @@ flowchart TD
     D --> F{"Planning to\nget all-in?"}
     E --> F
     F -->|Yes| G["Geometric sizing\ng = SPR to the 1 over n\nbet = g minus 1 over 2 times pot"]
-    F -->|No| H["Bluff-to-value ratio\nbluffs = value times B over P"]
+    F -->|No| H["Bluff-to-value ratio\nbluffs = value times alpha\nalpha = B over (P+B)"]
 ```
 
 ---
@@ -183,7 +183,7 @@ flowchart TD
 - **Polarised ranges** (nuts + bluffs) → large bets (75%–150% pot) to maximise fold equity and extract maximum value from calls.
 - **Merged ranges** (medium hands) → small bets (25%–50% pot) to get called by hands you beat without folding them out.
 - **Geometric sizing** $g = (S/P_0)^{1/n}$: bet $(g-1)/2 \times P_{\text{current}}$ on each of $n$ streets to grow the pot evenly up to the commitment point (pot = one stack). SPR 8 over 3 streets → $g = 2$ → 50% pot every street.
-- **Overbets** (>100% pot) exploit nut-heavy range advantages on the river; require $\geq 67\%$ bluffs in your range for a 2× pot bet — only viable when your range can supply them.
+- **Overbets** (>100% pot) exploit nut-heavy range advantages on the river; a 2× pot bet needs a bluff fraction of $B/(P+2B) = 40\%$ (a 3:2 value-to-bluff ratio) — only viable when your range can supply that many strong bluffs.
 - **Protection bets** are small, early-street bets to deny equity cheaply; they are an exploitative adjustment, not a pure GTO construct.
 - **IP vs OOP**: in position can use larger sizes more freely; out of position should default to 33–50% pot.
 

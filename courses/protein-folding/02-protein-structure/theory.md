@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="/images/protein-folding/folding-levels.svg" alt="Levels of Protein Structure" />
-</p>
-
 ## Backbone angles: φ, ψ, ω
 
 The protein backbone has three rotatable bonds per residue:

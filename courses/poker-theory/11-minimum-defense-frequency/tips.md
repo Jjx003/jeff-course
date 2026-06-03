@@ -12,7 +12,9 @@
 
 ## Common Mistakes
 
-**Confusing alpha and MDF:** Alpha is the fold % the defender *can* afford; MDF is the call % they *must* reach. Alpha tells you how many bluffs to include in your range; MDF tells you how often to defend. They are complementary, not the same number.
+**Confusing alpha and MDF:** Alpha is the fold % the defender *can* afford; MDF is the call % they *must* reach. Alpha also equals the bluff-to-value *ratio* (bluffs per value combo); MDF tells you how often to defend. They are complementary, not the same number.
+
+**Confusing the bluff ratio with the bluff fraction:** Alpha = B/(P+B) is the bluff-to-value *ratio* (e.g. 1 bluff per 2 value combos for a pot bet). The bluff *fraction* of the whole betting range is the smaller B/(P+2B) (33% for a pot bet, a 2:1 value-to-bluff split). Do not report alpha as "the percentage of my bets that are bluffs."
 
 **Forgetting MDF applies to your whole *range*, not individual hands:** MDF doesn't say "call with hands above X equity." It says "your overall defense frequency across all hands must be at least MDF." In practice you defend with your best hands, but the *total fraction* must hit MDF.
 

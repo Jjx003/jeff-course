@@ -22,7 +22,7 @@ for each outer (left) tuple L:
 
 $O(N \cdot M)$ comparisons. For 1 million × 1 million tables: $10^{12}$ comparisons — catastrophic.
 
-**Block NLJ**: read the outer in chunks that fit in the buffer pool. Inner is scanned once per outer chunk rather than once per outer row. Reduces I/O from $O(N \cdot M / B)$ to $O(N \cdot M / B^2)$ where $B$ is the buffer pool size.
+**Block NLJ**: read the outer in chunks (blocks) of $B$ pages that fit in the buffer pool. The inner is scanned once per *block* instead of once per outer page, cutting the inner re-scans by a factor of $B$. Measuring I/O in pages, the cost drops from roughly $N + N \cdot M$ (page-at-a-time NLJ) to $N + \lceil N / B \rceil \cdot M$ page reads, where $N$ and $M$ are the page counts of the outer and inner relations.
 
 NLJ is appropriate when the inner table fits in the buffer pool (pin it and loop) or when the join condition is non-equality (hash join doesn't apply).
 

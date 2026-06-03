@@ -5,7 +5,7 @@
 **Before making a river decision, run this quick GTO sanity check:**
 
 1. *If I always do X here, can villain exploit me?* — If yes, you need to mix.
-2. *What is my bluff frequency telling villain?* — If you bluff every missed draw, observant villains will always call. Are you bluffing at $B/(P+B)$?
+2. *What is my bluff frequency telling villain?* — If you bluff every missed draw, observant villains will always call. Is your bluff share of the betting range near $B/(P+2B)$ (e.g. ~33% for a pot-sized bet, a 2:1 value-to-bluff ratio)?
 3. *Am I balanced?* — Does your betting range contain both value combos and bluffs? A range that only ever contains the nuts when it bets is obviously exploitable.
 4. *Should I deviate?* — Do I have a reliable read that villain folds too much (→ bluff more) or calls too much (→ bluff less)? Without a read, default toward balance.
 

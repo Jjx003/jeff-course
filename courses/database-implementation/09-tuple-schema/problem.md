@@ -90,6 +90,6 @@ Row: 42 | 3.140000 | Alice
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - Use `std::variant<int32_t, int64_t, double, std::string>` for `Value`'s storage.
 - `ToString()` on INT32/INT64 uses `std::to_string`; on FLOAT64 uses `std::to_string` (6 decimal places default); on VARCHAR returns the string directly.

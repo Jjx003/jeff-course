@@ -2,9 +2,9 @@ questions:
   - id: conv_val
     type: multiple_choice
     stem: "Let $f(n) = n$ and $g(n) = 1$ for all $n$. What is the value of the Dirichlet convolution $(f * g)(6)$?"
-    options: ["$6$", "$12$", "$1+2+3+6 = 12$", "$1 \\cdot 6 + 2 \\cdot 3 = 12$"]
-    correct: 2
-    explanation: "$(f * g)(n) = \\sum_{d|n} f(d)g(n/d) = \\sum_{d|n} d \\cdot 1 = \\sigma(n)$. For $n=6$, the divisors are 1, 2, 3, 6, so the sum is $1+2+3+6=12$."
+    options: ["$6$", "$1+2+3+6 = 12$", "$4$", "$36$"]
+    correct: 1
+    explanation: "$(f * g)(n) = \\sum_{d|n} f(d)g(n/d) = \\sum_{d|n} d \\cdot 1 = \\sigma(n)$. For $n=6$, the divisors are $1, 2, 3, 6$, so the sum is $1+2+3+6=12$. (The distractor $4$ counts the divisors of $6$, $36$ is their product, and $6$ is just $n$ itself.)"
 
   - id: mult_property
     type: true_false

@@ -102,14 +102,16 @@ In the Nash equilibrium, the shover pushes a range just wide enough that the cal
 
 Using the worked example from the problem (P1 = P2 = 4,000 chips, P3 = 2,000 chips, payouts 500/300/200):
 
+Win → P1 has 8,000 chips (ICM = $460); lose → P1 busts 3rd ($200); pass → P1 = $356.6. Dollar EV of taking the flip with win probability $q$ is $460q + 200(1-q) = 200 + 260q$.
+
 | Scenario | P1 chip EV | P1 dollar EV | ICM penalty |
 |---|---|---|---|
 | Pass (no confrontation) | 4,000 chips | $356.6 | — |
 | 50/50 flip vs P2 | 4,000 chips (unchanged) | $330.0 | −$26.6 |
-| 55/45 edge vs P2 | +200 chips EV | $330.0 + small edge ≈ $336 | −$20.6 |
-| 60/40 edge vs P2 | +400 chips EV | ≈ $342 | −$14.6 |
+| 55/45 edge vs P2 | +400 chips EV | $343.0 | −$13.6 |
+| 60/40 edge vs P2 | +800 chips EV | $356.0 | −$0.6 |
 
-To break even in dollar EV on a flip against P2, P1 needs approximately **58% equity**, not 50%. This 8-percentage-point ICM penalty is purely structural — it has nothing to do with reads, skill, or hand strength.
+To break even in dollar EV on a flip against P2, P1 needs $200 + 260q = 356.6$, i.e. $q \approx$ **60% equity**, not 50%. This roughly 10-percentage-point ICM penalty is purely structural — it has nothing to do with reads, skill, or hand strength.
 
 ## Variance Considerations in Tournament Play
 

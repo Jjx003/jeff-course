@@ -88,6 +88,6 @@ Project [id, name]
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - `PlanNode` must be move-only (owns children via `unique_ptr`).
 - No cycles in the plan tree.

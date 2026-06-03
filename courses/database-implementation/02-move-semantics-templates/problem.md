@@ -80,5 +80,5 @@ to_string(string): <non-arithmetic>
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - `Buffer` must pass a move-safety check: verifying the moved-from object has `nullptr`/0.

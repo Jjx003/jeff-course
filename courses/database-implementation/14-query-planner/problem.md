@@ -185,7 +185,7 @@ id
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - Use only the C++ standard library.
 - The parser must handle the two queries above correctly.
 - Do not use `std::regex` — tokenize by hand.

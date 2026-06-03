@@ -112,17 +112,17 @@ window of learned co-evolution).
 ## Sanity checks
 
 - The number of forward passes should be exactly $5 \times 30 = 150$.
-- For all four mutants, $\Delta\text{PLL}$ should be **negative** (any random
-  mutation is more likely to hurt than help under a fitness-style
-  prior).
-- `W8A` and `W15A` should have the largest negative $\Delta\text{PLL}$
-  (typically $-10$ to $-20$). Tryptophan-at-conserved-position is
-  hard to substitute.
-- `K17R` should have the smallest magnitude $\Delta\text{PLL}$ (a few
-  units). K and R are interchangeable in many contexts.
-- Wild-type PLL on a 30-mer is typically $-30$ to $-60$ in absolute
-  units. If you see $+1000$ or $-10000$, you've forgotten to take
-  log-softmax (or are summing logits directly).
+- The PLL should be a sum of *log-probabilities*, so every per-position
+  term is $\le 0$ and the total is negative. If you see $+1000$ or
+  $-10000$, you've forgotten to take log-softmax (or are summing logits
+  directly).
+- On a **full-length** protein, tryptophan knockouts like `W8A` / `W15A`
+  give clearly negative $\Delta\text{PLL}$ and the conservative `K17R`
+  stays small — that is the textbook expectation. On this **30-residue
+  fragment** the deltas are small and noisy and an individual sign can
+  flip (see the caveat in problem.md); don't treat the exact ranking as
+  guaranteed. The point of the exercise is the PLL mechanics, not a
+  specific number.
 
 ## Going deeper
 

@@ -43,6 +43,22 @@ $$
 
 When $a = 1$, the sum is simply $k$.
 
+The committed-token numerator collapses to a clean closed form. Adding the
+guaranteed fallback token,
+
+$$
+1 + \sum_{i=1}^{k} a^i
+= \frac{(1-a) + a(1-a^k)}{1-a}
+= \frac{1 - a^{k+1}}{1-a},
+$$
+
+which is exactly the expected number of tokens committed per verification step
+derived in the original speculative-decoding analysis (Leviathan et al.). As
+$k \to \infty$ with $a < 1$ it saturates at $1/(1-a)$: no matter how long the
+draft, a constant per-token rejection probability caps the average advance. That
+ceiling is why draft length has diminishing returns and is usually tuned, not
+maximized.
+
 ## Why the first rejection matters
 
 Speculative verification accepts a prefix. If the first three draft tokens are

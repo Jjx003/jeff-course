@@ -25,7 +25,7 @@ model quality too much.
 
 ## Memory-bound versus compute-bound
 
-The two lower bounds from the first module are deliberately simple:
+The two lower bounds introduced in the overview are deliberately simple:
 
 $$
 t_\text{memory} \ge \frac{B}{\beta}

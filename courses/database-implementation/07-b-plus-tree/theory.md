@@ -32,7 +32,7 @@ For a B+ tree of order $d$ (max $2d$ keys per node):
 | Internal (non-root) | $d$ | $2d$ | $d+1$ | $2d+1$ |
 | Root | 1 | $2d$ | 2 | $2d+1$ |
 
-For `ORDER = 4` as used in this module, max keys per node = `ORDER - 1 = 3`, and overflow triggers at `ORDER = 4` keys.
+A note on terminology: the table above uses the textbook parameter $d$, where a node holds up to $2d$ keys. The code in this module instead uses a constant `ORDER` that denotes the **maximum fan-out** (maximum number of children), which is the more common convention in real implementations. With that convention a node holds up to `ORDER - 1` keys. So for `ORDER = 4` as used in this module, max keys per node = `ORDER - 1 = 3`, max children = `ORDER = 4`, and overflow triggers when a node reaches `ORDER = 4` keys. (The two parameterizations describe the same family of trees; they are not equal — `ORDER` is a fan-out, $d$ is a half-capacity.)
 
 ---
 

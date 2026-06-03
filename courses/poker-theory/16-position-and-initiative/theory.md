@@ -30,29 +30,31 @@ For the OOP check-raise to be unexploitable, the IP player must be indifferent b
 
 $$\text{MDF}_{raise} = 1 - \frac{R - b}{P' + R} = \frac{P' + b}{P' + R}$$
 
-For the check-raise to be balanced, the fraction of bluffs in the check-raising range satisfies:
+For the check-raise to be balanced, the IP player's bluff-catchers must break even — so the **bluff fraction** of the check-raising range equals the pot odds IP is laid. IP must call $c = R - b$ into a pot of $P' + R$, so:
 
-$$\frac{\text{bluffs}}{\text{bluffs} + \text{value}} = \alpha_R = \frac{R - b}{P' + R}$$
+$$\frac{\text{bluffs}}{\text{bluffs} + \text{value}} = \frac{R - b}{(P' + R) + (R - b)} = \frac{R - b}{P + 2R}$$
 
-**Example:** Pot is 100, IP bets 50. OOP check-raises to 200 (total). Then $P' = 150$, $R = 200$, $b = 50$:
+(where $P = P' - b$ is the pot before IP's bet). The related bluff-to-value *ratio* is $\dfrac{\text{bluffs}}{\text{value}} = \alpha_R = \dfrac{R - b}{P' + R}$.
 
-$$\alpha_R = \frac{200 - 50}{150 + 200} = \frac{150}{350} \approx 0.43$$
+**Example:** Pot before IP's bet is $P = 100$, IP bets $b = 50$ (so $P' = 150$), OOP check-raises to $R = 200$ (total). IP must call $c = 150$ into a pot of $P' + R = 350$:
 
-The check-raising range should contain approximately 43% bluffs and 57% value to make the IP player indifferent. This is the composition: for every set or straight check-raised, there should be approximately 0.75 draw bluffs. The exact ratio depends on the specific check-raise sizing.
+$$\text{bluff fraction} = \frac{150}{350 + 150} = \frac{150}{500} = 30\%, \qquad \alpha_R = \frac{150}{350} \approx 0.43$$
+
+The check-raising range should contain approximately **30% bluffs and 70% value** to make the IP player indifferent — i.e. roughly 0.43 of a draw bluff for every set or straight check-raised (a 7:3 value-to-bluff ratio). The exact split depends on the check-raise sizing.
 
 ## Initiative and the C-bet Frequency Formula
 
 Define the optimal c-bet frequency $f^*$ such that the caller is indifferent between always folding and always calling. For the caller to be indifferent, the c-bet must be exactly profitable at the margin — i.e. the aggressor's bluffs must be calibrated to win exactly enough to cover the losses when called by strong hands.
 
-The aggressor's bluffing frequency among c-bets must satisfy:
+The aggressor's bluff fraction among c-bets must satisfy:
 
-$$\frac{\text{bluff combos}}{total\ bet\ combos} \leq \alpha = \frac{b}{P + b}$$
+$$\frac{\text{bluff combos}}{\text{total bet combos}} \leq \frac{b}{P + 2b}$$
 
-The total c-bet frequency $f^*$ at which this is satisfied while including all value bets is:
+equivalently the bluff-to-value ratio is capped at $\text{bluffs} \leq \alpha \cdot \text{value}$, where $\alpha = b/(P+b)$. Including all value combos, the total number of c-bet combos is therefore bounded by:
 
-$$f^* = \text{value combos} \times \frac{1}{\alpha} + \text{bluff combos} = \text{value combos} + \frac{\text{bluff combos}}{\alpha} \cdot \alpha$$
+$$\text{total bet combos} \leq \text{value combos} \times (1 + \alpha)$$
 
-More practically: the total number of c-bet combos is bounded by $\text{value} / \alpha$. Any additional combos beyond this are either too many bluffs (over-bluffing) or too many thin values (bluffcatcher-inducing). Initiative — the aggressor having more value combos — shifts the bound higher, allowing higher total c-bet frequency.
+Any combos beyond this bound are either too many bluffs (over-bluffing, exploited by calling) or too many thin value bets (inducing profitable bluff-catches). Initiative — the aggressor having more value combos — raises the bound, allowing a higher total c-bet frequency.
 
 ## Position and Pre-flop Calling Width
 

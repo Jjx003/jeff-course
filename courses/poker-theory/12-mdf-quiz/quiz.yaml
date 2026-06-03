@@ -53,15 +53,16 @@ questions:
     params:
       pot: { min: 60, max: 300, step: 30 }
       bet: { min: 20, max: 200, step: 20 }
-    correct_formula: "Math.round(bet / (pot + bet) * 100)"
+    correct_formula: "Math.round(bet / (pot + 2 * bet) * 100)"
     distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
       - "Math.round(pot / (pot + bet) * 100)"
-      - "Math.round(bet / (pot + 2 * bet) * 100)"
-      - "Math.round(50)"
+      - "Math.round((pot + bet) / (pot + 2 * bet) * 100)"
     answer_suffix: "%"
     explanation_template: >-
-      The balanced bluff fraction = α = bet / (pot + bet) = {{bet}} / {{pot + bet}} = {{Math.round(bet/(pot+bet)*100)}}%.
-      This is the same formula as alpha. If {{Math.round(bet/(pot+bet)*100)}}% of your betting range is bluffs, villain is indifferent: calling and folding have identical EV against your range.
+      The balanced bluff fraction = bet / (pot + 2×bet) = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet/(pot+2*bet)*100)}}%.
+      This equals the pot odds villain is laid: when villain calls a bluff they win pot + bet (${{pot + bet}}), so indifference requires the bluff share to equal {{bet}}/(P+2B).
+      The complementary {{Math.round((pot+bet)/(pot+2*bet)*100)}}% of the betting range is value. Careful — the bluff fraction is NOT alpha ({{Math.round(bet/(pot+bet)*100)}}%); alpha is the maximum fold frequency, a separate quantity. The bluff-to-value *ratio* is bet : (pot+bet).
 
   - id: q_mdf_direction
     type: multiple_choice
@@ -105,10 +106,10 @@ questions:
       - "1 bluff for every 2 value combos (1:2)"
       - "1 bluff for every 1 value combo (1:1)"
       - "2 bluffs for every 1 value combo (2:1)"
-    correct: 2
+    correct: 1
     explanation: >-
-      For a pot-sized bet, α = B/(P+B) = P/(2P) = 50%. So 50% of your betting range should be bluffs, which means a 1:1 bluff-to-value ratio.
-      Compare to a half-pot bet where α = 33%, requiring a 1:2 bluff-to-value ratio — far fewer bluffs relative to value.
+      For a pot-sized bet (B = P), value:bluff = (P+B):B = 2P:P = 2:1 — one bluff for every two value combos. Equivalently, bluffs are B/(P+2B) = P/3P = 33% of the betting range.
+      The common error is to use α = B/(P+B) = 50%; α is the defender's max fold frequency, not the bluff share. Compare a half-pot bet: value:bluff = 3:1 (bluffs are 25% of the range).
 
   - id: q_three_street
     type: multiple_choice

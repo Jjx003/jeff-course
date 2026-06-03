@@ -19,15 +19,15 @@ River spot with:
 - Hero bets $B$ with a range mixing value hands and bluffs
 - Villain's choices: call $B$ or fold
 
-Let $\alpha$ = fraction of hero's betting range that are bluffs.
+Let $b$ = fraction of hero's betting range that are bluffs.
 
 ### Villain's EV of calling
 
 If villain calls:
-- With probability $\alpha$, hero is bluffing → villain wins the pot $P$ (hero folds after losing the bet, or villain wins at showdown): net gain = $+P$
-- With probability $(1-\alpha)$, hero has value → villain loses their call: net gain = $-B$
+- With probability $b$, hero is bluffing → villain wins the pot **plus** hero's bet: net gain $= +(P+B)$. (The pot $P$ and hero's bet $B$ both go to villain; villain's own call returns to them.)
+- With probability $(1-b)$, hero has value → villain loses their call: net gain $= -B$
 
-$$\text{EV}(\text{call}) = \alpha \cdot P + (1-\alpha) \cdot (-B) = \alpha P - B + \alpha B = \alpha(P+B) - B$$
+$$\text{EV}(\text{call}) = b \cdot (P+B) - (1-b) \cdot B = b(P+2B) - B$$
 
 ### Villain's EV of folding
 
@@ -35,18 +35,20 @@ $$\text{EV}(\text{fold}) = 0$$
 
 ### Indifference condition
 
-$$\alpha(P+B) - B = 0$$
+$$b(P+2B) - B = 0$$
 
-$$\alpha = \frac{B}{P+B}$$
+$$b = \frac{B}{P+2B}$$
 
-This is the GTO bluff frequency: the fraction of betting combos that should be bluffs.
+This is the **GTO bluff fraction**: the share of betting combos that should be bluffs. It equals the pot odds villain is being laid — exactly the price that makes their bluff-catcher break even. Note it is **distinct** from $\alpha = B/(P+B)$, the defender's maximum fold frequency (derived in the MDF section below); conflating the two is a classic mistake.
 
 ### Value-to-bluff ratio
 
-$$\frac{\text{value hands}}{\text{bluff hands}} = \frac{1-\alpha}{\alpha} = \frac{P+B-B}{B} = \frac{P}{B}$$
+$$\frac{\text{value hands}}{\text{bluff hands}} = \frac{1-b}{b} = \frac{(P+B)/(P+2B)}{B/(P+2B)} = \frac{P+B}{B}$$
 
-For a pot-sized bet ($B = P$): value:bluff ratio = $P/P = 1:1$. Equal parts value and bluff.
-For a half-pot bet ($B = P/2$): ratio = $P/(P/2) = 2:1$. Two value hands per bluff.
+For a pot-sized bet ($B = P$): value:bluff ratio $= 2P/P = 2:1$. Two value hands per bluff.
+For a half-pot bet ($B = P/2$): value:bluff ratio $= 1.5P/0.5P = 3:1$. Three value hands per bluff.
+
+(Equivalently, the number of bluffs per value combo is $b/(1-b) = B/(P+B) = \alpha$ — so "bluffs $=$ value $\times \alpha$". The bluff *ratio* numerically equals $\alpha$, but the bluff *fraction* of the whole betting range, $B/(P+2B)$, does not.)
 
 ## MDF: The Symmetric Derivation
 
@@ -68,15 +70,15 @@ Sanity check: $\alpha + \text{MDF} = \frac{B}{P+B} + \frac{P}{P+B} = 1$ ✓
 
 ## GTO Value for Different Bet Sizes
 
-| Bet size (as fraction of pot) | Bluff % of betting range | MDF (villain's call %) |
-|---|---|---|
-| 25% of pot ($B = 0.25P$) | $\frac{0.25}{1.25} = 20\%$ | 80% |
-| 50% of pot ($B = 0.5P$) | $\frac{0.5}{1.5} = 33\%$ | 67% |
-| 75% of pot ($B = 0.75P$) | $\frac{0.75}{1.75} \approx 43\%$ | 57% |
-| 100% of pot ($B = P$) | $\frac{P}{2P} = 50\%$ | 50% |
-| 150% of pot ($B = 1.5P$) | $\frac{1.5}{2.5} = 60\%$ | 40% |
+| Bet size (fraction of pot) | Bluff fraction $b = \frac{B}{P+2B}$ | Value:bluff $= \frac{P+B}{B}$ | MDF $= \frac{P}{P+B}$ | $\alpha = \frac{B}{P+B}$ (max fold) |
+|---|---|---|---|---|
+| 25% of pot ($B = 0.25P$) | $\frac{0.25}{1.5} \approx 17\%$ | 5:1 | 80% | 20% |
+| 50% of pot ($B = 0.5P$) | $\frac{0.5}{2} = 25\%$ | 3:1 | 67% | 33% |
+| 75% of pot ($B = 0.75P$) | $\frac{0.75}{2.5} = 30\%$ | 2.33:1 | 57% | 43% |
+| 100% of pot ($B = P$) | $\frac{1}{3} \approx 33\%$ | 2:1 | 50% | 50% |
+| 150% of pot ($B = 1.5P$) | $\frac{1.5}{3.5} \approx 43\%$ | 1.67:1 | 40% | 60% |
 
-**Key insight:** Larger bets require a higher bluff frequency (more bluffs per value bet) and force villain to fold more. Smaller bets require a lower bluff frequency but villain can call more liberally.
+**Key insight:** Larger bets require a higher bluff fraction (more bluffs per value bet) and force villain to fold more (lower MDF). Note that the bluff fraction $b = B/(P+2B)$ and the maximum fold frequency $\alpha = B/(P+B)$ are different numbers — only for the defender do the fold and continue frequencies ($\alpha$ and MDF) sum to 1.
 
 ## Rock-Paper-Scissors: Formal Analysis
 

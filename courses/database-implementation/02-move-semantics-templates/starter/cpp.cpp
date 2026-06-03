@@ -1,6 +1,5 @@
 #include <array>
 #include <cassert>
-#include <concepts>
 #include <cstddef>
 #include <iostream>
 #include <string>

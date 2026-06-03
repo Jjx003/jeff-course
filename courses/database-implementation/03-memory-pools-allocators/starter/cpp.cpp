@@ -87,9 +87,11 @@ private:
 
 int main() {
     // --- SlabAllocator demo ---
-    SlabAllocator<int, 8> alloc;
+    // T must be at least pointer-sized so a free slot can hold the free-list
+    // next-pointer (see the static_assert), so the demo uses int64_t.
+    SlabAllocator<int64_t, 8> alloc;
 
-    std::array<int*, 4> ptrs{};
+    std::array<int64_t*, 4> ptrs{};
     for (int i = 0; i < 4; ++i) {
         ptrs[i] = alloc.allocate();
         *ptrs[i] = i * 10;
@@ -100,8 +102,8 @@ int main() {
     alloc.deallocate(ptrs[2]);
 
     // Re-allocate 2 — should reuse ptrs[2] then ptrs[1] (LIFO)
-    int* r0 = alloc.allocate();
-    int* r1 = alloc.allocate();
+    int64_t* r0 = alloc.allocate();
+    int64_t* r1 = alloc.allocate();
 
     bool reused = (r0 == ptrs[2] || r0 == ptrs[1]) &&
                   (r1 == ptrs[2] || r1 == ptrs[1]);

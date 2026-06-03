@@ -1,4 +1,4 @@
-# Kinetics and Catalysis
+## Two questions: where, and how fast
 
 Thermodynamics asks: where is equilibrium?
 

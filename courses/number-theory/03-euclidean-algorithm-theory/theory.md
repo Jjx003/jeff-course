@@ -78,7 +78,22 @@ $$
 
 ![Bezout's Identity](/courses/number-theory/bezouts-identity.svg)
 
-This $x$ and $y$ can be found by "working backwards" through the steps of the Euclidean Algorithm, a process known as the **Extended Euclidean Algorithm**.
+**Proof:**
+Consider the set of all *positive* integer linear combinations of $a$ and $b$:
+$$
+S = \{ ax + by : x, y \in \mathbb{Z} \} \cap \mathbb{Z}^+
+$$
+Since $a$ and $b$ are not both zero, $S$ is non-empty (for example, $a \cdot a + b \cdot b = a^2 + b^2 > 0$ lies in $S$). By the **well-ordering principle**, $S$ has a least element; call it $d = ax_0 + by_0$.
+
+We claim $d = \gcd(a, b)$. First, $d \mid a$: by the Division Algorithm write $a = dq + r$ with $0 \le r < d$. Then
+$$
+r = a - dq = a - q(ax_0 + by_0) = a(1 - qx_0) + b(-qy_0),
+$$
+so $r$ is itself an integer linear combination of $a$ and $b$. If $r > 0$ it would belong to $S$, contradicting the minimality of $d$ since $r < d$. Hence $r = 0$ and $d \mid a$. The identical argument shows $d \mid b$, so $d$ is a common divisor of $a$ and $b$.
+
+Finally, let $c$ be *any* common divisor of $a$ and $b$. By the linear combination theorem, $c$ divides $ax_0 + by_0 = d$, so $c \le d$. Thus $d$ is the greatest common divisor, and $d = ax_0 + by_0$ expresses it as a linear combination. $\blacksquare$
+
+In practice, the coefficients $x$ and $y$ can be found constructively by "working backwards" through the steps of the Euclidean Algorithm, a process known as the **Extended Euclidean Algorithm**.
 
 ### Proof of Termination
 

@@ -30,7 +30,7 @@ Total check: $13 \times 6 + 78 \times 4 + 78 \times 12 = 78 + 312 + 936 = 1326$ 
 
 If a player opens $p\%$ of hands, the approximate combo count is:
 
-$$\text{combos in range} \approx \left\lfloor 1326 \times \frac{p}{100} \right\rfloor$$
+$$\text{combos in range} \approx \operatorname{round}\!\left(1326 \times \frac{p}{100}\right)$$
 
 For common opening frequencies:
 
@@ -64,7 +64,7 @@ AKo has 12 combos. If you hold A♠:
 
 If you hold A♠ and K♦:
 - A♠ removes 3 combos (as above)
-- K♦ removes a further 2 combos from the remaining set (A♥K♦, A♦K♦ — but A♠K♦ was already removed)
+- K♦ removes a further 2 combos from the remaining set (A♥K♦, A♣K♦ — A♠K♦ was already removed, and A♦K♦ is a suited combo, not offsuit)
 - Net: $12 - 3 - 2 = 7$ offsuit AK combos remain
 
 In general, when you hold **one card of rank X**, the total AXo combos for any rank Y reduce by 3 (from 12 to 9); total AXs reduce by 1 (from 4 to 3).

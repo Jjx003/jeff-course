@@ -85,10 +85,8 @@ public:
             frame_id_t fid = it->second;
             Frame& f = frames_[fid];
             f.pin_count++;
-            // Move to front of LRU list
-            if (lru_map_.count(fid)) {
-                lru_list_.splice(lru_list_.begin(), lru_list_, lru_map_[fid]);
-            }
+            // Now pinned, so it is no longer an eviction candidate.
+            RemoveFromLRU(fid);
             std::cout << "FetchPage " << id << ": hit frame " << fid << "\n";
             return &f;
         }
@@ -99,12 +97,9 @@ public:
             fid = free_list_.front();
             free_list_.pop();
         } else {
-            // Evict LRU unpinned frame
-            fid = INVALID_PAGE_ID;
-            for (auto rit = lru_list_.rbegin(); rit != lru_list_.rend(); ++rit) {
-                if (frames_[*rit].pin_count == 0) { fid = *rit; break; }
-            }
-            if (fid == INVALID_PAGE_ID) return nullptr;  // all pinned
+            // The LRU list holds only unpinned frames; the back is the victim.
+            if (lru_list_.empty()) return nullptr;  // all frames pinned
+            fid = lru_list_.back();
 
             Frame& victim = frames_[fid];
             std::cout << "FetchPage " << id << ": miss, evicting page "
@@ -116,8 +111,7 @@ public:
                 std::cout << "Evicted page " << victim.page_id << " (clean)\n";
             }
             page_table_.erase(victim.page_id);
-            lru_list_.erase(lru_map_[fid]);
-            lru_map_.erase(fid);
+            RemoveFromLRU(fid);
         }
 
         Frame& f = frames_[fid];
@@ -126,10 +120,6 @@ public:
         f.pin_count = 1;
         f.is_dirty  = false;
         page_table_[id] = fid;
-
-        // Add to front of LRU list
-        lru_list_.push_front(fid);
-        lru_map_[fid] = lru_list_.begin();
 
         std::cout << "FetchPage " << id << ": loaded page " << id
                   << " into frame " << fid << "\n";
@@ -145,7 +135,8 @@ public:
         if (is_dirty) f.is_dirty = true;
         f.pin_count--;
         std::cout << "UnpinPage " << id << " dirty=" << (is_dirty ? "true" : "false") << "\n";
-        // If now unpinned, it's LRU-eligible (already in list from FetchPage)
+        // Reaching pin_count 0 makes the frame eviction-eligible.
+        if (f.pin_count == 0) AddToLRU(fid);
     }
 
     bool FlushPage(page_id_t id) {
@@ -168,16 +159,12 @@ public:
             fid = free_list_.front();
             free_list_.pop();
         } else {
-            fid = INVALID_PAGE_ID;
-            for (auto rit = lru_list_.rbegin(); rit != lru_list_.rend(); ++rit) {
-                if (frames_[*rit].pin_count == 0) { fid = *rit; break; }
-            }
-            if (fid == INVALID_PAGE_ID) return nullptr;
+            if (lru_list_.empty()) return nullptr;
+            fid = lru_list_.back();
             Frame& victim = frames_[fid];
             if (victim.is_dirty) dm_->WritePage(victim.page_id, victim.data.data());
             page_table_.erase(victim.page_id);
-            lru_list_.erase(lru_map_[fid]);
-            lru_map_.erase(fid);
+            RemoveFromLRU(fid);
         }
 
         page_id_t new_id = dm_->AllocatePage();
@@ -187,8 +174,6 @@ public:
         f.pin_count = 1;
         f.is_dirty  = false;
         page_table_[new_id] = fid;
-        lru_list_.push_front(fid);
-        lru_map_[fid] = lru_list_.begin();
 
         page_id_out = new_id;
         std::cout << "NewPage: allocated page " << new_id << " in frame " << fid << "\n";
@@ -196,10 +181,19 @@ public:
     }
 
 private:
-    frame_id_t find_victim() {
-        for (auto rit = lru_list_.rbegin(); rit != lru_list_.rend(); ++rit)
-            if (frames_[*rit].pin_count == 0) return *rit;
-        return INVALID_PAGE_ID;
+    // The eviction list holds only unpinned (eviction-eligible) frames.
+    // Front = most recently unpinned, back = least recently used.
+    void AddToLRU(frame_id_t fid) {
+        if (lru_map_.count(fid)) return;
+        lru_list_.push_front(fid);
+        lru_map_[fid] = lru_list_.begin();
+    }
+
+    void RemoveFromLRU(frame_id_t fid) {
+        auto it = lru_map_.find(fid);
+        if (it == lru_map_.end()) return;
+        lru_list_.erase(it->second);
+        lru_map_.erase(it);
     }
 
     std::vector<Frame>                        frames_;

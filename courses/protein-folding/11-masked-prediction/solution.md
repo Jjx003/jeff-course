@@ -111,7 +111,7 @@ vocabulary first.
 
 ## Reading the model's answer
 
-For position 14 (the `W` of the conserved `WGK` motif), ESM-2 650M's
+For position 15 (the `W` of the conserved `WGK` motif), ESM-2 650M's
 typical output looks like:
 
 ```

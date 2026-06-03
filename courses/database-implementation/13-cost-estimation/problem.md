@@ -99,6 +99,6 @@ Plan cost (join orders x customers): 500000.00
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - Use only the C++ standard library.
 - No memory leaks: clean up all `PlanNode*` after use.

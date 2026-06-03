@@ -1,5 +1,5 @@
 Inserted 10 entries
-Global depth after inserts: 3
+Global depth after inserts: 2
 Num distinct buckets: 4
 Lookup(1): found 1
 Lookup(2): found 2

@@ -33,7 +33,7 @@ hidden states (we use that for embeddings in module 12).
 
 ```python
 SEQUENCE = "MGLSDGEWQLVLNVWGKVEADIPGHGQEVL"
-mask_pos_1based = 14
+mask_pos_1based = 15
 original_residue = SEQUENCE[mask_pos_1based - 1]   # 'W'
 
 inputs = tokenizer(SEQUENCE, return_tensors="pt").to(device)
@@ -42,7 +42,7 @@ inputs["input_ids"][0, mask_token_idx] = tokenizer.mask_token_id
 ```
 
 (An alternative is to assemble a string with a literal `<mask>`
-substring — `SEQUENCE[:13] + "<mask>" + SEQUENCE[14:]` — and let the
+substring — `SEQUENCE[:14] + "<mask>" + SEQUENCE[15:]` — and let the
 tokenizer parse it. Both work; the in-place overwrite approach uses
 no string parsing and never needs you to remember whether
 `<mask>` is treated as a single token.)

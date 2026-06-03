@@ -11,7 +11,7 @@ from transformers import AutoTokenizer, EsmForMaskedLM
 
 CHECKPOINT = "facebook/esm2_t33_650M_UR50D"
 SEQUENCE = "MGLSDGEWQLVLNVWGKVEADIPGHGQEVL"
-MASK_POS_1BASED = 14
+MASK_POS_1BASED = 15  # the W of the conserved WGK motif (positions 15-17)
 AA_LETTERS = "ACDEFGHIKLMNPQRSTVWY"
 
 

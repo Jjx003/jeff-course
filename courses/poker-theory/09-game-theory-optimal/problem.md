@@ -101,36 +101,38 @@ Let's derive the exact bluff frequency for a river spot.
 
 $$\text{EV}(\text{fold}) = 0$$
 
-$$\text{EV}(\text{call}) = p_{\text{bluff}} \cdot P - p_{\text{value}} \cdot B$$
+When villain calls, what do they win or lose? Against a **bluff**, villain wins the pot *plus* hero's bet — a net gain of $P + B$ (villain's own call comes back, and they scoop hero's bet on top of the pot). Against a **value** hand, villain loses their call $B$. So:
+
+$$\text{EV}(\text{call}) = p_{\text{bluff}} \cdot (P + B) - p_{\text{value}} \cdot B$$
 
 where $p_{\text{bluff}}$ is the probability hero is bluffing given that hero bet, and $p_{\text{value}} = 1 - p_{\text{bluff}}$.
 
 **Setting them equal (indifference condition):**
 
-$$p_{\text{bluff}} \cdot P = (1 - p_{\text{bluff}}) \cdot B$$
+$$p_{\text{bluff}} \cdot (P + B) = (1 - p_{\text{bluff}}) \cdot B$$
 
-$$p_{\text{bluff}} \cdot P = B - p_{\text{bluff}} \cdot B$$
+$$p_{\text{bluff}} \cdot (P + B) = B - p_{\text{bluff}} \cdot B$$
 
-$$p_{\text{bluff}} \cdot (P + B) = B$$
+$$p_{\text{bluff}} \cdot (P + 2B) = B$$
 
-$$\boxed{p_{\text{bluff}} = \frac{B}{P + B}}$$
+$$\boxed{p_{\text{bluff}} = \frac{B}{P + 2B}}$$
 
-This is the fraction of hero's betting range that should be bluffs to make villain exactly indifferent.
+This is the fraction of hero's betting range that should be bluffs to make villain exactly indifferent. Notice it equals the **pot odds villain is being laid** ($B/(P+2B)$) — the bluff share is set precisely so the bluff-catcher breaks even. It is **not** the same as alpha $= B/(P+B)$ (the defender's maximum fold frequency, derived next).
 
 **Example:** Pot = \$100, bet = \$50.
 
-$$p_{\text{bluff}} = \frac{50}{100 + 50} = \frac{1}{3} \approx 33\%$$
+$$p_{\text{bluff}} = \frac{50}{100 + 2 \times 50} = \frac{50}{200} = \frac{1}{4} = 25\%$$
 
-One third of hero's $100 bets should be bluffs, two thirds should be value.
+One quarter of hero's $50 (half-pot) bets should be bluffs, three quarters value — a **3:1 value-to-bluff ratio**.
 
 ```mermaid
 flowchart TD
     HERO_BET["Hero bets B into pot P"]
     VILLAIN_CHOICE{"Villain's EV calculation"}
-    CALL_PATH["EV(call) = p_bluff * P minus p_value * B"]
+    CALL_PATH["EV(call) = p_bluff * (P+B) minus p_value * B"]
     FOLD_PATH["EV(fold) = 0"]
     INDIFF_COND["Indifference: EV(call) = EV(fold)"]
-    BLUFF_FREQ["GTO bluff frequency = B divided by P+B"]
+    BLUFF_FREQ["GTO bluff fraction = B divided by (P + 2B)"]
     HERO_BET --> VILLAIN_CHOICE
     VILLAIN_CHOICE --> CALL_PATH
     VILLAIN_CHOICE --> FOLD_PATH
@@ -153,7 +155,7 @@ $$P = p_{\text{call}} \cdot (P + B)$$
 
 $$\boxed{p_{\text{call}} = \frac{P}{P + B}}$$
 
-This is the **Minimum Defense Frequency (MDF)** — the minimum fraction of villain's range that must call to prevent hero from profitably bluffing 100% of the time. Module 11 explores MDF in depth. Notice that bluff% + MDF = 1, which is a reassuring sanity check.
+This is the **Minimum Defense Frequency (MDF)** — the minimum fraction of villain's range that must call to prevent hero from profitably bluffing 100% of the time. Module 11 explores MDF in depth. Notice that $\alpha + \text{MDF} = 1$, where $\alpha = B/(P+B) = 1 - p_{\text{call}}$ is villain's maximum fold frequency — a reassuring sanity check. Be careful to keep two quantities separate: this fold frequency $\alpha = B/(P+B)$ is **not** the same as the bluff *fraction* $B/(P+2B)$ derived just above.
 
 ---
 
@@ -224,8 +226,8 @@ Several misconceptions are worth addressing:
 | Nash equilibrium | No player can improve EV by unilaterally changing strategy |
 | GTO | The Nash equilibrium strategy for poker — unexploitable |
 | Mixed strategy | Randomise between actions so no single action is always correct |
-| Indifference principle | Bluff at $B/(P+B)$ so villain's EV(call) = EV(fold) = 0 |
-| MDF | Villain calls $P/(P+B)$ so hero's EV(bluff) = EV(check) = 0 |
+| Indifference principle | Bluff fraction $= B/(P+2B)$ so villain's EV(call) = EV(fold) = 0 |
+| MDF | Villain calls $P/(P+B)$ so hero's EV(bluff) = EV(check) = 0; max fold $\alpha = B/(P+B)$ |
 | GTO vs. exploitative | GTO = safe floor; exploitative = higher ceiling against predictable opponents |
 
 The indifference principle — setting frequencies so the opponent cannot profitably deviate — is the engine behind every GTO concept. **Minimum Defense Frequency (Module 11)** applies the same logic to defence: what fraction of your range must you protect to make villain's bluffs break even?

@@ -1,5 +1,3 @@
-# Study Prompts
-
 ## Check your intuition
 
 - If a reaction has $\Delta G < 0$, is it necessarily fast?

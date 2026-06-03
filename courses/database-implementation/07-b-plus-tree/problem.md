@@ -79,7 +79,7 @@ Search(11): not found
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - Use `ORDER = 4` (leaf capacity 3 keys; splits at 4).
 - No use of `std::map` or any balanced BST — implement the tree yourself.
 - The tree must correctly free all allocated nodes in the destructor (no leaks).

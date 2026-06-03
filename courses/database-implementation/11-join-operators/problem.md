@@ -74,6 +74,6 @@ HashJoin (employees JOIN departments ON id=emp_id):
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - Include the full Tuple/Schema/Value/TableHeap/SeqScanExecutor stack from module 10.
 - Hash join result rows may appear in a different order than NLJ — that is acceptable.

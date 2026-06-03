@@ -10,7 +10,7 @@ chips?" It is:
 As of May 2026, Intel's 2025 10-K says Intel ramped Intel 18A into high-volume
 production and is seeking to establish it as the first significant node for
 government and enterprise foundry customers. The same filing reports Intel
-Foundry operating loss of $10.3 billion in 2025, compared with a $13.3 billion
+Foundry operating loss of $10.3 billion in 2025, compared with a $13.4 billion
 loss in 2024. It also warns that if Intel cannot secure a significant external
 customer and meet important milestones for Intel 14A, it may not be economical
 to develop and manufacture 14A and successor leading-edge nodes.

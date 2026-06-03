@@ -1,6 +1,7 @@
-# Theory
+## Rates, barriers, and pathways
 
-**Definition:** Kinetics describes the rates of chemical change. It depends on barriers, pathways, and molecular encounters.
+Kinetics describes the rates of chemical change. It depends on barriers,
+pathways, and molecular encounters.
 
 For a simple reaction:
 

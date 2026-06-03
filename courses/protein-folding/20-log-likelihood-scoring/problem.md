@@ -62,9 +62,20 @@ We define four mutants for variety:
 | `A20V` | A at 20 → V | Modest size change |
 
 Position numbering is 1-indexed (so `position 8` is the 8th residue
-of the wild-type string). Both `W8A` and `W15A` should score
-significantly worse than wild-type; the conservative `K17R` should
-be close to neutral.
+of the wild-type string). On a full-length protein the tryptophan
+knockouts (`W8A`, `W15A`) typically score clearly worse than wild-type
+and the conservative `K17R` stays close to neutral.
+
+> **Caveat — this is a 30-residue fragment, not a full protein.** ESM-2
+> conditions each masked prediction on the rest of the sequence, and a
+> short isolated fragment supplies much weaker context than the intact
+> myoglobin chain. On this fragment the per-variant ΔPLL values are
+> small and noisy, and the *sign* of an individual mutation can even
+> flip. That is expected: the robust "conserved tryptophan is hard to
+> substitute" signal emerges on full-length sequences and when averaged
+> over many variants. What this module teaches is the **mechanics of
+> PLL scoring**; treat the exact numbers below as illustrative of the
+> output format, not as a guaranteed ranking for this short input.
 
 ## What to compute
 

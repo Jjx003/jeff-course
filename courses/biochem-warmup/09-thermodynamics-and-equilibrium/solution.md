@@ -1,4 +1,4 @@
-# Solution Walkthrough
+## Solution walkthrough
 
 The key equation is:
 

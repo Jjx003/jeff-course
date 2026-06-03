@@ -99,7 +99,10 @@ public:
     }
 
 private:
-    // TODO: helper to find LRU victim (pin_count == 0) from back of lru_list_
+    // TODO: helpers to add/remove a frame from lru_list_. The list holds only
+    //       unpinned (eviction-eligible) frames: front = most recently
+    //       unpinned, back = LRU victim. UnpinPage to 0 adds to the front;
+    //       pinning a frame (Fetch/New) removes it; eviction takes the back.
 
     std::vector<Frame>                        frames_;
     std::unordered_map<page_id_t, frame_id_t> page_table_;

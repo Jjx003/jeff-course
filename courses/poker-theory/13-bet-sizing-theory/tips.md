@@ -18,7 +18,7 @@
 
 **Using geometric sizing on non-all-in lines:** Geometric sizing is designed specifically for building to an all-in. If you are not planning to commit stacks, use range-based sizing instead.
 
-**Forgetting the bluff requirement for overbets:** If you cannot construct a high-alpha betting range (≈67% bluffs for a 2× pot overbet), do not overbet. Your value hands need protection from villain's exploitative always-fold.
+**Forgetting the bluff requirement for overbets:** If you cannot supply enough bluffs (a 2× pot overbet needs a bluff fraction of B/(P+2B) ≈ 40% of your betting range, a 3:2 value-to-bluff ratio), do not overbet. Your value hands need protection from villain's exploitative always-fold.
 
 **Conflating protection and value:** A protection bet is not the same as a value bet. Protection bets charge draws; value bets extract money from worse made hands. On some boards you need both — a merged range bet does double duty. But if you label every small bet "protection," you are probably betting hands you should check.
 

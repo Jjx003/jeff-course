@@ -1,4 +1,4 @@
-# Biochem Warm-up Final Test
+## What this cumulative test covers
 
 This cumulative test covers the full biochemistry and organic chemistry warm-up track. Expect questions that connect local chemistry to protein folding and molecular recognition: pKa shifts, side-chain properties, noncovalent interactions, disulfides, thermodynamics, kinetics, and mutation consequences.
 

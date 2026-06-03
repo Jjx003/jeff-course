@@ -1,4 +1,4 @@
-# Biochem Warm-up Midterm Test
+## What this checkpoint covers
 
 This checkpoint covers the first half of the warm-up track: bonding and molecular shape, functional groups, pKa and charge state, water and the hydrophobic effect, stereochemistry, and peptide backbone geometry.
 

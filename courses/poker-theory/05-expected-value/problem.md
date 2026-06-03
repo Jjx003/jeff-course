@@ -88,26 +88,23 @@ When you value bet, you hope to be called by worse hands. Let:
 - $P$ = pot before your value bet
 - $B$ = your value bet size
 
-$$\text{EV(value bet)} = c \cdot [q \cdot (P + B) - (1-q) \cdot B] + (1-c) \cdot 0$$
+We measure the *marginal* value the bet adds beyond the pot you would win anyway. When villain folds, the bet adds nothing extra (you keep the pot you already had). When villain calls, you win their $B$ with probability $q$ and lose your $B$ with probability $1-q$:
 
-The $(1-c) \cdot 0$ term reflects that when villain folds, you win the current pot regardless of the bet (EV = 0 additional from the bet). Simplifying:
-
-$$\text{EV(value bet)} = c \cdot [q(P + B) - (1-q)B]$$
+$$\text{EV(value bet)} = c \cdot [q \cdot B - (1-q) \cdot B] = c \cdot (2q - 1) \cdot B$$
 
 At 100% equity ($q=1$, the pure nuts):
 
 $$\text{EV(value bet, nuts)} = c \cdot B$$
 
-Every dollar of call frequency earns you one dollar of EV from the bet itself (plus you already own the pot).
+Every unit of call frequency earns you one bet's worth of value from the bet itself (and you keep the pot regardless). The bet stops adding value once $q < \tfrac{1}{2}$: a hand that loses more than half the time *when called* is not a value bet — betting it just donates chips to villain's stronger calling range.
 
 ### Worked Example
 
 Pot = $200, you bet $100 for value. You estimate villain calls 60% of the time, and your equity when called is 90% (you occasionally lose to a redraw):
 
-$$\text{EV(value bet)} = 0.60 \times [0.90 \times 300 - 0.10 \times 100]$$
-$$= 0.60 \times [270 - 10] = 0.60 \times 260 = +\$156$$
+$$\text{EV(value bet)} = 0.60 \times (2 \times 0.90 - 1) \times 100 = 0.60 \times 0.80 \times 100 = +\$48$$
 
-Compared to checking: if villain checks back, you win $200 (the pot) with 90% equity → EV of checking ≈ $180. So in this case, betting actually *reduces* EV — your opponent folds too often! This illustrates the trade-off in value betting: bigger bets risk more folds; smaller bets get called more but win less when called.
+The bet extracts about \$48 beyond the pot you already expected to win. The thinner your edge when called (the closer $q$ is to 50%), the smaller this margin — which is why thin value bets need a high call frequency to be worth making, and why a hand you are not at least 50% to win with when called should usually be checked rather than bet.
 
 ---
 
@@ -117,7 +114,7 @@ Compared to checking: if villain checks back, you win $200 (the pot) with 90% eq
 |---|---|---|
 | Call | $q \cdot P - (1-q) \cdot C$ | Equity $q$ vs. pot odds $C/(P+C)$ |
 | Bluff | $f \cdot P - (1-f) \cdot B$ | Fold equity $f$ vs. $B/(P+B)$ |
-| Value bet | $c \cdot [q(P+B) - (1-q)B]$ | Call frequency $c$ and equity $q$ |
+| Value bet | $c \cdot (2q - 1) \cdot B$ | Call frequency $c$ and equity $q$ (value beyond the pot) |
 | Check/Fold | $0$ (by definition) | Baseline |
 
 ---
@@ -147,7 +144,7 @@ Every poker decision reduces to the same question: **does this action have posit
 
 - Calling: $q > C/(P+C)$?
 - Bluffing: $f > B/(P+B)$?
-- Value betting: is $c \cdot [q(P+B) - (1-q)B] > 0$ and is it more than the EV of checking?
+- Value betting: is $c \cdot (2q - 1) \cdot B > 0$ — i.e. is your equity when called above 50%?
 
 The math is simple arithmetic. The difficulty lies in estimating $q$ (opponent's range vs. your hand), $f$ (opponent's folding frequency), and $c$ (opponent's calling frequency) accurately. The entire rest of this course — ranges, GTO, bet sizing, board texture — is about building the skills to estimate these quantities reliably.
 
@@ -158,7 +155,7 @@ The math is simple arithmetic. The difficulty lies in estimating $q$ (opponent's
 - **EV formula:** $\text{EV} = \sum P_i V_i$ — the probability-weighted average of all outcomes.
 - **EV of a call:** $q \cdot P - (1-q) \cdot C$. Positive when equity exceeds pot odds.
 - **EV of a bluff:** $f \cdot P - (1-f) \cdot B$. Positive when fold frequency exceeds $B/(P+B)$.
-- **EV of a value bet:** $c \cdot [q(P+B) - (1-q)B]$. Positive when call frequency and equity are high enough.
+- **EV of a value bet (beyond the pot you already own):** $c \cdot (2q - 1) \cdot B$. Positive when your equity when called exceeds 50%.
 - Every poker concept in this course is a consequence of maximising expected value.
 
 Next up: [Module 06 — EV Quiz](../06-ev-quiz/) to drill the calling, bluffing, and value-betting formulas on randomised numbers, then [Module 07 — Range Theory](../07-range-theory/) lifts the analysis from single hands to full ranges.

@@ -47,9 +47,15 @@ All elements square to 1, so the maximum order is 2. However, $\phi(8) = 4$. Sin
 
 Let $p$ be a prime. We want to prove that a primitive root exists modulo $p$. 
 
-First, recall a theorem about polynomials over fields: A polynomial of degree $d$ can have at most $d$ roots modulo $p$.
+First, recall a theorem about polynomials over fields (Lagrange): a nonzero polynomial of degree $d$ can have at most $d$ roots modulo a prime $p$.
 
-For any divisor $d$ of $p-1$, the polynomial $x^d - 1 \equiv 0 \pmod p$ has exactly $d$ roots. 
+For any divisor $d$ of $p-1$, the polynomial $x^d - 1 \equiv 0 \pmod p$ has *exactly* $d$ roots. To see this, write $p - 1 = d e$ and factor
+
+$$
+x^{p-1} - 1 = (x^d - 1)\left(x^{d(e-1)} + x^{d(e-2)} + \dots + x^d + 1\right).
+$$
+
+By Fermat's Little Theorem, the left side has exactly $p-1$ roots modulo $p$ (every nonzero residue). The second factor has degree $p-1-d$, so it has at most $p-1-d$ roots. Therefore the first factor $x^d - 1$ must supply at least $(p-1) - (p-1-d) = d$ roots; combined with the at-most-$d$ bound from Lagrange's theorem, it has exactly $d$ roots. 
 Let $\psi(d)$ be the number of elements modulo $p$ that have order *exactly* $d$.
 Every element from $1$ to $p-1$ has some order $d$ that divides $p-1$. Therefore:
 

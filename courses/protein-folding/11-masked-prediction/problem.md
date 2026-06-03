@@ -36,9 +36,9 @@ verdict. Run it locally and inspect the output yourself.
    MGLSDGEWQLVLNVWGKVEADIPGHGQEVL
    ```
 
-3. Mask **position 14** (1-based; the `W` of the conserved `WGK`
-   motif). Replace it with the model's `<mask>` token before the
-   forward pass.
+3. Mask **position 15** (1-based; the `W` of the conserved `WGK`
+   motif, which spans positions 15–17). Replace it with the model's
+   `<mask>` token before the forward pass.
 4. Run the model under `torch.inference_mode()` and grab the logits at
    the masked position.
 5. Convert the logits to probabilities with `softmax`, restrict to
@@ -86,8 +86,8 @@ Running on: cuda
 Sequence (length 30):
 MGLSDGEWQLVLNVWGKVEADIPGHGQEVL
 
-Masking position 14 (1-based, original residue 'W'):
-MGLSDGEWQLVLN<mask>WGKVEADIPGHGQEVL
+Masking position 15 (1-based, original residue 'W'):
+MGLSDGEWQLVLNV<mask>GKVEADIPGHGQEVL
 
 Top-5 predicted amino acids for the masked position:
   W    p=0.7421

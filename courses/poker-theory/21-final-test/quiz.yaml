@@ -37,15 +37,15 @@ questions:
     params:
       pot: { min: 100, max: 400, step: 50 }
       bet: { min: 50, max: 300, step: 50 }
-    correct_formula: "Math.round(bet / (pot + bet) * 100)"
+    correct_formula: "Math.round(bet / (pot + 2 * bet) * 100)"
     distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
       - "Math.round(pot / (pot + bet) * 100)"
-      - "Math.round(bet / (pot + 2 * bet) * 100)"
       - "Math.round((pot + bet) / (pot + 2 * bet) * 100)"
     answer_suffix: "%"
     explanation_template: >-
-      Balanced river bluff fraction equals alpha: bet / (pot + bet).
-      Here alpha = {{bet}} / {{pot + bet}} = {{Math.round(bet/(pot+bet)*100)}}%.
+      The balanced bluff share = bet / (pot + 2×bet) = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet/(pot+2*bet)*100)}}%.
+      This equals the pot odds the caller is laid (when called, a bluff loses to villain who wins pot + bet). It is NOT alpha = {{Math.round(bet/(pot+bet)*100)}}%, which is the defender's max fold frequency.
 
   - id: final_geometric_sizing
     type: parametric

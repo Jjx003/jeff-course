@@ -148,12 +148,14 @@ learned, expressive, gradient-friendly version.
 
 ## Implementation tips, if you ever build this
 
-- **Don't materialise $(S, L, L, c'^2)$.** Use einsum to compute the
-  per-pair mean directly:
+- **Don't materialise $(S, L, L, c'^2)$.** With `a`, `b` of shape
+  `(S, L, c')`, use einsum to average the outer products over sequences
+  directly into `(L, L, c', c')`:
   ```python
-  delta_z = torch.einsum("ski,skj->ijij", a, b) / S
+  opm = torch.einsum("sip,sjq->ijpq", a, b) / S   # (L, L, c', c')
+  delta_z = opm.reshape(L, L, c_prime * c_prime) @ W_O.T  # (L, L, c_z)
   ```
-  (Schematically — the actual code goes through the flatten step.)
+  Here `i, j` index residue columns and `p, q` index the `c'` channels.
 - **Layer-norm a and b** before outer product. AlphaFold2 does, and
   it stabilises training.
 - **Drop sequence weighting** unless you're being very careful — the

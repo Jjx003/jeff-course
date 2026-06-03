@@ -3,11 +3,11 @@ questions:
     type: multiple_choice
     stem: "Which fields are enough to describe a basic dense tensor view over a one-dimensional storage buffer?"
     options:
-      - "Storage, shape, strides, and optionally a storage offset"
       - "Only the shape"
       - "Only the data type and device"
+      - "Storage, shape, strides, and optionally a storage offset"
       - "The computation graph and gradient function"
-    correct: 0
+    correct: 2
     explanation: "A tensor view needs the underlying storage plus metadata that maps logical indices to storage positions: shape, strides, and often an offset."
 
   - id: q2_contiguous_offset
@@ -32,22 +32,22 @@ questions:
     type: multiple_choice
     stem: "For $C = AB$ and upstream gradient $G = \\partial L / \\partial C$, what is $\\partial L / \\partial A$?"
     options:
-      - "$G B^T$"
       - "$A^T G$"
+      - "$G B^T$"
       - "$B G^T$"
       - "$G^T A$"
-    correct: 0
+    correct: 1
     explanation: "The gradient with respect to the left operand of matmul is the upstream gradient multiplied by the transpose of the right operand: $G B^T$."
 
   - id: q4_matmul_backward_b
     type: multiple_choice
     stem: "For $C = AB$ and upstream gradient $G = \\partial L / \\partial C$, what is $\\partial L / \\partial B$?"
     options:
-      - "$A^T G$"
       - "$G B^T$"
       - "$A G$"
       - "$B^T A$"
-    correct: 0
+      - "$A^T G$"
+    correct: 3
     explanation: "The gradient with respect to the right operand is the left operand transposed times the upstream gradient: $A^T G$."
 
   - id: q5_broadcast_reduce
@@ -75,22 +75,22 @@ questions:
     type: multiple_choice
     stem: "For mean squared error $L = \\frac{1}{n}\\sum_i (\\hat y_i - y_i)^2$, what is $\\partial L / \\partial \\hat y_i$?"
     options:
-      - "$\\frac{2}{n}(\\hat y_i - y_i)$"
       - "$2(y_i - \\hat y_i)$"
       - "$\\hat y_i(1 - \\hat y_i)$"
+      - "$\\frac{2}{n}(\\hat y_i - y_i)$"
       - "$-\\frac{y_i}{\\hat y_i}$"
-    correct: 0
+    correct: 2
     explanation: "Differentiate the squared residual and keep the mean factor: $\\partial L / \\partial \\hat y_i = 2(\\hat y_i - y_i)/n$."
 
   - id: q8_chain_rule
     type: multiple_choice
     stem: "If $z = x y + \\sin(x)$, which local derivative is needed to send gradient from $z$ back to $x$?"
     options:
-      - "$\\frac{\\partial z}{\\partial x} = y + \\cos(x)$"
       - "$\\frac{\\partial z}{\\partial x} = x + \\cos(y)$"
+      - "$\\frac{\\partial z}{\\partial x} = y + \\cos(x)$"
       - "$\\frac{\\partial z}{\\partial x} = xy$"
       - "$\\frac{\\partial z}{\\partial x} = y - \\sin(x)$"
-    correct: 0
+    correct: 1
     explanation: "Differentiate each term with respect to $x$: $xy$ contributes $y$, and $\\sin(x)$ contributes $\\cos(x)$."
 
   - id: q9_gradient_accumulation
@@ -103,33 +103,33 @@ questions:
     type: multiple_choice
     stem: "Why does a scalar autograd engine usually traverse the computation graph in reverse topological order during backward?"
     options:
-      - "So every node receives all downstream gradient contributions before its local backward function runs"
       - "So forward values can be recomputed without storing them"
       - "So gradients are always positive"
       - "So the graph can ignore shared subexpressions"
-    correct: 0
+      - "So every node receives all downstream gradient contributions before its local backward function runs"
+    correct: 3
     explanation: "Reverse topological order ensures children closer to the loss propagate into a node before that node sends gradients to its own parents."
 
   - id: q11_relu_backward_mask
     type: multiple_choice
     stem: "In tensor autograd, why does ReLU backward need information from the forward input or output?"
     options:
-      - "It needs a mask identifying which elements were positive"
       - "It needs to know the original tensor's storage pointer only"
+      - "It needs a mask identifying which elements were positive"
       - "It needs the learning rate"
       - "It needs the batch size to normalize every gradient"
-    correct: 0
+    correct: 1
     explanation: "ReLU passes upstream gradient only where the forward input was positive and sends zero where the input was non-positive."
 
   - id: q12_sum_backward
     type: multiple_choice
     stem: "If $y = x.sum()$ for a tensor $x$ with shape $(2, 3)$ and the upstream gradient for scalar $y$ is $g$, what is the gradient shape for $x$?"
     options:
-      - "$(2, 3)$, filled with $g$"
       - "$()$, a scalar $g$"
       - "$(3, 2)$, filled with $g$"
+      - "$(2, 3)$, filled with $g$"
       - "$(2,)$, one value per row"
-    correct: 0
+    correct: 2
     explanation: "A full reduction maps every element of $x$ into one scalar sum, so the scalar upstream gradient broadcasts back to every element of $x$."
 
   - id: q13_inplace_risk

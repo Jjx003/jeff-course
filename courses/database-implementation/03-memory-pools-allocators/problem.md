@@ -57,16 +57,22 @@ Allocated @ 0x<addr2>
 Allocated @ 0x<addr3>
 Deallocated @ 0x<addr1>
 Deallocated @ 0x<addr2>
-Allocated @ 0x<addr1>
 Allocated @ 0x<addr2>
+Allocated @ 0x<addr1>
 Addresses reused: yes
 pmr::vector values: 1 2 3
 ```
 
-(Actual hex addresses will vary. The key requirement is that the two re-allocated addresses match two of the first four — demonstrating free-list reuse.)
+The free list is LIFO, so the most recently freed slot (`addr2`) is handed
+back first, then `addr1`.
+
+Because the printed hex addresses depend on where the OS places the pool, the
+output is **not deterministic** and is not auto-graded against a fixed
+reference. The key requirement is that the two re-allocated addresses match two
+of the first four — demonstrating free-list reuse.
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - No calls to `malloc`/`free`/`new`/`delete` after `SlabAllocator` construction.
 - `static_assert(sizeof(T) >= sizeof(void*))` inside `SlabAllocator`.

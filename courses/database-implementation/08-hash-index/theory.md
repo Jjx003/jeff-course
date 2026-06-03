@@ -37,7 +37,7 @@ This sharing is why doubling the directory is cheap: copy each pointer twice —
 
 When bucket $b$ at directory index $i$ overflows:
 
-1. **If $l == g$**: double the directory. $g \leftarrow g+1$. For each new entry $j$ in $[0, 2^g)$, set `dir[j] = old_dir[j >> 1]`.
+1. **If $l == g$**: double the directory. Because the directory is indexed by the **low-order** bits of the hash, each old entry is simply duplicated — adding a high bit must not change which bucket an existing index maps to. For $j$ in $[0, 2^{g+1})$, set `dir[j] = old_dir[j & (2^g - 1)]` (equivalently `old_dir[j mod 2^g]`). Then $g \leftarrow g+1$.
 
 2. **Increment local depth**: $b.l \leftarrow b.l + 1$.
 
@@ -58,7 +58,8 @@ After:  directory size $= 2^{g+1}$, global depth $= g+1$.
 
 ```
 Before (g=1): [B0, B1]
-After  (g=2): [B0, B0, B1, B1]   (each pointer duplicated)
+After  (g=2): [B0, B1, B0, B1]   (low-order indexing: entry j keeps the
+                                  bucket of index j mod 2^old_g)
 ```
 
 Note: this only copies pointers, not data. The directory itself is small (at most $2^{32}$ entries in theory, but in practice bounded by the number of pages times bits-per-page).

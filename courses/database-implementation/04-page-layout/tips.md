@@ -16,8 +16,6 @@ void SetNumSlots(uint16_t n) {
 }
 ```
 
-Or use `std::bit_cast` on a subarray if you prefer zero-copy reads.
-
 ## Slot array layout
 
 Slot `i` lives at byte offset `4 + i * 4`. Each slot has two `uint16_t` fields: offset then length.
@@ -53,10 +51,14 @@ FreeSpace = free_space_offset - (4 + num_slots * 4)
 
 This is the gap between where the next slot entry would go and where the next tuple would end.
 
-## std::span return for GetTuple
+## ByteSpan return for GetTuple
+
+`std::span` is C++20, but this course compiles with `-std=c++17`, so use the
+tiny `ByteSpan` view (`{const std::byte* ptr; size_t len; ...}`) defined in
+`problem.md`:
 
 ```cpp
-std::span<const std::byte> GetTuple(uint16_t slot_id) const {
+ByteSpan GetTuple(uint16_t slot_id) const {
     if (slot_id >= GetNumSlots()) return {};
     Slot s = GetSlot(slot_id);
     if (s.length == 0) return {};   // tombstone
@@ -64,7 +66,7 @@ std::span<const std::byte> GetTuple(uint16_t slot_id) const {
 }
 ```
 
-## Printing span as string
+## Printing the view as a string
 
 ```cpp
 auto sp = page.GetTuple(0);

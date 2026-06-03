@@ -53,7 +53,7 @@ questions:
       - "Increase your bluff frequency beyond GTO — villain cannot profitably call"
       - "Decrease your value-bet frequency, since folds are as good as calls"
     correct: 2
-    explanation: "If villain always folds, every bet wins the pot regardless of your hand. The exploitative response is to bluff as much as possible — in the extreme, bet 100% of your range as a bluff. GTO would bluff at B/(P+B); the exploitative strategy bluffs far more because the fold EV is guaranteed."
+    explanation: "If villain always folds, every bet wins the pot regardless of your hand. The exploitative response is to bluff as much as possible — in the extreme, bet 100% of your range as a bluff. GTO would bluff only B/(P+2B) of the betting range; the exploitative strategy bluffs far more because the fold EV is guaranteed."
 
   - id: q7
     type: multiple_choice
@@ -72,32 +72,34 @@ questions:
     params:
       pot: { min: 40, max: 200, step: 20 }
       bet: { min: 20, max: 120, step: 20 }
-    correct_formula: "Math.round(bet / (pot + bet) * 100)"
+    correct_formula: "Math.round(bet / (pot + 2 * bet) * 100)"
     distractor_formulas:
+      - "Math.round(bet / (pot + bet) * 100)"
       - "Math.round(pot / (pot + bet) * 100)"
-      - "Math.round(bet / (pot + 2 * bet) * 100)"
       - "Math.round(pot / (2 * pot + bet) * 100)"
     answer_suffix: "%"
     explanation_template: >-
-      Indifference condition: EV(call) = EV(fold) = 0.
-      EV(call) = p_bluff × ${{pot}} − p_value × ${{bet}} = 0.
-      Solving: p_bluff = {{bet}} / ({{pot}} + {{bet}}) = {{Math.round(bet / (pot + bet) * 100)}}%.
-      The remaining {{100 - Math.round(bet / (pot + bet) * 100)}}% of betting combos should be value.
+      Indifference condition: EV(call) = EV(fold) = 0. When Villain calls and Hero is bluffing,
+      Villain wins the pot **plus** Hero's bet (${{pot}} + ${{bet}} = ${{pot + bet}}); when Hero has value, Villain loses the ${{bet}} call.
+      EV(call) = p_bluff × ${{pot + bet}} − (1 − p_bluff) × ${{bet}} = 0.
+      Solving: p_bluff = {{bet}} / ({{pot}} + 2×{{bet}}) = {{bet}} / {{pot + 2 * bet}} = {{Math.round(bet / (pot + 2 * bet) * 100)}}%.
+      This is exactly the pot odds Villain is being laid — the bluff share that makes calling break even.
+      (Note: this is NOT alpha = {{Math.round(bet/(pot+bet)*100)}}%; alpha is the defender's max fold frequency, a different quantity.)
 
   - id: q_value_bluff_ratio
     type: parametric
-    stem_template: "Pot = ${{pot}}, river bet = ${{bet}}. At GTO, the value-to-bluff ratio in Hero's betting range is P : B = {{pot}} : {{bet}}. If Hero has {{n}} bluff combos in their betting range, how many **value combos** should they have? (Round to the nearest whole number.)"
+    stem_template: "Pot = ${{pot}}, river bet = ${{bet}}. At GTO, the value-to-bluff ratio in Hero's betting range is (P+B) : B = {{pot + bet}} : {{bet}}. If Hero has {{n}} bluff combos in their betting range, how many **value combos** should they have? (Round to the nearest whole number.)"
     params:
       pot: { min: 40, max: 160, step: 20 }
       bet: { min: 20, max: 100, step: 20 }
       n: { min: 2, max: 8, step: 1 }
-    correct_formula: "Math.round(n * pot / bet)"
+    correct_formula: "Math.round(n * (pot + bet) / bet)"
     distractor_formulas:
-      - "Math.round(n * bet / pot)"
+      - "Math.round(n * pot / bet)"
+      - "Math.round(n * bet / (pot + bet))"
       - "n"
-      - "Math.round(n * (pot + bet) / bet)"
     answer_suffix: " value combos"
     explanation_template: >-
-      At GTO, value combos / bluff combos = P / B = {{pot}} / {{bet}}.
-      With {{n}} bluff combos: value combos = {{n}} × {{pot}} / {{bet}} = {{Math.round(n * pot / bet)}}.
-      Check: bluff% = {{n}} / ({{n}} + {{Math.round(n * pot / bet)}}) ≈ {{Math.round(bet / (pot + bet) * 100)}}%, which matches B/(P+B).
+      At GTO, value combos / bluff combos = (P + B) / B = {{pot + bet}} / {{bet}} (this is the price the caller is laid).
+      With {{n}} bluff combos: value combos = {{n}} × {{pot + bet}} / {{bet}} = {{Math.round(n * (pot + bet) / bet)}}.
+      Check: bluff share = {{n}} / ({{n}} + {{Math.round(n * (pot + bet) / bet)}}) ≈ {{Math.round(bet / (pot + 2 * bet) * 100)}}%, which matches B/(P+2B).

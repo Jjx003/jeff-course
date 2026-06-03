@@ -48,10 +48,12 @@ Self-attention's compute and memory both scale as $O(L^2 d)$:
   to softmax, $O(L^2 d_v)$ to apply.
 - Plus $O(L d^2)$ for the linear projections.
 
-For a 1000-residue protein with $d = 1280$, the attention is
-$\approx 1.3\text{B}$ FLOPs per layer per head — fast on a GPU but
-quadratic in $L$. This is why long-protein inference is hard, and why
-techniques like FlashAttention and chunked processing exist.
+For a 1000-residue protein with $d = 1280$, building the score matrices
+costs $\approx L^2 d = 1.3\text{B}$ multiply-adds per layer (summed across
+all heads, since the per-head cost $L^2 d_k$ times $h$ heads recovers
+$L^2 d$) — fast on a GPU but quadratic in $L$. This is why long-protein
+inference is hard, and why techniques like FlashAttention and chunked
+processing exist.
 
 ## The "compressed database" intuition, mathematically
 

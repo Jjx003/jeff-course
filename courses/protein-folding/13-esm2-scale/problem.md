@@ -80,7 +80,7 @@ Same as module 11:
 MGLSDGEWQLVLNVWGKVEADIPGHGQEVL
 ```
 
-with `<mask>` inserted at position 14 (the conserved `W`).
+with `<mask>` inserted at position 15 (the conserved `W` of the `WGK` motif).
 
 ## Expected output (illustrative)
 
@@ -97,27 +97,27 @@ ESM-2 model size reference
 Loading facebook/esm2_t6_8M_UR50D ...
   Parameters: 7,840,737
   Forward time (best of 3): 0.0123 s
-  Masked position 14 top-1: K  p=0.1547
+  Masked position 15 top-1: K  p=0.1547
 
 Loading facebook/esm2_t12_35M_UR50D ...
   Parameters: 33,665,889
   Forward time (best of 3): 0.0184 s
-  Masked position 14 top-1: L  p=0.2731
+  Masked position 15 top-1: L  p=0.2731
 
 Loading facebook/esm2_t30_150M_UR50D ...
   Parameters: 148,796,673
   Forward time (best of 3): 0.0312 s
-  Masked position 14 top-1: W  p=0.5104
+  Masked position 15 top-1: W  p=0.5104
 
 Loading facebook/esm2_t33_650M_UR50D ...
   Parameters: 651,765,424
   Forward time (best of 3): 0.0521 s
-  Masked position 14 top-1: W  p=0.7421
+  Masked position 15 top-1: W  p=0.7421
 
 Loading facebook/esm2_t36_3B_UR50D ...
   Parameters: 2,841,920,257
   Forward time (best of 3): 0.1184 s
-  Masked position 14 top-1: W  p=0.8612
+  Masked position 15 top-1: W  p=0.8612
 
 Comparison
   Size     Top-1   p(top-1)   Forward (s)

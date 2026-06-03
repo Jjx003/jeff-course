@@ -63,6 +63,6 @@ FileHandle closed fd=3
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - No memory leaks (valgrind-clean).
 - Use `/tmp/db_raii_test.db` as the file path in `main`.

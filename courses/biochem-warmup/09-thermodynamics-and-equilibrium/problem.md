@@ -1,4 +1,4 @@
-# Thermodynamics and Equilibrium
+## Equilibrium is a population, not a choice
 
 Biochemical systems are noisy, molecular, and reversible. A protein does not "choose" one shape because it wants to; it samples states, and the lower-free-energy states are more populated at equilibrium.
 

@@ -138,16 +138,28 @@
 
       const correctValue = evalExpr(q.correct_formula ?? '0');
       const suffix = q.answer_suffix ?? '';
+      const labelFor = (v: number): string => `${v}${suffix}`;
 
-      const distractorValues = (q.distractor_formulas ?? []).map((f) => {
-        const val = evalExpr(f);
-        return val === correctValue ? correctValue + 1 : val;
-      });
-
+      // Ensure every displayed option is unique on its rendered label. The
+      // correct value is fixed; each distractor that would collide with an
+      // already-used label is nudged to a nearby unused value (+1, -1, +2, …).
+      const usedLabels = new Set<string>([labelFor(correctValue)]);
       const items: Array<{ label: string; isCorrect: boolean }> = [
-        { label: `${correctValue}${suffix}`, isCorrect: true },
-        ...distractorValues.map((v) => ({ label: `${v}${suffix}`, isCorrect: false }))
+        { label: labelFor(correctValue), isCorrect: true }
       ];
+
+      for (const f of q.distractor_formulas ?? []) {
+        const base = evalExpr(f);
+        let value = base;
+        let label = labelFor(value);
+        for (let offset = 1; usedLabels.has(label); offset++) {
+          value = offset % 2 === 1 ? base + Math.ceil(offset / 2) : base - offset / 2;
+          label = labelFor(value);
+        }
+        usedLabels.add(label);
+        items.push({ label, isCorrect: false });
+      }
+
       for (let i = items.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [items[i], items[j]] = [items[j], items[i]];

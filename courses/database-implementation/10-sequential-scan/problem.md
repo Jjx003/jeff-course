@@ -80,7 +80,7 @@ Schema: `id INT32, score FLOAT64, name VARCHAR`. Insert 5 tuples as above.
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - Include the `Schema`, `Value`, `Tuple` implementations from module 09.
 - The `TableHeap` in the solution may use `std::vector<Tuple>` internally for simplicity.
 - The predicate receives the tuple and schema; access `id` via `t.GetValue(schema, 0).AsInt32()`.

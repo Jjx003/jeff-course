@@ -1,6 +1,8 @@
-<p align="center">
-  <img src="/images/protein-folding/amino-acid.svg" alt="General Amino Acid Structure" />
-</p>
+![General amino-acid structure: shared backbone and variable side chain](/courses/protein-folding/wiki-amino-acid-zwitterions.svg)
+
+*The shared backbone and variable side chain `R` common to all 20 standard
+amino acids. Image from Wikimedia Commons, Tim Vickers / GYassineMrabet,
+CC BY 3.0.*
 
 ## The full amino-acid lookup table
 

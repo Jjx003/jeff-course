@@ -49,14 +49,23 @@ private:
 
 ### LRU policy
 
-Maintain a doubly-linked list (use `std::list`) where:
-- Front = most recently used.
+Maintain a doubly-linked list (use `std::list`) that holds **only
+eviction-eligible (unpinned) frames**, where:
+- Front = most recently unpinned.
 - Back = least recently used.
 
-On `FetchPage` (hit or miss): move the frame to the front.
-On `UnpinPage` to 0: the frame is now eviction-eligible — add it to the front if not already present.
+- On `UnpinPage` that drops `pin_count` to 0: the frame becomes
+  eviction-eligible — add it to the front (if not already present).
+- On `FetchPage`/`NewPage` that pins a frame (cache hit, load, or allocate):
+  the frame is now in use — remove it from the list if present.
 
-**Eviction:** scan from the back of the list to find the first frame with `pin_count == 0`. If `is_dirty`, flush before eviction. Remove from page table, reset frame fields.
+**Eviction:** because the list contains only unpinned frames, the victim is
+simply the back of the list. If the list is empty, every frame is pinned and
+`FetchPage`/`NewPage` returns `nullptr`. If the victim `is_dirty`, flush before
+eviction. Then remove it from the page table and reuse the frame.
+
+Use `std::list::splice`/`erase` plus a `frame_id → iterator` map so all of
+these are O(1).
 
 ### Constants
 
@@ -71,17 +80,24 @@ NewPage: allocated page 0 in frame 0
 NewPage: allocated page 1 in frame 1
 FetchPage 0: hit frame 0
 UnpinPage 0 dirty=false
+UnpinPage 0 dirty=false
 UnpinPage 1 dirty=false
 FetchPage 2: miss, evicting page 0 from frame 0
 Evicted page 0 (clean)
 FetchPage 2: loaded page 2 into frame 0
 FetchPage 1: hit frame 1
 pool full test: nullptr (all pinned)
+UnpinPage 2 dirty=false
 FlushPage 2: dirty=false, no write needed
 ```
 
+Page 0 is the eviction victim (not page 1): after page 0 is fetched and then
+fully unpinned, both frames are eligible, but page 0 reached `pin_count == 0`
+first via the two `UnpinPage 0` calls, so it sits at the back (LRU) of the
+list. Page 1 stays resident, so the later `FetchPage 1` is a hit.
+
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - Pool size = 2 frames in the demo.
 - Reuse the `DiskManager` from module 05 (copy its implementation into this file or `#include` it).

@@ -59,7 +59,7 @@ Alpha ($\alpha = B / (P + B)$) has two equivalent interpretations depending on w
 
 **From the defender's perspective:** $\alpha$ is the maximum fraction of your range you can fold without being exploited. Fold more than $\alpha$ and bluffs become free money for the bettor.
 
-**From the bettor's perspective:** $\alpha$ is also the fraction of your *own betting range* that should be bluffs. If bluffs exceed $\alpha$, a calling station profits. If bluffs fall below $\alpha$, a folding station profits.
+**From the bettor's perspective:** $\alpha$ is the break-even *fold* frequency — how often villain must fold for a pure bluff to break even — and, equivalently, the **bluff-to-value ratio** in your betting range: you include $\alpha$ of a bluff combo for every value combo (bluffs $=$ value $\times\,\alpha$). Do **not** confuse this with the bluff *fraction* of the whole betting range, which is $B/(P+2B)$ — a smaller number, equal to the pot odds you lay the caller. (For a pot-sized bet, $\alpha = 50\%$ but the bluff fraction is only $33\%$, a 2:1 value-to-bluff ratio.)
 
 Both players are solving the same indifference equation. Alpha and MDF sum to one:
 
@@ -71,28 +71,28 @@ This symmetry is not a coincidence — it is the signature of a Nash equilibrium
 
 ## 4. Bluff:Value Ratio — Worked Example
 
-Because the bettor's bluff fraction should equal $\alpha$, we can find the correct number of bluff combos given any number of value combos.
+The bettor's **bluff-to-value ratio** is $\alpha = B/(P+B)$ — that is, $\alpha$ bluff combos for every value combo. So given any number of value combos:
 
-$$\frac{\text{bluffs}}{\text{bluffs} + \text{value}} = \alpha \implies \text{bluffs} = \text{value} \times \frac{\alpha}{1 - \alpha} = \text{value} \times \frac{B}{P}$$
+$$\text{bluffs} = \text{value} \times \alpha = \text{value} \times \frac{B}{P+B}$$
 
 **Example:** You are betting the river with 12 value combos (flushes, straights, full houses). You choose a **75% pot bet**.
 
 $$\alpha = \frac{0.75P}{P + 0.75P} = \frac{0.75}{1.75} \approx 0.43 \quad (43\%)$$
 
-$$\text{bluffs} = \text{value} \times \frac{B}{P} = 12 \times \frac{0.75P}{P} = 12 \times 0.75 = 9$$
+$$\text{bluffs} = \text{value} \times \alpha = 12 \times 0.43 \approx 5$$
 
-You should include **9 bluff combos**. Adding a 10th makes calling profitable for the defender; dropping to 8 makes folding profitable.
+You should include about **5 bluff combos**. Adding too many makes calling profitable for the defender; including too few makes folding profitable.
 
-**Sanity check:** $9 / (9 + 12) = 9/21 \approx 43\%$ — exactly $\alpha$.
+**Sanity check (bluff fraction of the betting range):** $5 / (5 + 12) = 5/17 \approx 29\%$ — which matches $B/(P+2B) = 0.75/2.5 = 30\%$, the pot odds the caller is laid. (Note this 30% is *not* $\alpha = 43\%$; $\alpha$ is the bluff-to-*value* ratio, not the bluff share of the whole range.)
 
-A quick formula to keep in mind: **bluffs = value combos × (B/P)**. For a pot-sized bet that simplifies to bluffs = value (a 1:1 ratio). For a half-pot bet it is bluffs = value/2 (a 1:2 ratio).
+A quick formula to keep in mind: **bluffs = value combos × $\alpha$ = value × B/(P+B)**. For a pot-sized bet, $\alpha = 1/2$, so bluffs = value/2 (a 2:1 value-to-bluff ratio). For a half-pot bet, $\alpha = 1/3$, so bluffs = value/3 (a 3:1 ratio).
 
-| Bet size | B/P ratio | Bluffs per 12 value combos |
-|---|---|---|
-| 25% pot | 0.25 | 3 |
-| 50% pot | 0.50 | 6 |
-| 75% pot | 0.75 | 9 |
-| 100% pot | 1.00 | 12 |
+| Bet size | $\alpha = B/(P+B)$ | Bluffs per 12 value combos | Value:bluff |
+|---|---|---|---|
+| 25% pot | 0.20 | 2 | 5:1 |
+| 50% pot | 0.33 | 4 | 3:1 |
+| 75% pot | 0.43 | 5 | 2.33:1 |
+| 100% pot | 0.50 | 6 | 2:1 |
 
 ---
 
@@ -149,9 +149,9 @@ Each arrow labelled "Continue" represents a street where the defender applies MD
 ## Recap
 
 - **MDF = P / (P + B)**: the minimum fraction of your range you must continue with to prevent a zero-equity bluff from being immediately profitable.
-- **Alpha = B / (P + B)**: the maximum fold frequency, and simultaneously the correct bluff fraction in the bettor's range.
+- **Alpha = B / (P + B)**: the maximum fold frequency, and simultaneously the bluff-to-value *ratio* (bluffs per value combo) in the bettor's range — but **not** the bluff fraction of the whole betting range, which is $B/(P+2B)$.
 - $\alpha + \text{MDF} = 1$: they are mathematically dual — two faces of the same equilibrium condition.
-- **Bluff combos = value combos × (B/P)**: for a 75% pot bet, 9 bluffs for every 12 value combos.
+- **Bluff combos = value combos × $\alpha$ = value × B/(P+B)**: for a 75% pot bet, about 5 bluffs for every 12 value combos (a 2.33:1 value-to-bluff ratio).
 - **Multi-street**: the fraction of your range that calls down all streets is $\text{MDF}_1 \times \text{MDF}_2 \times \text{MDF}_3$; only ~19% of the flop range reaches showdown against three consecutive pot-to-pot-size bets.
 - Larger bets lower MDF, increase alpha, and compress the defending range — but require more bluffs in the bettor's range to stay balanced.
 

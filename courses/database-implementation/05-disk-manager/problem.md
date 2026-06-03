@@ -58,6 +58,6 @@ Use `/tmp/test_disk.db` in `main`. Write a distinct repeating byte pattern per p
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - Use `O_RDWR | O_CREAT | O_TRUNC` when opening the file.
 - No `std::fstream` — use POSIX `open`/`pread`/`pwrite`/`close`.

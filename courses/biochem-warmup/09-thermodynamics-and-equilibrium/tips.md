@@ -1,5 +1,3 @@
-# Tips
-
 ## Hint 1
 
 Use `math.exp` and `math.log`. The gas constant should be in kJ so it matches the input energy units.

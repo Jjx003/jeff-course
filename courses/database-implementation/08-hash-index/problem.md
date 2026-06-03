@@ -73,7 +73,7 @@ Insert the keys 1–10 in order.
 
 ## Constraints
 
-- Compile with `g++ -std=c++20 -Wall -Wextra`.
+- Compile with `g++ -std=c++17 -Wall -Wextra`.
 - `BUCKET_CAPACITY = 4`.
 - `directory_` is `std::vector<std::shared_ptr<Bucket>>`.
 - No external hash table libraries.

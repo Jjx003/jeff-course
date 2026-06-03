@@ -1,6 +1,8 @@
-# Theory
+## Free energy sets the direction of change
 
-**Definition:** Free energy measures the part of a system's energy that can bias change at constant temperature and pressure. In chemistry and biochemistry, the sign of $\Delta G$ tells you which direction is favored, not how fast it happens.
+Free energy measures the part of a system's energy that can bias change at
+constant temperature and pressure. In chemistry and biochemistry, the sign of
+$\Delta G$ tells you which direction is favored, not how fast it happens.
 
 For a standard-state reaction,
 

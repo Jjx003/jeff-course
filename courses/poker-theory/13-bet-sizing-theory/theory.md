@@ -130,7 +130,7 @@ An **overbet** is a bet exceeding 100% of the pot. Overbets are not reckless —
 
 $$\text{MDF} = \frac{P}{P + 2P} = \frac{1}{3} \approx 33\%$$
 
-Against a 2× pot overbet, the defender must call only 33% of their range. This sounds generous to the defender — but you must construct your overbet range correctly, including exactly 67% bluffs by alpha ($\alpha = 2P / 3P = 67\%$). If you cannot find enough strong bluffs, overbetting backfires.
+Against a 2× pot overbet, the defender must call only 33% of their range. This sounds generous to the defender — but you must construct your overbet range correctly. The bluff *fraction* of your betting range is $B/(P+2B) = 2P/5P = 40\%$ (a 3:2 value-to-bluff ratio). If you cannot find enough strong bluffs, overbetting backfires. (Note: the defender's max fold frequency here is $\alpha = 2P/3P = 67\%$ — that 67% is a fold frequency, not your bluff share.)
 
 ---
 
@@ -188,7 +188,8 @@ flowchart TD
 | Geometric ratio | $g = \left(\dfrac{S}{P}\right)^{1/n}$ |
 | Bet size each street | $B = \dfrac{g - 1}{2} \times P_{\text{current}}$ |
 | MDF at overbet (2× pot) | $\dfrac{P}{3P} = 33\%$ |
-| Bluff fraction for overbet | $\alpha = \dfrac{2P}{3P} = 67\%$ |
+| Bluff fraction for overbet (2× pot) | $\dfrac{B}{P+2B} = \dfrac{2P}{5P} = 40\%$ |
+| Max fold $\alpha$ at overbet (2× pot) | $\dfrac{2P}{3P} = 67\%$ |
 
 ---
 
@@ -197,7 +198,7 @@ flowchart TD
 - **Polarised ranges** (strong hands + bluffs) → large bets to maximise fold equity and extract value
 - **Merged ranges** (medium hands) → small bets to get called by hands you beat
 - **Geometric sizing**: $g = \text{SPR}^{1/n}$; bet $(g-1)/2 \times$ current pot on each street to reach all-in evenly across $n$ streets
-- **Overbets** exploit nut-heavy range advantages on the river; require high alpha in your range (≥67% bluffs for 2× pot)
+- **Overbets** exploit nut-heavy range advantages on the river; require many bluffs (a 2× pot overbet needs a bluff fraction of $B/(P+2B) = 40\%$, i.e. a 3:2 value-to-bluff ratio)
 - **Protection bets** are small bets that deny equity to draws cheaply; closer to exploitative than pure GTO
 - **IP vs OOP**: in position can use larger sizes more freely; out of position should default to smaller bets
 

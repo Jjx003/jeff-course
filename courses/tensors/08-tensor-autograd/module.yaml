@@ -2,7 +2,7 @@ title: "Tensor Autograd Engine"
 slug: "tensor-autograd"
 description: "Extend the scalar autograd engine to tensors: implement add, multiply, matmul, sum, and relu operations with correct backward passes that handle broadcasting and shape propagation."
 order: 8
-difficulty: hard
+difficulty: advanced
 estimatedMinutes: 60
 tags:
   - autograd

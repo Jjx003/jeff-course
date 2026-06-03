@@ -49,7 +49,7 @@ def stub_inverse_fold(
     num_samples: int = 5,
     seed: int = 0,
     temperature: float = 1.0,
-    wt_bias: float = 2.0,
+    wt_bias: float = 3.5,
 ) -> list[tuple[str, float]]:
     samples: list[tuple[str, float]] = []
     for k in range(num_samples):

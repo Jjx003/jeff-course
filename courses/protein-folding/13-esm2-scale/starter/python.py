@@ -12,7 +12,7 @@ import torch
 from transformers import AutoTokenizer, EsmForMaskedLM
 
 SEQUENCE = "MGLSDGEWQLVLNVWGKVEADIPGHGQEVL"
-MASK_POS_1BASED = 14
+MASK_POS_1BASED = 15  # the conserved W of the WGK motif (positions 15-17)
 AA_LETTERS = "ACDEFGHIKLMNPQRSTVWY"
 
 # (HuggingFace id, short name, params for table, embed dim, FP16 weights-only VRAM)
