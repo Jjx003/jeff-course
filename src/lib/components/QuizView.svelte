@@ -242,6 +242,7 @@
     answers = resolved.map(() => null as null);
     // Always refresh from API on mount so retakes between problems show
     // accurate best-score info even when SSR was cached.
+    tick().then(updateExplorerHeadingFromScroll);
     void refreshProgress(problemId);
   });
 
@@ -252,6 +253,7 @@
     lastSeenProblemId = pid;
     isComplete = false;
     phase = 'intro';
+    activeExplorerHeadingId = '';
     currentIndex = 0;
     attemptStartedAt = null;
     recentOutcome = null;
@@ -427,12 +429,14 @@
   let quizMain = $state<HTMLElement | undefined>(undefined);
   let explorerOpen = $state(true);
   let activeExplorerSection = $state('problem');
+  let activeExplorerHeadingId = $state('');
   let explorerSections = $derived.by<ExplorerSection[]>(() => [
     { id: 'problem', label: 'Briefing', content: problem.tabs.problem }
   ]);
 
   async function scrollToExplorerTarget(sectionId: string, headingId?: string) {
     activeExplorerSection = sectionId;
+    activeExplorerHeadingId = headingId ?? '';
     if (sectionId === 'problem' && phase !== 'intro') {
       phase = 'intro';
     }
@@ -454,6 +458,27 @@
       behavior: 'smooth',
     });
   }
+
+  function updateExplorerHeadingFromScroll() {
+    if (!quizMain) return;
+    const containerTop = quizMain.getBoundingClientRect().top;
+    const threshold = containerTop + 72;
+    const headings = Array.from(
+      quizMain.querySelectorAll<HTMLElement>('[data-markdown-heading-id]')
+    );
+    let activeHeading = '';
+
+    for (const heading of headings) {
+      if (heading.getBoundingClientRect().top <= threshold) {
+        activeHeading = heading.dataset.markdownHeadingId ?? '';
+      } else {
+        break;
+      }
+    }
+
+    activeExplorerSection = 'problem';
+    activeExplorerHeadingId = activeHeading;
+  }
 </script>
 
 <svelte:window onkeydown={onKeyDown} />
@@ -467,13 +492,14 @@
     ]}
   />
 
-  <main class="quiz-main" bind:this={quizMain}>
+  <main class="quiz-main" bind:this={quizMain} onscroll={updateExplorerHeadingFromScroll}>
     <div class="quiz-layout">
       <CourseExplorer
         {track}
         currentSlug={problem.slug}
         sections={explorerSections}
         activeSectionId={activeExplorerSection}
+        activeHeadingId={activeExplorerHeadingId}
         bind:open={explorerOpen}
         onsection={(sectionId) => void scrollToExplorerTarget(sectionId)}
         onheading={(sectionId, headingId) => void scrollToExplorerTarget(sectionId, headingId)}

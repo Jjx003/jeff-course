@@ -44,6 +44,7 @@
   let readingMain = $state<HTMLElement | undefined>(undefined);
   let explorerOpen = $state(true);
   let activeExplorerSection = $state('problem');
+  let activeExplorerHeadingId = $state('');
   let readingMode = $state<'page' | 'focus'>('page');
   let activeFocusIndex = $state(0);
   let programmaticScrollUntil = 0;
@@ -56,6 +57,7 @@
   ]);
   let gradualSteps = $derived(buildGradualReadSteps(explorerSections));
   let focusActiveSection = $derived(gradualSteps[activeFocusIndex]?.sectionId ?? 'problem');
+  let focusActiveHeadingId = $derived(gradualSteps[activeFocusIndex]?.headingIds[0] ?? '');
 
   function selectReadingMode(mode: 'page' | 'focus') {
     readingMode = mode;
@@ -80,6 +82,7 @@
 
   async function scrollToExplorerTarget(sectionId: string, headingId?: string) {
     activeExplorerSection = sectionId;
+    activeExplorerHeadingId = headingId ?? '';
     await tick();
     const selector = headingId
       ? `[data-markdown-heading-id="${headingId}"]`
@@ -105,11 +108,45 @@
 
   function handleReadingScroll() {
     if (!readingMain || !browser) return;
+    updateExplorerTargetFromScroll();
     if (performance.now() < programmaticScrollUntil) {
       lastKnownScrollTop = readingMain.scrollTop;
       return;
     }
     lastKnownScrollTop = readingMain.scrollTop;
+  }
+
+  function updateExplorerTargetFromScroll() {
+    if (!readingMain) return;
+    const containerTop = readingMain.getBoundingClientRect().top;
+    const threshold = containerTop + 72;
+    const sectionMarkers = Array.from(
+      readingMain.querySelectorAll<HTMLElement>('[data-explorer-section]')
+    );
+    const headings = Array.from(
+      readingMain.querySelectorAll<HTMLElement>('[data-markdown-heading-id]')
+    );
+    let activeSection = activeExplorerSection || 'problem';
+    let activeHeading = '';
+
+    for (const marker of sectionMarkers) {
+      if (marker.getBoundingClientRect().top <= threshold) {
+        activeSection = marker.dataset.explorerSection ?? activeSection;
+      } else {
+        break;
+      }
+    }
+
+    for (const heading of headings) {
+      if (heading.getBoundingClientRect().top <= threshold) {
+        activeHeading = heading.dataset.markdownHeadingId ?? '';
+      } else {
+        break;
+      }
+    }
+
+    activeExplorerSection = activeSection;
+    activeExplorerHeadingId = activeHeading;
   }
 
   let problemId = $derived(`${track.slug}/${problem.slug}`);
@@ -126,6 +163,7 @@
     completedAt = initiallyCompleted ? Date.now() : null;
     lastSeenProblemId = problemId;
     lastKnownScrollTop = readingMain?.scrollTop ?? 0;
+    tick().then(updateExplorerTargetFromScroll);
     void loadCompletion(problemId);
   });
 
@@ -136,6 +174,7 @@
     isComplete = false;
     completedAt = null;
     activeExplorerSection = 'problem';
+    activeExplorerHeadingId = '';
     activeFocusIndex = 0;
     void loadCompletion(pid);
   });
@@ -208,6 +247,7 @@
           currentSlug={problem.slug}
           sections={explorerSections}
           activeSectionId={focusActiveSection}
+          activeHeadingId={focusActiveHeadingId}
           bind:open={explorerOpen}
           onsection={(sectionId) => setActiveFocusIndex(focusIndexForSection(sectionId))}
           onheading={(sectionId, headingId) => setActiveFocusIndex(focusIndexForHeading(sectionId, headingId))}
@@ -232,6 +272,7 @@
           currentSlug={problem.slug}
           sections={explorerSections}
           activeSectionId={activeExplorerSection}
+          activeHeadingId={activeExplorerHeadingId}
           bind:open={explorerOpen}
           onsection={(sectionId) => void scrollToExplorerTarget(sectionId)}
           onheading={(sectionId, headingId) => void scrollToExplorerTarget(sectionId, headingId)}

@@ -300,6 +300,7 @@
     ...(problem.tabs.solution ? [{ id: 'solution', label: 'Solution' }] : [])
   ]);
   let activeTabId = $state('problem');
+  let activeExplorerHeadingId = $state('');
   let tabScroll = $state<HTMLElement | undefined>(undefined);
   let explorerOpen = $state(true);
   let explorerSections = $derived.by<ExplorerSection[]>(() => [
@@ -311,15 +312,43 @@
 
   async function selectExplorerSection(sectionId: string) {
     activeTabId = sectionId;
+    activeExplorerHeadingId = '';
     await tick();
     tabScroll?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function selectExplorerHeading(sectionId: string, headingId: string) {
     activeTabId = sectionId;
+    activeExplorerHeadingId = headingId;
     await tick();
     scrollWithin(tabScroll, tabScroll?.querySelector<HTMLElement>(`[data-markdown-heading-id="${headingId}"]`));
   }
+
+  function updateExplorerHeadingFromScroll() {
+    if (!tabScroll) return;
+    const headings = Array.from(
+      tabScroll.querySelectorAll<HTMLElement>('[data-markdown-heading-id]')
+    );
+    const containerTop = tabScroll.getBoundingClientRect().top;
+    const threshold = containerTop + 56;
+    let activeHeading = '';
+
+    for (const heading of headings) {
+      if (heading.getBoundingClientRect().top <= threshold) {
+        activeHeading = heading.dataset.markdownHeadingId ?? '';
+      } else {
+        break;
+      }
+    }
+
+    activeExplorerHeadingId = activeHeading;
+  }
+
+  $effect(() => {
+    const _ = activeTabId;
+    activeExplorerHeadingId = '';
+    tick().then(updateExplorerHeadingFromScroll);
+  });
 
   function scrollWithin(container: HTMLElement | undefined, target: HTMLElement | null | undefined) {
     if (!container || !target) return;
@@ -918,6 +947,7 @@
               currentSlug={problem.slug}
               sections={explorerSections}
               activeSectionId={activeTabId}
+              activeHeadingId={activeExplorerHeadingId}
               bind:open={explorerOpen}
               onsection={(sectionId) => void selectExplorerSection(sectionId)}
               onheading={(sectionId, headingId) => void selectExplorerHeading(sectionId, headingId)}
@@ -928,7 +958,7 @@
               <div class="tab-area">
                 <TabGroup tabs={TABS} bind:activeId={activeTabId} children={tabContent} />
                 {#snippet tabContent({ activeId }: { activeId: string })}
-                  <div class="tab-scroll" bind:this={tabScroll}>
+                  <div class="tab-scroll" bind:this={tabScroll} onscroll={updateExplorerHeadingFromScroll}>
                 {#if activeId === 'problem'}
                   <MarkdownRenderer content={problem.tabs.problem} variant="study" headingPrefix="problem" />
                 {:else if activeId === 'theory'}
