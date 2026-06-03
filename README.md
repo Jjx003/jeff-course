@@ -44,6 +44,20 @@ For coding exercises, install the language tools you want to run:
 For Windows, macOS, Linux, tablets, phones, Chromebooks, and LAN access, see
 [Setup Guide](docs/setup.md).
 
+## Product Tour
+
+| Browse courses | Work through coding exercises |
+|---|---|
+| <img src="docs/assets/screenshots/tracks-overview.png" alt="Track library showing available courses" width="560"> | <img src="docs/assets/screenshots/coding-workspace.png" alt="Coding exercise workspace with instructions, editor, and output" width="560"> |
+
+| Read, review, and assess | Track steady progress |
+|---|---|
+| <img src="docs/assets/screenshots/reading-module.png" alt="Reading module with course explorer and article content" width="560"> | <img src="docs/assets/screenshots/progress-dashboard.png" alt="Stats dashboard with streak, points, time, and activity" width="560"> |
+
+| Tests and quizzes |
+|---|
+| <img src="docs/assets/screenshots/test-module.png" alt="Test module introduction with pass threshold and question count" width="700"> |
+
 ## Why This Exists
 
 Most learning platforms make the course the scarce thing. Jeff Course treats the
