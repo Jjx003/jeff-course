@@ -1,0 +1,10 @@
+title: "Network Flow and Capacity"
+slug: "network-flow-and-capacity"
+description: "Implement a small max-flow solver and identify binding capacity constraints in a supply network."
+order: 4
+difficulty: advanced
+estimatedMinutes: 55
+tags: [network-flow, capacity, python]
+type: coding
+languages: [python]
+defaultLanguage: python

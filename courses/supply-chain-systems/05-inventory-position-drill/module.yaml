@@ -1,0 +1,8 @@
+title: "Inventory Position Speed Drill"
+slug: "inventory-position-drill"
+description: "Practice reorder points, safety stock, and inventory position arithmetic under time pressure."
+order: 5
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [inventory, safety-stock, drill]
+type: drill

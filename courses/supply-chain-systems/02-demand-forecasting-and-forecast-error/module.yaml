@@ -1,0 +1,8 @@
+title: "Demand Forecasting and Forecast Error"
+slug: "demand-forecasting-and-forecast-error"
+description: "Understand forecast horizons, bias, variance, intermittent demand, and the cost of being wrong."
+order: 2
+difficulty: intermediate
+estimatedMinutes: 40
+tags: [forecasting, demand, uncertainty]
+type: reading

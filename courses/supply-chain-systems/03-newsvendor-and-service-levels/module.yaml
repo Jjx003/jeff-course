@@ -1,0 +1,8 @@
+title: "Newsvendor Logic and Service Levels"
+slug: "newsvendor-and-service-levels"
+description: "Use the critical fractile to balance underage cost, overage cost, and target service levels."
+order: 3
+difficulty: advanced
+estimatedMinutes: 45
+tags: [inventory, service-levels, probability]
+type: reading

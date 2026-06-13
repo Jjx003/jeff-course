@@ -1,0 +1,65 @@
+questions:
+  - id: q_bullwhip_definition
+    type: multiple_choice
+    stem: "What is the bullwhip effect?"
+    options:
+      - "Demand variability amplifies as orders move upstream from customer-facing nodes to suppliers"
+      - "Inventory always decreases as a product moves downstream"
+      - "Transportation cost falls whenever lead time rises"
+      - "A supplier's forecast is always more accurate than a retailer's point-of-sale data"
+    correct: 0
+    explanation: "The bullwhip effect is upstream amplification of order variability, often caused by distorted signals and local policies."
+
+  - id: q_batching
+    type: multiple_choice
+    stem: "How can order batching contribute to bullwhip?"
+    options:
+      - "It converts smoother consumption into lumpy replenishment orders"
+      - "It eliminates all lead-time variability"
+      - "It makes upstream suppliers see point-of-sale demand directly"
+      - "It removes capacity constraints"
+    correct: 0
+    explanation: "Batching can make upstream orders look volatile even when consumer demand is relatively smooth."
+
+  - id: q_information_sharing
+    type: true_false
+    stem: "Sharing point-of-sale demand can reduce bullwhip only if upstream decisions actually use the better signal."
+    correct: true
+    explanation: "Correct. Information sharing helps when planning, replenishment, and capacity decisions are changed by the cleaner signal."
+
+  - id: q_lead_time
+    type: multiple_choice
+    stem: "Why do longer lead times often amplify inventory swings?"
+    options:
+      - "More demand accumulates during the response window, so errors and policy changes have larger consequences"
+      - "Long lead times make all forecasts exact"
+      - "Long lead times remove the need for safety stock"
+      - "Long lead times prevent any supplier from overreacting"
+    correct: 0
+    explanation: "Longer response windows increase exposure to forecast error and make corrections slower."
+
+  - id: q_parametric_rop
+    type: parametric
+    stem_template: "Mean weekly demand is {{demand}} units, lead time is {{lead}} weeks, and safety stock is {{safety}} units. What is the reorder point?"
+    params:
+      demand: { min: 20, max: 80, step: 10 }
+      lead: { min: 2, max: 6, step: 1 }
+      safety: { min: 20, max: 100, step: 20 }
+    correct_formula: "demand * lead + safety"
+    distractor_formulas:
+      - "demand + lead + safety"
+      - "demand * lead - safety"
+      - "Math.round(demand * safety / lead)"
+    answer_suffix: " units"
+    explanation_template: "Reorder point = mean lead-time demand + safety stock = {{demand}} x {{lead}} + {{safety}} = {{demand * lead + safety}}."
+
+  - id: q_coordination
+    type: multiple_choice
+    stem: "Which policy is most likely to reduce bullwhip?"
+    options:
+      - "Smaller, more frequent replenishment based on shared demand data"
+      - "Secret forecasts at every echelon"
+      - "Forward buying caused by temporary trade promotions"
+      - "Rationing scarce supply based only on recent order size"
+    correct: 0
+    explanation: "Cleaner demand signals and smoother replenishment reduce artificial order volatility."

@@ -1,0 +1,8 @@
+=== baseline expected annual losses ===
+port closure: $342,000
+supplier quality escape: $270,000
+regional power outage: $330,000
+=== mitigation net values ===
+alternate port routing: $33,900
+dual source critical component: $-231,500
+backup generation and cold inventory: $-404,500

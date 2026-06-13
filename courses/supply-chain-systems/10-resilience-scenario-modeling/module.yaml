@@ -1,0 +1,10 @@
+title: "Resilience Scenario Modeling"
+slug: "resilience-scenario-modeling"
+description: "Implement a scenario model that compares expected loss, recovery time, and mitigation value."
+order: 10
+difficulty: advanced
+estimatedMinutes: 55
+tags: [resilience, risk, python]
+type: coding
+languages: [python]
+defaultLanguage: python

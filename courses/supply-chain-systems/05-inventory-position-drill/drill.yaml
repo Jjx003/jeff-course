@@ -1,0 +1,31 @@
+title: "Inventory Position Speed Drill"
+instructions: "Answer with the requested integer quantity."
+roundSeconds: 150
+targetAccuracy: 0.85
+itemsPerRound: 18
+items:
+  - id: inventory_position
+    prompt_template: "On-hand inventory is {{on_hand}}, open purchase orders are {{on_order}}, and backlog is {{backlog}}. What is inventory position?"
+    params:
+      on_hand: { min: 20, max: 180, step: 10 }
+      on_order: { min: 10, max: 120, step: 10 }
+      backlog: { min: 0, max: 60, step: 10 }
+    correct_formula: "on_hand + on_order - backlog"
+    tolerance: 0
+    explanation_template: "Inventory position = on-hand + on-order - backlog = {{on_hand}} + {{on_order}} - {{backlog}} = {{on_hand + on_order - backlog}}."
+  - id: reorder_point
+    prompt_template: "Mean demand during lead time is {{mean}} units and safety stock is {{safety}} units. What is the reorder point?"
+    params:
+      mean: { min: 50, max: 300, step: 25 }
+      safety: { min: 10, max: 90, step: 10 }
+    correct_formula: "mean + safety"
+    tolerance: 0
+    explanation_template: "Reorder point = mean lead-time demand + safety stock = {{mean}} + {{safety}} = {{mean + safety}}."
+  - id: safety_stock
+    prompt_template: "A SKU has reorder point {{rop}} and mean lead-time demand {{mean}}. What safety stock is implied?"
+    params:
+      rop: { min: 120, max: 360, step: 20 }
+      mean: { min: 60, max: 100, step: 20 }
+    correct_formula: "rop - mean"
+    tolerance: 0
+    explanation_template: "Safety stock = reorder point - mean lead-time demand = {{rop}} - {{mean}} = {{rop - mean}}."

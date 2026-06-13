@@ -1,0 +1,6 @@
+maximum customer flow: 60
+source->supplier_a: 40
+source->supplier_b: 20
+plant_1->warehouse: 30
+plant_2->warehouse: 5
+warehouse->demand: 35
