@@ -221,3 +221,62 @@ For a separate course library, point the app at another directory:
 ```bash
 COURSES_DIR=/path/to/course-library npm run dev
 ```
+
+## Course Packs
+
+For repeatable installs, publish the course as a git-backed course pack. A pack
+repo can use either shape:
+
+```text
+my-course-pack/
+  courses/
+    my-track/
+      course.yaml
+      01-first-module/
+        module.yaml
+        problem.md
+```
+
+or, for a single-track pack:
+
+```text
+my-course-pack/
+  course.yaml
+  01-first-module/
+    module.yaml
+    problem.md
+```
+
+Install and update packs with:
+
+```bash
+npm run course:add -- https://github.com/someone/my-course-pack.git
+npm run course:update
+npm run course:validate
+```
+
+The default manifest is `data/course-packs.yaml`; cloned repos live under
+`data/course-packs/repos/`. Both are local state and are ignored by git. Use
+`course-packs.example.yaml` as a starting point when you want to curate a set of
+packs by hand.
+
+Validation checks track/module metadata, required files, duplicate slugs, and
+dependency-bearing coding modules. Treat packs with `requirements.txt` or coding
+exercises as trusted code, because running those exercises can install and
+execute dependencies on the local machine.
+
+### Course Pack Metadata
+
+Course packs do not need metadata beyond normal course files, but adding a small
+README helps agents and people understand the intent. If you want a machine-
+readable note, use `course-pack.yaml` at the repo root:
+
+```yaml
+id: someone/my-course-pack
+title: "My Course Pack"
+description: "A short description of the audience and scope."
+version: 0.1.0
+```
+
+The current app does not require `course-pack.yaml`; the install manifest is the
+source of truth for repo URL, enabled state, and pinned ref.

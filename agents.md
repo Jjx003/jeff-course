@@ -23,6 +23,11 @@ The philosophy matters:
 Course content lives in `courses/`. User progress and app state live in DuckDB
 at `data/jeff-course.duckdb` by default.
 
+Course content can also come from git-backed course packs. Enabled packs are
+listed in `data/course-packs.yaml` and checked out under
+`data/course-packs/repos/` by default. The app loads built-in courses first,
+then enabled pack roots.
+
 ## User-Facing Docs
 
 Keep these aligned with this file:
@@ -93,6 +98,10 @@ npm run dev
 npm run build
 npm run preview
 npm run check
+npm run course:add -- <git-url-or-local-path>
+npm run course:update
+npm run course:list
+npm run course:validate
 ```
 
 On Windows PowerShell, prefer this when script execution policy blocks npm:
@@ -108,7 +117,9 @@ Environment variables:
 
 | Variable | Purpose |
 |---|---|
-| `COURSES_DIR` | Override course content root. Defaults to `<repo>/courses`. |
+| `COURSES_DIR` | Override course content root. Defaults to `<repo>/courses`. Multiple roots can be separated with the platform path delimiter. |
+| `COURSE_PACKS_MANIFEST` | Override course-pack manifest path. Defaults to `<repo>/data/course-packs.yaml`. |
+| `COURSE_PACKS_DIR` | Override course-pack checkout directory. Defaults to `<repo>/data/course-packs/repos`. |
 | `DB_PATH` | Override DuckDB file path. Defaults to `<repo>/data/jeff-course.duckdb`. |
 | `TORCH_INDEX_URL` | Override PyTorch wheel index for Python modules using `torch`. |
 | `SANDBOX_SKIP_GPU_PROBE=1` | Skip Docker GPU probing at startup. |
@@ -142,7 +153,10 @@ jeff-course/
   data/
     jeff-course.duckdb       local progress DB
     cache/                   sandbox/Hugging Face caches
+    course-packs.yaml        optional local course-pack manifest
+    course-packs/repos/      default git checkout location for packs
   infra/docker/              local sandbox Dockerfiles
+  tools/course-packs/        git-backed course pack manager CLI
   src/
     lib/content/             server-only course parser/loader
     lib/markdown/            Markdown, math, proof callout rendering
@@ -202,6 +216,49 @@ proof-style callouts. Use `static/courses/<track-slug>/` for bundled images and
 reference them as `/courses/<track-slug>/<image>.png`.
 
 For more examples, see `docs/course-authoring.md`.
+
+## Course Packs
+
+A course pack is a git repo that contains either:
+
+```text
+courses/<track-slug>/course.yaml
+```
+
+or a single track at the repo root:
+
+```text
+course.yaml
+01-module/module.yaml
+```
+
+Users and agents install packs with:
+
+```bash
+npm run course:add -- https://github.com/org/course-pack.git
+```
+
+This writes `data/course-packs.yaml` and clones the repo under
+`data/course-packs/repos/<safe-pack-id>/`. `npm run course:update` fetches and
+fast-forwards enabled git packs. `npm run course:validate` checks built-in
+courses plus enabled packs for required files, unsupported module types,
+duplicate slugs, missing starter files, and dependency-bearing coding modules.
+
+Course-pack manifest shape:
+
+```yaml
+packs:
+  - id: org/course-pack
+    repo: https://github.com/org/course-pack.git
+    ref: main
+    enabled: true
+    # Optional; defaults to courses/ when it exists, otherwise repo root.
+    # coursesDir: courses
+```
+
+Bundled courses win track-slug collisions. Treat packs with coding modules,
+`requirements.txt`, or starter code as trusted local code because exercises may
+install dependencies and execute on the user's machine.
 
 ## Services And Boundaries
 

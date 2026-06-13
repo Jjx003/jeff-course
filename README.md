@@ -83,6 +83,23 @@ Each course can mix several module types:
 See [Course Authoring](docs/course-authoring.md) for the file format and sharing
 workflow.
 
+## Course Packs
+
+Shared courses can also be installed as git-backed course packs. A pack repo may
+contain either a `courses/` directory with one or more tracks, or a single track
+with `course.yaml` at the repository root.
+
+```bash
+npm run course:add -- https://github.com/someone/ml-foundations-course-pack.git
+npm run course:list
+npm run course:update
+npm run course:validate
+```
+
+The pack manifest lives at `data/course-packs.yaml` by default, and cloned repos
+live under `data/course-packs/repos/`. Both are local user state. See
+`course-packs.example.yaml` for the manifest shape.
+
 ## Project Layout
 
 ```text
@@ -119,6 +136,9 @@ npm run dev          # Start the dev server
 npm run build        # Build with adapter-node
 npm run preview      # Preview the production build
 npm run check        # Svelte + TypeScript checks
+npm run course:add -- <git-url>   # Install a git-backed course pack
+npm run course:update             # Pull enabled course packs
+npm run course:validate           # Validate built-in courses and enabled packs
 ```
 
 ## Environment Variables
@@ -126,6 +146,8 @@ npm run check        # Svelte + TypeScript checks
 | Variable | Purpose |
 |---|---|
 | `COURSES_DIR` | Override the course content directory. Defaults to `<repo>/courses`. |
+| `COURSE_PACKS_MANIFEST` | Override the course-pack manifest path. Defaults to `<repo>/data/course-packs.yaml`. |
+| `COURSE_PACKS_DIR` | Override the course-pack checkout directory. Defaults to `<repo>/data/course-packs/repos`. |
 | `DB_PATH` | Override the DuckDB file path. Defaults to `<repo>/data/jeff-course.duckdb`. |
 | `TORCH_INDEX_URL` | Override the PyTorch wheel index used by Python exercises with `torch`. |
 | `SANDBOX_SKIP_GPU_PROBE=1` | Skip Docker GPU probing on startup. |
@@ -142,6 +164,10 @@ Important: `@sveltejs/vite-plugin-svelte` must stay on v5 or newer for Vite 6.
 A course is just a folder under `courses/<track-slug>/`. To share one, share that
 folder. To install one, copy it into `courses/` or point `COURSES_DIR` at a
 folder that contains one or more track directories.
+
+For repeatable sharing, put that folder in a git repository and install it with
+`npm run course:add -- <repo-url>`. Course-pack repos can be forked, pinned,
+updated, and validated without changing app code.
 
 The long-term spirit of the project is a commons of agent-generated courses:
 small enough to fork, clear enough to review, and personal enough to study from.

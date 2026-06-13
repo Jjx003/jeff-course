@@ -269,27 +269,62 @@ export function parseTrack(trackPath: string): Track | null {
 
 // ── Top-level course directory scan ──────────────────────────────────────
 
-/**
- * Scan the root `coursesDir` for all tracks.
- * Returns tracks sorted by their `order` field.
- */
-export function parseAllTracks(coursesDir: string): Track[] {
+function findTrackDirs(coursesDir: string): string[] {
   if (!fs.existsSync(coursesDir)) {
     console.warn(`[courseParser] courses directory not found at ${coursesDir}`);
     return [];
   }
 
-  const entries = fs.readdirSync(coursesDir, { withFileTypes: true });
-  const trackDirs = entries
-    .filter((e: import('fs').Dirent) => e.isDirectory())
-    .map((e: import('fs').Dirent) => path.join(coursesDir, e.name));
+  if (fs.existsSync(path.join(coursesDir, 'course.yaml'))) {
+    return [coursesDir];
+  }
 
-  const tracks = trackDirs
+  const entries = fs.readdirSync(coursesDir, { withFileTypes: true });
+  return entries
+    .filter((e: import('fs').Dirent) => e.isDirectory())
+    .map((e: import('fs').Dirent) => path.join(coursesDir, e.name))
+    .filter((dir: string) => fs.existsSync(path.join(dir, 'course.yaml')));
+}
+
+/**
+ * Scan the root `coursesDir` for all tracks.
+ * Returns tracks sorted by their `order` field.
+ */
+export function parseAllTracks(coursesDir: string): Track[] {
+  const tracks = findTrackDirs(coursesDir)
     .map((dir: string) => parseTrack(dir))
     .filter((t: Track | null): t is Track => t !== null)
     .sort((a: Track, b: Track) => a.order - b.order);
 
   return tracks;
+}
+
+/**
+ * Scan multiple roots for tracks. Earlier roots win slug collisions so bundled
+ * courses and explicitly ordered roots keep stable URLs.
+ */
+export function parseAllTracksFromRoots(courseRoots: string[]): Track[] {
+  const bySlug = new Map<string, Track>();
+
+  for (const root of courseRoots) {
+    for (const track of parseAllTracks(root)) {
+      if (bySlug.has(track.slug)) {
+        console.warn(`[courseParser] Duplicate track slug "${track.slug}" found under ${root}; keeping first`);
+        continue;
+      }
+      bySlug.set(track.slug, track);
+    }
+  }
+
+  return [...bySlug.values()].sort((a: Track, b: Track) => a.order - b.order || a.title.localeCompare(b.title));
+}
+
+export function resolveTrackPath(coursesDir: string, trackSlug: string): string | null {
+  for (const trackPath of findTrackDirs(coursesDir)) {
+    const raw = readYaml<RawCourseYaml>(path.join(trackPath, 'course.yaml'));
+    if (raw?.slug === trackSlug) return trackPath;
+  }
+  return null;
 }
 
 /**
@@ -301,8 +336,8 @@ export function resolveModulePath(
   trackSlug: string,
   problemSlug: string
 ): string | null {
-  const trackPath = path.join(coursesDir, trackSlug);
-  if (!fs.existsSync(trackPath)) return null;
+  const trackPath = resolveTrackPath(coursesDir, trackSlug);
+  if (!trackPath || !fs.existsSync(trackPath)) return null;
 
   const entries = fs.readdirSync(trackPath, { withFileTypes: true });
   const moduleDirs = entries

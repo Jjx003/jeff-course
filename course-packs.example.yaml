@@ -1,0 +1,11 @@
+# Copy this to data/course-packs.yaml or set COURSE_PACKS_MANIFEST to point at
+# your own manifest. Installed git repos live under data/course-packs/repos/ by
+# default, which keeps downloaded course packs out of the application repo.
+packs:
+  - id: example/ml-foundations
+    repo: https://github.com/example/ml-foundations-course-pack.git
+    ref: main
+    enabled: true
+    # Optional. Defaults to "courses" when that folder exists, otherwise the
+    # repository root is treated as a single-track course pack.
+    # coursesDir: courses

@@ -7,7 +7,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "course:list": "node tools/course-packs/manager.mjs list",
+    "course:add": "node tools/course-packs/manager.mjs add",
+    "course:update": "node tools/course-packs/manager.mjs update",
+    "course:validate": "node tools/course-packs/manager.mjs validate"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.2.10",
