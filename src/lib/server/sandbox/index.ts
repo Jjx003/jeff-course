@@ -109,6 +109,7 @@ export async function startSession(
 
   const record: SessionRecord = {
     id,
+    userId: req.userId,
     problemId: req.problemId,
     language: req.language,
     action: req.action,
@@ -260,16 +261,16 @@ export async function startSession(
   return { id, queued: isQueued() };
 }
 
-export async function listSessions(opts?: { activeOnly?: boolean; limit?: number }): Promise<SessionRecord[]> {
-  return listSessionRecords(opts);
+export async function listSessions(userId: string, opts?: { activeOnly?: boolean; limit?: number }): Promise<SessionRecord[]> {
+  return listSessionRecords(userId, opts);
 }
 
-export async function getSession(id: string): Promise<SessionRecord | null> {
+export async function getSession(userId: string, id: string): Promise<SessionRecord | null> {
   // Prefer the live entry's record so callers see fresh PID / byte counts
   // without waiting for the next DB flush.
   const live = registry.getEntry(id);
-  if (live) return live.record;
-  return getSessionById(id);
+  if (live) return live.record.userId === userId ? live.record : null;
+  return getSessionById(userId, id);
 }
 
 /**
@@ -327,7 +328,7 @@ export async function awaitCompletion(id: string): Promise<SessionRecord | null>
   if (entry) {
     await entry.done;
   }
-  return getSession(id);
+  return entry ? getSession(entry.record.userId, id) : null;
 }
 
 export { queueSnapshot };
@@ -406,7 +407,7 @@ export async function collectOutput(id: string): Promise<{
     unsub();
   }
 
-  const finalRecord = await getSession(id);
+  const finalRecord = entry ? await getSession(entry.record.userId, id) : null;
   if (finalRecord) {
     status = finalRecord.status;
     exitCode = finalRecord.exitCode;

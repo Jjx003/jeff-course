@@ -66,8 +66,9 @@ Design changes and docs should assume different users have different devices.
   CUDA, or heavy local dependencies.
 - Coding modules should degrade gracefully when optional tools are missing.
 - Do not make Docker, CUDA, or a high-end GPU mandatory for general use.
-- Do not expose shared or remote instances publicly without auth or another
-  access-control layer. The app has no built-in auth.
+- The app has passwordless local profiles for trusted LAN sharing. Do not expose
+  shared or remote instances publicly without a stronger external access-control
+  layer.
 
 Optional execution tools:
 
@@ -295,6 +296,8 @@ DuckDB is the single local source of truth. The default path is
 
 Main tables:
 
+- `users`
+- `auth_sessions`
 - `drafts`
 - `runs`
 - `submissions`
@@ -305,6 +308,10 @@ Main tables:
 - `drill_attempts`
 - `sandbox_sessions`
 - `sandbox_preferences`
+
+Learner-owned tables include `user_id` so profiles have separate progress,
+drafts, attempts, achievements, study time, sandbox sessions, and sandbox
+preferences. Course files and enabled course packs remain shared by the server.
 
 There is no migration framework. For breaking local schema changes during
 development, stop the server and remove the DB file.
@@ -360,6 +367,9 @@ fallback when available on the host.
 Pages:
 
 - `/` - landing page
+- `/auth/setup` - first local learner profile setup
+- `/auth/sign-in` - trusted-user profile picker and switching
+- `/auth/users` - profile list and learner creation
 - `/tracks` - all tracks
 - `/tracks/[trackSlug]` - track detail
 - `/tracks/[trackSlug]/problems/[problemSlug]` - reading/coding/quiz/test/drill page
@@ -368,6 +378,7 @@ Pages:
 
 API routes include:
 
+- `/auth/sign-out`
 - `/api/sessions` and `/api/sessions/[id]/*`
 - `/api/sandbox/capabilities`
 - `/api/sandbox/preferences/[trackSlug]`

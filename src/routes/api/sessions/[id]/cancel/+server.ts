@@ -6,11 +6,13 @@
  * to `docker kill -s KILL` if the container ignores the signal.
  */
 
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { cancelSession } from '$lib/server/sandbox/index.js';
+import { cancelSession, getSession } from '$lib/server/sandbox/index.js';
 
-export const POST: RequestHandler = async ({ params }) => {
+export const POST: RequestHandler = async ({ locals, params }) => {
+  const rec = await getSession(locals.user!.id, params.id);
+  if (!rec) throw error(404, 'Session not found');
   await cancelSession(params.id);
   return json({ ok: true });
 };

@@ -27,8 +27,8 @@ function sseFrame(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
-export const GET: RequestHandler = async ({ params, request }) => {
-  const rec = await getSession(params.id);
+export const GET: RequestHandler = async ({ locals, params, request }) => {
+  const rec = await getSession(locals.user!.id, params.id);
   if (!rec) throw error(404, 'Session not found');
 
   const encoder = new TextEncoder();

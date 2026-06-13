@@ -26,7 +26,7 @@ interface ExecuteBody {
   problemId: string;
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ locals, request }) => {
   let body: ExecuteBody;
   try {
     body = await request.json();
@@ -45,6 +45,7 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   const { id } = await startSession({
+    userId: locals.user!.id,
     problemId,
     language: language as Language,
     code,
@@ -59,7 +60,7 @@ export const POST: RequestHandler = async ({ request }) => {
   const collected = await collectOutput(id);
   request.signal.removeEventListener('abort', onAbort);
 
-  const finalRecord = await getSession(id);
+  const finalRecord = await getSession(locals.user!.id, id);
 
   if (action === 'run') {
     const status: RunResult['status'] =

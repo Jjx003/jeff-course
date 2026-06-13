@@ -10,15 +10,16 @@ import type { RequestHandler } from './$types';
 import { dbReady, dbRun } from '$lib/server/db.js';
 import type { RunSnapshot } from '$lib/types/execution.js';
 
-export const PUT: RequestHandler = async ({ params, request }) => {
+export const PUT: RequestHandler = async ({ locals, params, request }) => {
   await dbReady;
   const snapshot = (await request.json()) as RunSnapshot;
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   await dbRun(
-    `INSERT INTO runs (problem_id, language, id, code, result, timestamp) VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT (problem_id, language)
+    `INSERT INTO runs (user_id, problem_id, language, id, code, result, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (user_id, problem_id, language)
      DO UPDATE SET id = EXCLUDED.id, code = EXCLUDED.code, result = EXCLUDED.result, timestamp = EXCLUDED.timestamp`,
     [
+      locals.user!.id,
       problemId,
       params.language,
       snapshot.id,

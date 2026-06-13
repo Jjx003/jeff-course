@@ -22,7 +22,7 @@ function isAttemptBody(value: unknown): value is AttemptBody {
     && typeof o.durationMs === 'number';
 }
 
-export const POST: RequestHandler = async ({ params, request }) => {
+export const POST: RequestHandler = async ({ locals, params, request }) => {
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   let body: unknown;
   try {
@@ -35,6 +35,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
   }
 
   const result = await recordDrillAttempt({
+    userId: locals.user!.id,
     id: randomUUID(),
     problemId,
     total: body.total,

@@ -13,12 +13,12 @@ import type { Language } from '$lib/types/course.js';
 
 type RunRow = { id: string; language: string; code: string; result: string; timestamp: number };
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ locals, params }) => {
   await dbReady;
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   const rows = await dbAll<RunRow>(
-    'SELECT id, language, code, result, timestamp FROM runs WHERE problem_id = ? ORDER BY timestamp DESC',
-    [problemId]
+    'SELECT id, language, code, result, timestamp FROM runs WHERE user_id = ? AND problem_id = ? ORDER BY timestamp DESC',
+    [locals.user!.id, problemId]
   );
   const runs: RunSnapshot[] = rows.map((row) => ({
     id: row.id,

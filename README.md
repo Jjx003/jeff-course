@@ -64,9 +64,10 @@ Most learning platforms make the course the scarce thing. Jeff Course treats the
 course as a portable artifact. An agent can draft a track on any topic, a human
 can clean it up, and the result can be shared as ordinary files.
 
-The platform is intentionally calm: no accounts, no feed, no marketplace lock-in.
-It keeps progress, streaks, achievements, and practice history locally so you can
-build momentum without turning study into noise.
+The platform is intentionally calm: local profiles, no feed, no marketplace
+lock-in. It keeps progress, streaks, achievements, and practice history in the
+local DuckDB file so a household or small study group can share one server
+without turning study into noise.
 
 ## What You Can Build
 
@@ -99,6 +100,19 @@ npm run course:validate
 The pack manifest lives at `data/course-packs.yaml` by default, and cloned repos
 live under `data/course-packs/repos/`. Both are local user state. See
 `course-packs.example.yaml` for the manifest shape.
+
+## Local Profiles
+
+On first launch, Jeff Course asks for the first learner profile. Anyone on the
+trusted local network can add profiles from `/auth/users` or switch from the
+profile picker. Each profile gets separate drafts,
+completions, quiz/drill attempts, study time, achievements, run history, and
+sandbox preferences while sharing the same course folders.
+
+This is meant for trusted local-network sharing, such as a family computer or a
+private home server. Profiles are not protected by passwords. It is not a public identity system; do not expose an
+instance directly to the internet without a real network/auth boundary in front
+of it.
 
 ## Project Layout
 

@@ -6,6 +6,7 @@
    * pill that links to /stats, and a small "Stats" tab.
    */
   import { APP_NAME } from '$lib/config/app.js';
+  import { page } from '$app/state';
   import StreakBadge from './StreakBadge.svelte';
   import SessionPill from './SessionPill.svelte';
 
@@ -49,6 +50,9 @@
     <SessionPill />
     <a href="/sessions" class="header-link" title="Running and recent sandbox sessions">Sessions</a>
     <a href="/stats" class="header-link" title="Your progress">Stats</a>
+    {#if page.data.user}
+      <a href="/auth/sign-in" class="header-link" title="Switch profile">{page.data.user.name}</a>
+    {/if}
     <StreakBadge />
   </div>
 </header>

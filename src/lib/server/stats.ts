@@ -122,16 +122,16 @@ interface ActivityFacts {
   hasPerfectQuiz: boolean;
 }
 
-async function loadActivityFacts(): Promise<ActivityFacts> {
+async function loadActivityFacts(userId: string): Promise<ActivityFacts> {
   await dbReady;
 
   const subs = await dbAll<SubmissionRow>(
-    'SELECT problem_id, language, result, timestamp FROM submissions ORDER BY timestamp ASC',
-    []
+    'SELECT problem_id, language, result, timestamp FROM submissions WHERE user_id = ? ORDER BY timestamp ASC',
+    [userId]
   );
   const reads = await dbAll<ReadingRow>(
-    'SELECT problem_id, completed_at FROM reading_completions',
-    []
+    'SELECT problem_id, completed_at FROM reading_completions WHERE user_id = ?',
+    [userId]
   );
 
   const firstSolveAt = new Map<string, number>();
@@ -186,8 +186,9 @@ async function loadActivityFacts(): Promise<ActivityFacts> {
             MAX(CASE WHEN passed THEN 1 ELSE 0 END)                       AS passed_any,
             MAX(CASE WHEN total > 0 AND correct = total THEN 1 ELSE 0 END) AS perfect_any
        FROM quiz_attempts
+      WHERE user_id = ?
       GROUP BY problem_id`,
-    []
+    [userId]
   );
   const quizzesPassed = new Set<string>();
   let hasPerfectQuiz = false;
@@ -439,19 +440,22 @@ function ratio(current: number, target: number, label: string): AchievementEval 
   return { unlocked: current >= target, progress: p, progressLabel: label };
 }
 
-async function loadUnlockedAchievements(): Promise<Map<string, number>> {
-  const rows = await dbAll<AchievementRow>('SELECT id, unlocked_at FROM achievements', []);
+async function loadUnlockedAchievements(userId: string): Promise<Map<string, number>> {
+  const rows = await dbAll<AchievementRow>(
+    'SELECT id, unlocked_at FROM achievements WHERE user_id = ?',
+    [userId]
+  );
   return new Map(rows.map((r) => [r.id, Number(r.unlocked_at)]));
 }
 
-async function persistNewAchievements(ids: AchievementId[]): Promise<void> {
+async function persistNewAchievements(userId: string, ids: AchievementId[]): Promise<void> {
   if (ids.length === 0) return;
   const now = Date.now();
   for (const id of ids) {
     await dbRun(
-      `INSERT INTO achievements (id, unlocked_at) VALUES (?, ?)
-       ON CONFLICT (id) DO NOTHING`,
-      [id, now]
+      `INSERT INTO achievements (user_id, id, unlocked_at) VALUES (?, ?, ?)
+       ON CONFLICT (user_id, id) DO NOTHING`,
+      [userId, id, now]
     );
   }
 }
@@ -500,9 +504,9 @@ function computePoints(tracks: Track[], facts: ActivityFacts): number {
 // ── Public API ───────────────────────────────────────────────────────────
 
 /** One unified payload for the /stats page and the header badge. */
-export async function getStatsSummary(): Promise<StatsSummary> {
+export async function getStatsSummary(userId: string): Promise<StatsSummary> {
   await dbReady;
-  const facts = await loadActivityFacts();
+  const facts = await loadActivityFacts(userId);
   const tracks = await loadAllTracks();
 
   // Build the set of known problem IDs so we can filter activity to events
@@ -572,12 +576,12 @@ export async function getStatsSummary(): Promise<StatsSummary> {
   // numbers.
   const todayKey = dateKeyDaysAgo(0);
   const [totalActiveMs, activeMsToday] = await Promise.all([
-    getTotalActiveMs(),
-    getActiveMsForDateKey(todayKey)
+    getTotalActiveMs(userId),
+    getActiveMsForDateKey(userId, todayKey)
   ]);
 
   // Achievements — evaluate, persist new unlocks, then return enriched list.
-  const persisted = await loadUnlockedAchievements();
+  const persisted = await loadUnlockedAchievements(userId);
   const ctx: AchievementContext = {
     facts,
     tracks,
@@ -603,7 +607,7 @@ export async function getStatsSummary(): Promise<StatsSummary> {
     };
   });
   if (newlyUnlocked.length > 0) {
-    await persistNewAchievements(newlyUnlocked);
+    await persistNewAchievements(userId, newlyUnlocked);
     const now = Date.now();
     for (const a of achievements) {
       if (newlyUnlocked.includes(a.id) && a.unlockedAt === null) {
@@ -639,10 +643,11 @@ export async function getStatsSummary(): Promise<StatsSummary> {
 // ── Per-problem completion (used by track listings) ──────────────────────
 
 export async function getCompletionsForTrack(
+  userId: string,
   trackSlug: string
 ): Promise<ProblemCompletion[]> {
   await dbReady;
-  const facts = await loadActivityFacts();
+  const facts = await loadActivityFacts(userId);
   const tracks = await loadAllTracks();
   const track = tracks.find((t) => t.slug === trackSlug);
   if (!track) return [];
@@ -664,33 +669,33 @@ export async function getCompletionsForTrack(
 }
 
 /** Is a single problem completed? Used by the problem page for the toast. */
-export async function isProblemCompleted(problemId: string): Promise<boolean> {
+export async function isProblemCompleted(userId: string, problemId: string): Promise<boolean> {
   await dbReady;
-  const facts = await loadActivityFacts();
+  const facts = await loadActivityFacts(userId);
   return facts.firstSolveAt.has(problemId) || facts.readingCompletedAt.has(problemId);
 }
 
 /** Mark a reading module as complete. Idempotent. */
-export async function markReadingCompleted(problemId: string): Promise<{ wasNew: boolean }> {
+export async function markReadingCompleted(userId: string, problemId: string): Promise<{ wasNew: boolean }> {
   await dbReady;
   const existing = await dbAll<{ problem_id: string }>(
-    'SELECT problem_id FROM reading_completions WHERE problem_id = ?',
-    [problemId]
+    'SELECT problem_id FROM reading_completions WHERE user_id = ? AND problem_id = ?',
+    [userId, problemId]
   );
   if (existing.length > 0) return { wasNew: false };
   await dbRun(
-    'INSERT INTO reading_completions (problem_id, completed_at) VALUES (?, ?)',
-    [problemId, Date.now()]
+    'INSERT INTO reading_completions (user_id, problem_id, completed_at) VALUES (?, ?, ?)',
+    [userId, problemId, Date.now()]
   );
   return { wasNew: true };
 }
 
 /** Has a reading module been completed? */
-export async function isReadingCompleted(problemId: string): Promise<boolean> {
+export async function isReadingCompleted(userId: string, problemId: string): Promise<boolean> {
   await dbReady;
   const rows = await dbAll<{ problem_id: string }>(
-    'SELECT problem_id FROM reading_completions WHERE problem_id = ?',
-    [problemId]
+    'SELECT problem_id FROM reading_completions WHERE user_id = ? AND problem_id = ?',
+    [userId, problemId]
   );
   return rows.length > 0;
 }
@@ -731,6 +736,7 @@ type DrillAttemptRow = {
  * whether the completion is *new* so the client can show a reward toast.
  */
 export async function recordQuizAttempt(args: {
+  userId: string;
   id: string;
   problemId: string;
   total: number;
@@ -752,27 +758,27 @@ export async function recordQuizAttempt(args: {
   const now = Date.now();
 
   await dbRun(
-    `INSERT INTO quiz_attempts (id, problem_id, total, correct, passed, duration_ms, completed_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [args.id, args.problemId, safeTotal, safeCorrect, passed, Math.max(0, Math.floor(args.durationMs)), now]
+    `INSERT INTO quiz_attempts (id, user_id, problem_id, total, correct, passed, duration_ms, completed_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [args.id, args.userId, args.problemId, safeTotal, safeCorrect, passed, Math.max(0, Math.floor(args.durationMs)), now]
   );
 
   let wasNewCompletion = false;
   if (passed) {
     const existing = await dbAll<{ problem_id: string }>(
-      'SELECT problem_id FROM reading_completions WHERE problem_id = ?',
-      [args.problemId]
+      'SELECT problem_id FROM reading_completions WHERE user_id = ? AND problem_id = ?',
+      [args.userId, args.problemId]
     );
     if (existing.length === 0) {
       await dbRun(
-        'INSERT INTO reading_completions (problem_id, completed_at) VALUES (?, ?)',
-        [args.problemId, now]
+        'INSERT INTO reading_completions (user_id, problem_id, completed_at) VALUES (?, ?, ?)',
+        [args.userId, args.problemId, now]
       );
       wasNewCompletion = true;
     }
   }
 
-  const progress = await getQuizProgress(args.problemId);
+  const progress = await getQuizProgress(args.userId, args.problemId);
   return {
     passed,
     bestScore: progress.bestScore ?? safeCorrect,
@@ -787,7 +793,7 @@ export async function recordQuizAttempt(args: {
  * record (no attempts yet) for any module that has never been attempted —
  * the caller never has to null-check.
  */
-export async function getQuizProgress(problemId: string): Promise<{
+export async function getQuizProgress(userId: string, problemId: string): Promise<{
   problemId: string;
   attempts: number;
   bestScore: number | null;
@@ -800,9 +806,9 @@ export async function getQuizProgress(problemId: string): Promise<{
   const rows = await dbAll<QuizAttemptRow>(
     `SELECT problem_id, total, correct, passed, duration_ms, completed_at
        FROM quiz_attempts
-      WHERE problem_id = ?
+      WHERE user_id = ? AND problem_id = ?
       ORDER BY completed_at ASC`,
-    [problemId]
+    [userId, problemId]
   );
 
   if (rows.length === 0) {
@@ -848,6 +854,7 @@ export async function getQuizProgress(problemId: string): Promise<{
 }
 
 export async function recordDrillAttempt(args: {
+  userId: string;
   id: string;
   problemId: string;
   total: number;
@@ -879,27 +886,27 @@ export async function recordDrillAttempt(args: {
   const now = Date.now();
 
   await dbRun(
-    `INSERT INTO drill_attempts (id, problem_id, total, correct, avg_ms, best_streak, duration_ms, completed_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [args.id, args.problemId, safeTotal, safeCorrect, safeAvgMs, safeBestStreak, safeDurationMs, now]
+    `INSERT INTO drill_attempts (id, user_id, problem_id, total, correct, avg_ms, best_streak, duration_ms, completed_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [args.id, args.userId, args.problemId, safeTotal, safeCorrect, safeAvgMs, safeBestStreak, safeDurationMs, now]
   );
 
   let wasNewCompletion = false;
   if (passed) {
     const existing = await dbAll<{ problem_id: string }>(
-      'SELECT problem_id FROM reading_completions WHERE problem_id = ?',
-      [args.problemId]
+      'SELECT problem_id FROM reading_completions WHERE user_id = ? AND problem_id = ?',
+      [args.userId, args.problemId]
     );
     if (existing.length === 0) {
       await dbRun(
-        'INSERT INTO reading_completions (problem_id, completed_at) VALUES (?, ?)',
-        [args.problemId, now]
+        'INSERT INTO reading_completions (user_id, problem_id, completed_at) VALUES (?, ?, ?)',
+        [args.userId, args.problemId, now]
       );
       wasNewCompletion = true;
     }
   }
 
-  const progress = await getDrillProgress(args.problemId, target);
+  const progress = await getDrillProgress(args.userId, args.problemId, target);
   return {
     passed,
     bestCorrect: progress.bestCorrect ?? safeCorrect,
@@ -912,7 +919,7 @@ export async function recordDrillAttempt(args: {
   };
 }
 
-export async function getDrillProgress(problemId: string, targetAccuracy = DRILL_TARGET_ACCURACY): Promise<{
+export async function getDrillProgress(userId: string, problemId: string, targetAccuracy = DRILL_TARGET_ACCURACY): Promise<{
   problemId: string;
   attempts: number;
   bestCorrect: number | null;
@@ -928,9 +935,9 @@ export async function getDrillProgress(problemId: string, targetAccuracy = DRILL
   const rows = await dbAll<DrillAttemptRow>(
     `SELECT problem_id, total, correct, avg_ms, best_streak, duration_ms, completed_at
        FROM drill_attempts
-      WHERE problem_id = ?
+      WHERE user_id = ? AND problem_id = ?
       ORDER BY completed_at ASC`,
-    [problemId]
+    [userId, problemId]
   );
 
   if (rows.length === 0) {

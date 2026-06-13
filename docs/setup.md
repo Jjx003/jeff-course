@@ -32,7 +32,8 @@ npm run dev
 Open [http://localhost:5173](http://localhost:5173).
 
 The app creates `data/jeff-course.duckdb` automatically the first time it needs
-to save progress.
+to save progress. On first launch, create the first learner profile. That first
+profile inherits any pre-existing single-user progress in the database.
 
 ## Windows
 
@@ -105,6 +106,9 @@ http://<host-ip>:5173
 This is good for reading, quizzes, and review. Editing code on mobile works, but
 it is not the best experience.
 
+Each person should sign in with their own local profile so progress, drafts,
+study time, achievements, and sandbox preferences stay separate.
+
 ## Chromebooks And Low-Power Devices
 
 Best options:
@@ -131,8 +135,10 @@ npm run build
 npm run preview -- --host 0.0.0.0
 ```
 
-This project has no built-in auth. Do not expose it directly to the public
-internet unless you put it behind your own access controls.
+Jeff Course has passwordless profile switching for trusted LAN sharing. It has
+no public-account system, identity verification, rate limiting, or hardened
+multi-tenant security. Do not expose it directly to the public internet unless you put it
+behind your own access controls.
 
 ## Docker Sandbox
 

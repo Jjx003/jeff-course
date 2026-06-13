@@ -9,8 +9,8 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getQuizProgress } from '$lib/server/stats.js';
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ locals, params }) => {
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
-  const progress = await getQuizProgress(problemId);
+  const progress = await getQuizProgress(locals.user!.id, problemId);
   return json(progress);
 };

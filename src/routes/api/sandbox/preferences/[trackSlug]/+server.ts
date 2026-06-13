@@ -14,12 +14,13 @@ import { defaultResourcesFor } from '$lib/server/sandbox/types.js';
 
 const VALID_MODES: readonly SandboxMode[] = ['baremetal', 'docker', 'docker-gpu'];
 
-export const GET: RequestHandler = async ({ params }) => {
-  const pref = await getPreference(params.trackSlug);
+export const GET: RequestHandler = async ({ locals, params }) => {
+  const pref = await getPreference(locals.user!.id, params.trackSlug);
   if (!pref) {
     // Return a default rather than 404 so the UI doesn't special-case the
     // first-visit shape. The default mode is baremetal — safe everywhere.
     const defaults: TrackPreference = {
+      userId: locals.user!.id,
       trackSlug: params.trackSlug,
       preferredMode: 'baremetal',
       resources: defaultResourcesFor('baremetal')
@@ -34,7 +35,7 @@ interface PutBody {
   resources?: Partial<ResourceLimits>;
 }
 
-export const PUT: RequestHandler = async ({ params, request }) => {
+export const PUT: RequestHandler = async ({ locals, params, request }) => {
   let body: PutBody;
   try {
     body = (await request.json()) as PutBody;
@@ -52,6 +53,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
     timeoutMs: body.resources?.timeoutMs ?? defaults.timeoutMs
   };
   await upsertPreference({
+    userId: locals.user!.id,
     trackSlug: params.trackSlug,
     preferredMode: mode,
     resources

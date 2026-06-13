@@ -66,6 +66,7 @@ export interface ResourceLimits {
  * server applies sensible defaults.
  */
 export interface StartSessionRequest {
+  userId: string;
   problemId: string;                  // "{trackSlug}/{problemSlug}"
   language: Language;
   code: string;
@@ -83,6 +84,7 @@ export interface StartSessionRequest {
  */
 export interface SessionRecord {
   id: string;
+  userId: string;
   problemId: string;
   language: Language;
   action: SessionAction;
@@ -122,6 +124,7 @@ export type LogChunk =
  * run mode + resource limits per track so the picker remembers their pick.
  */
 export interface TrackPreference {
+  userId: string;
   trackSlug: string;
   preferredMode: SandboxMode;
   resources: ResourceLimits;

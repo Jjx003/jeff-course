@@ -4,11 +4,13 @@
  * Force kill — SIGKILL / `docker kill -s KILL`. No graceful window.
  */
 
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { killSession } from '$lib/server/sandbox/index.js';
+import { getSession, killSession } from '$lib/server/sandbox/index.js';
 
-export const POST: RequestHandler = async ({ params }) => {
+export const POST: RequestHandler = async ({ locals, params }) => {
+  const rec = await getSession(locals.user!.id, params.id);
+  if (!rec) throw error(404, 'Session not found');
   await killSession(params.id);
   return json({ ok: true });
 };

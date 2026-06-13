@@ -31,6 +31,7 @@ type SessionRow = {
  * out-of-order heartbeat can't double-count.
  */
 export async function upsertHeartbeat(
+  userId: string,
   sessionId: string,
   problemId: string,
   activeMs: number,
@@ -39,12 +40,12 @@ export async function upsertHeartbeat(
   await dbReady;
   const now = Date.now();
   await dbRun(
-    `INSERT INTO study_sessions (id, problem_id, started_at, active_ms, last_heartbeat_at)
-     VALUES (?, ?, ?, ?, ?)
+    `INSERT INTO study_sessions (id, user_id, problem_id, started_at, active_ms, last_heartbeat_at)
+     VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT (id)
      DO UPDATE SET active_ms = EXCLUDED.active_ms,
                    last_heartbeat_at = EXCLUDED.last_heartbeat_at`,
-    [sessionId, problemId, startedAt, activeMs, now]
+    [sessionId, userId, problemId, startedAt, activeMs, now]
   );
 }
 
@@ -63,11 +64,11 @@ async function knownProblemIdSet(): Promise<Set<string>> {
 }
 
 /** Sum `active_ms` across every session that maps to a real problem. */
-export async function getTotalActiveMs(): Promise<number> {
+export async function getTotalActiveMs(userId: string): Promise<number> {
   await dbReady;
   const rows = await dbAll<SessionRow>(
-    'SELECT id, problem_id, started_at, active_ms FROM study_sessions',
-    []
+    'SELECT id, problem_id, started_at, active_ms FROM study_sessions WHERE user_id = ?',
+    [userId]
   );
   const known = await knownProblemIdSet();
   let total = 0;
@@ -84,11 +85,11 @@ export async function getTotalActiveMs(): Promise<number> {
  * `last_heartbeat_at` so a long session that begins late at night counts
  * toward the day it began on, matching how streak / heatmap dates work.
  */
-export async function getActiveMsForDateKey(dateKey: string): Promise<number> {
+export async function getActiveMsForDateKey(userId: string, dateKey: string): Promise<number> {
   await dbReady;
   const rows = await dbAll<SessionRow>(
-    'SELECT id, problem_id, started_at, active_ms FROM study_sessions',
-    []
+    'SELECT id, problem_id, started_at, active_ms FROM study_sessions WHERE user_id = ?',
+    [userId]
   );
   const known = await knownProblemIdSet();
   let total = 0;
@@ -101,11 +102,11 @@ export async function getActiveMsForDateKey(dateKey: string): Promise<number> {
 }
 
 /** Bucketed view: local date → total active ms. */
-export async function getActiveMsByDate(): Promise<Map<string, number>> {
+export async function getActiveMsByDate(userId: string): Promise<Map<string, number>> {
   await dbReady;
   const rows = await dbAll<SessionRow>(
-    'SELECT id, problem_id, started_at, active_ms FROM study_sessions',
-    []
+    'SELECT id, problem_id, started_at, active_ms FROM study_sessions WHERE user_id = ?',
+    [userId]
   );
   const known = await knownProblemIdSet();
   const out = new Map<string, number>();

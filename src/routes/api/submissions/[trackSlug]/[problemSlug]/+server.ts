@@ -11,12 +11,12 @@ import type { Language } from '$lib/types/course.js';
 
 type SubmitRow = { id: string; language: string; code: string; result: string; timestamp: number };
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ locals, params }) => {
   await dbReady;
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   const rows = await dbAll<SubmitRow>(
-    'SELECT id, language, code, result, timestamp FROM submissions WHERE problem_id = ? ORDER BY timestamp DESC',
-    [problemId]
+    'SELECT id, language, code, result, timestamp FROM submissions WHERE user_id = ? AND problem_id = ? ORDER BY timestamp DESC',
+    [locals.user!.id, problemId]
   );
   const submissions: SubmitSnapshot[] = rows
     .map((row) => ({
@@ -31,15 +31,16 @@ export const GET: RequestHandler = async ({ params }) => {
   return json({ submissions });
 };
 
-export const POST: RequestHandler = async ({ params, request }) => {
+export const POST: RequestHandler = async ({ locals, params, request }) => {
   await dbReady;
   const snapshot = (await request.json()) as SubmitSnapshot;
 
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   await dbRun(
-    'INSERT INTO submissions (id, problem_id, language, code, result, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO submissions (id, user_id, problem_id, language, code, result, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [
       snapshot.id,
+      locals.user!.id,
       problemId,
       snapshot.language,
       snapshot.code,

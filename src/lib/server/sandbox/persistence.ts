@@ -19,6 +19,7 @@ import { defaultResourcesFor } from './types.js';
 
 interface SessionRow {
   id: string;
+  user_id: string;
   problem_id: string;
   language: string;
   action: string;
@@ -57,6 +58,7 @@ function rowToRecord(row: SessionRow): SessionRecord {
   }
   return {
     id: row.id,
+    userId: row.user_id,
     problemId: row.problem_id,
     language: row.language as SessionRecord['language'],
     action: row.action as SessionAction,
@@ -83,13 +85,14 @@ export async function insertSession(rec: SessionRecord): Promise<void> {
   await dbReady;
   await dbRun(
     `INSERT INTO sandbox_sessions
-       (id, problem_id, language, action, mode, status,
+       (id, user_id, problem_id, language, action, mode, status,
         container_name, host_pid, started_at, completed_at, exit_code,
         error_message, resources_json, stdout_bytes, stderr_bytes,
         submit_verdict, submit_message, submit_score)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       rec.id,
+      rec.userId,
       rec.problemId,
       rec.language,
       rec.action,
@@ -150,20 +153,20 @@ export async function updateSession(
   await dbRun(`UPDATE sandbox_sessions SET ${sets.join(', ')} WHERE id = ?`, params);
 }
 
-export async function getSessionById(id: string): Promise<SessionRecord | null> {
+export async function getSessionById(userId: string, id: string): Promise<SessionRecord | null> {
   await dbReady;
-  const rows = await dbAll<SessionRow>(`SELECT * FROM sandbox_sessions WHERE id = ?`, [id]);
+  const rows = await dbAll<SessionRow>(`SELECT * FROM sandbox_sessions WHERE user_id = ? AND id = ?`, [userId, id]);
   if (rows.length === 0) return null;
   return rowToRecord(rows[0]);
 }
 
-export async function listSessionRecords(opts: { activeOnly?: boolean; limit?: number } = {}): Promise<SessionRecord[]> {
+export async function listSessionRecords(userId: string, opts: { activeOnly?: boolean; limit?: number } = {}): Promise<SessionRecord[]> {
   await dbReady;
   const limit = Math.max(1, Math.min(500, opts.limit ?? 100));
-  let sql = `SELECT * FROM sandbox_sessions`;
-  const params: unknown[] = [];
+  let sql = `SELECT * FROM sandbox_sessions WHERE user_id = ?`;
+  const params: unknown[] = [userId];
   if (opts.activeOnly) {
-    sql += ` WHERE status IN ('queued','starting','running')`;
+    sql += ` AND status IN ('queued','starting','running')`;
   }
   sql += ` ORDER BY started_at DESC LIMIT ${limit}`;
   const rows = await dbAll<SessionRow>(sql, params);
@@ -207,17 +210,18 @@ export async function reapStaleSessionsOnBoot(): Promise<number> {
 // ── Preferences CRUD ─────────────────────────────────────────────────────
 
 interface PrefRow {
+  user_id: string;
   track_slug: string;
   preferred_mode: string;
   resources_json: string;
 }
 
-export async function getPreference(trackSlug: string): Promise<TrackPreference | null> {
+export async function getPreference(userId: string, trackSlug: string): Promise<TrackPreference | null> {
   await dbReady;
   const rows = await dbAll<PrefRow>(
-    `SELECT track_slug, preferred_mode, resources_json
-       FROM sandbox_preferences WHERE track_slug = ?`,
-    [trackSlug]
+    `SELECT user_id, track_slug, preferred_mode, resources_json
+       FROM sandbox_preferences WHERE user_id = ? AND track_slug = ?`,
+    [userId, trackSlug]
   );
   if (rows.length === 0) return null;
   const row = rows[0];
@@ -228,6 +232,7 @@ export async function getPreference(trackSlug: string): Promise<TrackPreference 
     resources = defaultResourcesFor(row.preferred_mode as SandboxMode);
   }
   return {
+    userId: row.user_id,
     trackSlug: row.track_slug,
     preferredMode: row.preferred_mode as SandboxMode,
     resources
@@ -239,12 +244,12 @@ export async function upsertPreference(pref: TrackPreference): Promise<void> {
   const now = Date.now();
   // DuckDB supports ON CONFLICT (col) DO UPDATE in current versions.
   await dbRun(
-    `INSERT INTO sandbox_preferences (track_slug, preferred_mode, resources_json, updated_at)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT (track_slug) DO UPDATE
+    `INSERT INTO sandbox_preferences (user_id, track_slug, preferred_mode, resources_json, updated_at)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT (user_id, track_slug) DO UPDATE
        SET preferred_mode = excluded.preferred_mode,
            resources_json = excluded.resources_json,
            updated_at     = excluded.updated_at`,
-    [pref.trackSlug, pref.preferredMode, JSON.stringify(pref.resources), now]
+    [pref.userId, pref.trackSlug, pref.preferredMode, JSON.stringify(pref.resources), now]
   );
 }

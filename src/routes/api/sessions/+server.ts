@@ -19,7 +19,7 @@ import type {
 
 const VALID_MODES: readonly SandboxMode[] = ['baremetal', 'docker', 'docker-gpu'];
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ locals, request }) => {
   let body: Partial<StartSessionRequest>;
   try {
     body = (await request.json()) as Partial<StartSessionRequest>;
@@ -42,6 +42,7 @@ export const POST: RequestHandler = async ({ request }) => {
   const resources: Partial<ResourceLimits> | undefined = body.resources ?? undefined;
 
   const result = await startSession({
+    userId: locals.user!.id,
     problemId,
     language,
     code,
@@ -53,12 +54,12 @@ export const POST: RequestHandler = async ({ request }) => {
   return json({ id: result.id, queued: result.queued });
 };
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ locals, url }) => {
   const activeOnly = url.searchParams.get('activeOnly');
   const limitRaw = url.searchParams.get('limit');
   const limit = limitRaw ? Math.max(1, Math.min(500, parseInt(limitRaw, 10))) : 100;
 
-  const sessions = await listSessions({
+  const sessions = await listSessions(locals.user!.id, {
     activeOnly: activeOnly === '1' || activeOnly === 'true',
     limit
   });

@@ -27,7 +27,7 @@ function isAttemptBody(value: unknown): value is AttemptBody {
   return typeof o.total === 'number' && typeof o.correct === 'number';
 }
 
-export const POST: RequestHandler = async ({ params, request }) => {
+export const POST: RequestHandler = async ({ locals, params, request }) => {
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   let body: unknown;
   try {
@@ -40,6 +40,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
   }
 
   const result = await recordQuizAttempt({
+    userId: locals.user!.id,
     id: randomUUID(),
     problemId,
     total: body.total,

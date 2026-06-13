@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 import { localCourseRepository } from '$lib/services/local/courseRepository.local';
 import { isReadingCompleted, isProblemCompleted, getQuizProgress, getDrillProgress } from '$lib/server/stats';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ locals, params }) => {
   const [track, problem] = await Promise.all([
     localCourseRepository.getTrack(params.trackSlug),
     localCourseRepository.getProblem(params.trackSlug, params.problemSlug)
@@ -29,15 +29,15 @@ export const load: PageServerLoad = async ({ params }) => {
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   const initiallyCompleted =
     problem.type === 'reading' || problem.type === 'quiz' || problem.type === 'test' || problem.type === 'drill'
-      ? await isReadingCompleted(problemId)
-      : await isProblemCompleted(problemId);
+      ? await isReadingCompleted(locals.user!.id, problemId)
+      : await isProblemCompleted(locals.user!.id, problemId);
 
   // For quiz/test modules, also seed the aggregate progress so the intro screen
   // can show "Best: X/Y" / "Passed" without a fetch on first paint.
   const initialQuizProgress =
-    problem.type === 'quiz' || problem.type === 'test' ? await getQuizProgress(problemId) : null;
+    problem.type === 'quiz' || problem.type === 'test' ? await getQuizProgress(locals.user!.id, problemId) : null;
   const initialDrillProgress =
-    problem.type === 'drill' ? await getDrillProgress(problemId, problem.drill?.targetAccuracy) : null;
+    problem.type === 'drill' ? await getDrillProgress(locals.user!.id, problemId, problem.drill?.targetAccuracy) : null;
 
   return { track, problem, prevProblem, nextProblem, initiallyCompleted, initialQuizProgress, initialDrillProgress };
 };

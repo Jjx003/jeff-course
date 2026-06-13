@@ -1,16 +1,9 @@
 /**
  * DuckDB singleton for server-side persistence.
  *
- * Stores:
- *   drafts      — one row per (problem_id, language), upserted on every auto-save
- *   runs        — one row per (problem_id, language), upserted on every Run click
- *   submissions — append-only, only accepted verdicts are inserted
- *
  * SERVER-SIDE ONLY. Never import from components or client-side code.
  */
 
-// duckdb is a CJS native addon. Use createRequire so Vite's module runner
-// doesn't intercept and mis-wrap it.
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,7 +15,6 @@ const duckdb = _require('duckdb') as any;
 const DB_PATH =
   process.env.DB_PATH ?? path.join(process.cwd(), 'data', 'jeff-course.duckdb');
 
-// Ensure the data directory exists before DuckDB tries to open the file.
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 // Survive Vite HMR module reloads without opening multiple DB handles.
@@ -33,8 +25,6 @@ if (!g.__duckdb) {
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db: any = g.__duckdb;
-
-// ── Promisified helpers ──────────────────────────────────────────────────────
 
 export function dbRun(sql: string, params: unknown[] = []): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -57,71 +47,140 @@ export function dbAll<T = Record<string, unknown>>(
   });
 }
 
-// ── Schema init ──────────────────────────────────────────────────────────────
+async function tableColumns(table: string): Promise<Set<string>> {
+  const rows = await dbAll<{ name: string }>(
+    `SELECT column_name AS name
+       FROM information_schema.columns
+      WHERE table_name = ?`,
+    [table]
+  );
+  return new Set(rows.map((row) => row.name));
+}
+
+async function migrateTableToUserScoped(
+  table: string,
+  createSql: string,
+  copySql: string
+): Promise<void> {
+  const columns = await tableColumns(table);
+  if (columns.size === 0) {
+    await dbRun(createSql);
+    return;
+  }
+  if (columns.has('user_id')) return;
+
+  const indexes = await dbAll<{ index_name: string }>(
+    'SELECT index_name FROM duckdb_indexes() WHERE table_name = ?',
+    [table]
+  );
+  for (const index of indexes) {
+    await dbRun(`DROP INDEX IF EXISTS "${index.index_name.replaceAll('"', '""')}"`);
+  }
+
+  const old = `${table}_single_user_backup`;
+  await dbRun(`ALTER TABLE ${table} RENAME TO ${old}`);
+  await dbRun(createSql);
+  await dbRun(copySql.replaceAll('__OLD__', old));
+  await dbRun(`DROP TABLE ${old}`);
+}
 
 export const dbReady: Promise<void> = (async () => {
   await dbRun(`
-    CREATE TABLE IF NOT EXISTS drafts (
-      problem_id    VARCHAR NOT NULL,
-      language      VARCHAR NOT NULL,
-      code          TEXT    NOT NULL,
-      last_saved_at BIGINT  NOT NULL,
-      PRIMARY KEY (problem_id, language)
+    CREATE TABLE IF NOT EXISTS users (
+      id            VARCHAR PRIMARY KEY,
+      name          VARCHAR NOT NULL UNIQUE,
+      role          VARCHAR NOT NULL,
+      password_hash TEXT    NOT NULL,
+      created_at    BIGINT  NOT NULL,
+      last_login_at BIGINT
     )
   `);
 
   await dbRun(`
+    CREATE TABLE IF NOT EXISTS auth_sessions (
+      id         VARCHAR PRIMARY KEY,
+      user_id    VARCHAR NOT NULL,
+      created_at BIGINT  NOT NULL,
+      expires_at BIGINT  NOT NULL
+    )
+  `);
+  await dbRun(`CREATE INDEX IF NOT EXISTS auth_sessions_user_idx ON auth_sessions (user_id)`);
+  await dbRun(`DELETE FROM auth_sessions WHERE expires_at <= ?`, [Date.now()]);
+
+  await migrateTableToUserScoped('drafts', `
+    CREATE TABLE IF NOT EXISTS drafts (
+      user_id       VARCHAR NOT NULL,
+      problem_id    VARCHAR NOT NULL,
+      language      VARCHAR NOT NULL,
+      code          TEXT    NOT NULL,
+      last_saved_at BIGINT  NOT NULL,
+      PRIMARY KEY (user_id, problem_id, language)
+    )
+  `, `
+    INSERT INTO drafts (user_id, problem_id, language, code, last_saved_at)
+    SELECT 'local', problem_id, language, code, last_saved_at FROM __OLD__
+  `);
+
+  await migrateTableToUserScoped('runs', `
     CREATE TABLE IF NOT EXISTS runs (
+      user_id    VARCHAR NOT NULL,
       problem_id VARCHAR NOT NULL,
       language   VARCHAR NOT NULL,
       id         VARCHAR NOT NULL,
       code       TEXT    NOT NULL,
       result     VARCHAR NOT NULL,
       timestamp  BIGINT  NOT NULL,
-      PRIMARY KEY (problem_id, language)
+      PRIMARY KEY (user_id, problem_id, language)
     )
+  `, `
+    INSERT INTO runs (user_id, problem_id, language, id, code, result, timestamp)
+    SELECT 'local', problem_id, language, id, code, result, timestamp FROM __OLD__
   `);
 
-  await dbRun(`
+  await migrateTableToUserScoped('submissions', `
     CREATE TABLE IF NOT EXISTS submissions (
       id         VARCHAR PRIMARY KEY,
+      user_id    VARCHAR NOT NULL,
       problem_id VARCHAR NOT NULL,
       language   VARCHAR NOT NULL,
       code       TEXT    NOT NULL,
       result     VARCHAR NOT NULL,
       timestamp  BIGINT  NOT NULL
     )
+  `, `
+    INSERT INTO submissions (id, user_id, problem_id, language, code, result, timestamp)
+    SELECT id, 'local', problem_id, language, code, result, timestamp FROM __OLD__
   `);
+  await dbRun(`CREATE INDEX IF NOT EXISTS submissions_user_problem_idx ON submissions (user_id, problem_id)`);
 
-  // ── Gamification ──────────────────────────────────────────────────────
-  // Reading modules don't produce submissions, so we track their completion
-  // explicitly. One row per problem; first mark-complete is preserved.
-  await dbRun(`
+  await migrateTableToUserScoped('reading_completions', `
     CREATE TABLE IF NOT EXISTS reading_completions (
-      problem_id   VARCHAR PRIMARY KEY,
-      completed_at BIGINT  NOT NULL
+      user_id      VARCHAR NOT NULL,
+      problem_id   VARCHAR NOT NULL,
+      completed_at BIGINT  NOT NULL,
+      PRIMARY KEY (user_id, problem_id)
     )
+  `, `
+    INSERT INTO reading_completions (user_id, problem_id, completed_at)
+    SELECT 'local', problem_id, completed_at FROM __OLD__
   `);
 
-  // Achievements are persisted on first unlock so we can show a stable
-  // "earned on" date in the UI. Locked achievements are NOT stored — they
-  // are computed on demand from the static definition list.
-  await dbRun(`
+  await migrateTableToUserScoped('achievements', `
     CREATE TABLE IF NOT EXISTS achievements (
-      id          VARCHAR PRIMARY KEY,
-      unlocked_at BIGINT  NOT NULL
+      user_id     VARCHAR NOT NULL,
+      id          VARCHAR NOT NULL,
+      unlocked_at BIGINT  NOT NULL,
+      PRIMARY KEY (user_id, id)
     )
+  `, `
+    INSERT INTO achievements (user_id, id, unlocked_at)
+    SELECT 'local', id, unlocked_at FROM __OLD__
   `);
 
-  // Quiz attempts are append-only. Each row is one completed pass through
-  // a quiz module (the user clicked through every question to "See results").
-  // The "first passing attempt" is what flips `reading_completions` for a
-  // quiz module — it's the moment a quiz is considered complete and grants
-  // its 5 points. Below-threshold attempts are still recorded so the intro
-  // screen can show "Best: X/Y" and the attempt counter.
-  await dbRun(`
+  await migrateTableToUserScoped('quiz_attempts', `
     CREATE TABLE IF NOT EXISTS quiz_attempts (
       id           VARCHAR PRIMARY KEY,
+      user_id      VARCHAR NOT NULL,
       problem_id   VARCHAR NOT NULL,
       total        INTEGER NOT NULL,
       correct      INTEGER NOT NULL,
@@ -129,12 +188,16 @@ export const dbReady: Promise<void> = (async () => {
       duration_ms  BIGINT  NOT NULL,
       completed_at BIGINT  NOT NULL
     )
+  `, `
+    INSERT INTO quiz_attempts (id, user_id, problem_id, total, correct, passed, duration_ms, completed_at)
+    SELECT id, 'local', problem_id, total, correct, passed, duration_ms, completed_at FROM __OLD__
   `);
-  await dbRun(`CREATE INDEX IF NOT EXISTS quiz_attempts_problem_idx ON quiz_attempts (problem_id)`);
+  await dbRun(`CREATE INDEX IF NOT EXISTS quiz_attempts_problem_idx ON quiz_attempts (user_id, problem_id)`);
 
-  await dbRun(`
+  await migrateTableToUserScoped('drill_attempts', `
     CREATE TABLE IF NOT EXISTS drill_attempts (
       id           VARCHAR PRIMARY KEY,
+      user_id      VARCHAR NOT NULL,
       problem_id   VARCHAR NOT NULL,
       total        INTEGER NOT NULL,
       correct      INTEGER NOT NULL,
@@ -143,32 +206,30 @@ export const dbReady: Promise<void> = (async () => {
       duration_ms  BIGINT  NOT NULL,
       completed_at BIGINT  NOT NULL
     )
+  `, `
+    INSERT INTO drill_attempts (id, user_id, problem_id, total, correct, avg_ms, best_streak, duration_ms, completed_at)
+    SELECT id, 'local', problem_id, total, correct, avg_ms, best_streak, duration_ms, completed_at FROM __OLD__
   `);
-  await dbRun(`CREATE INDEX IF NOT EXISTS drill_attempts_problem_idx ON drill_attempts (problem_id)`);
+  await dbRun(`CREATE INDEX IF NOT EXISTS drill_attempts_problem_idx ON drill_attempts (user_id, problem_id)`);
 
-  // Study sessions track active engagement time per problem visit. The
-  // client owns `active_ms` as a running counter (it pauses on idle / hidden
-  // tab); each heartbeat overwrites the row's `active_ms`, never appends to
-  // it. `started_at` is fixed at session creation and is what we bucket by
-  // for "time today" calculations.
-  await dbRun(`
+  await migrateTableToUserScoped('study_sessions', `
     CREATE TABLE IF NOT EXISTS study_sessions (
       id                VARCHAR PRIMARY KEY,
+      user_id           VARCHAR NOT NULL,
       problem_id        VARCHAR NOT NULL,
       started_at        BIGINT  NOT NULL,
       active_ms         BIGINT  NOT NULL,
       last_heartbeat_at BIGINT  NOT NULL
     )
+  `, `
+    INSERT INTO study_sessions (id, user_id, problem_id, started_at, active_ms, last_heartbeat_at)
+    SELECT id, 'local', problem_id, started_at, active_ms, last_heartbeat_at FROM __OLD__
   `);
 
-  // ── Sandbox (containerized / baremetal code execution) ────────────────
-  //
-  // One row per Run/Submit click that goes through the sandbox pipeline.
-  // Persisted so the /sessions page can show history across restarts and
-  // so the boot-time zombie reaper can find stale rows to mark crashed.
-  await dbRun(`
+  await migrateTableToUserScoped('sandbox_sessions', `
     CREATE TABLE IF NOT EXISTS sandbox_sessions (
       id              VARCHAR PRIMARY KEY,
+      user_id         VARCHAR NOT NULL,
       problem_id      VARCHAR NOT NULL,
       language        VARCHAR NOT NULL,
       action          VARCHAR NOT NULL,
@@ -187,18 +248,32 @@ export const dbReady: Promise<void> = (async () => {
       submit_message  TEXT,
       submit_score    INTEGER
     )
+  `, `
+    INSERT INTO sandbox_sessions
+      (id, user_id, problem_id, language, action, mode, status,
+       container_name, host_pid, started_at, completed_at, exit_code,
+       error_message, resources_json, stdout_bytes, stderr_bytes,
+       submit_verdict, submit_message, submit_score)
+    SELECT id, 'local', problem_id, language, action, mode, status,
+       container_name, host_pid, started_at, completed_at, exit_code,
+       error_message, resources_json, stdout_bytes, stderr_bytes,
+       submit_verdict, submit_message, submit_score
+    FROM __OLD__
   `);
+  await dbRun(`CREATE INDEX IF NOT EXISTS sandbox_sessions_status_idx ON sandbox_sessions (user_id, status)`);
+  await dbRun(`CREATE INDEX IF NOT EXISTS sandbox_sessions_started_idx ON sandbox_sessions (user_id, started_at)`);
 
-  await dbRun(`CREATE INDEX IF NOT EXISTS sandbox_sessions_status_idx ON sandbox_sessions (status)`);
-  await dbRun(`CREATE INDEX IF NOT EXISTS sandbox_sessions_started_idx ON sandbox_sessions (started_at)`);
-
-  // Per-track preference for sandbox mode + resources. Sticky between visits.
-  await dbRun(`
+  await migrateTableToUserScoped('sandbox_preferences', `
     CREATE TABLE IF NOT EXISTS sandbox_preferences (
-      track_slug      VARCHAR PRIMARY KEY,
+      user_id         VARCHAR NOT NULL,
+      track_slug      VARCHAR NOT NULL,
       preferred_mode  VARCHAR NOT NULL,
       resources_json  TEXT    NOT NULL,
-      updated_at      BIGINT  NOT NULL
+      updated_at      BIGINT  NOT NULL,
+      PRIMARY KEY (user_id, track_slug)
     )
+  `, `
+    INSERT INTO sandbox_preferences (user_id, track_slug, preferred_mode, resources_json, updated_at)
+    SELECT 'local', track_slug, preferred_mode, resources_json, updated_at FROM __OLD__
   `);
 })();

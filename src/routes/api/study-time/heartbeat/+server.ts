@@ -25,7 +25,7 @@ function bad(message: string): never {
   throw error(400, message);
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ locals, request }) => {
   let body: HeartbeatBody;
   try {
     body = (await request.json()) as HeartbeatBody;
@@ -52,6 +52,6 @@ export const POST: RequestHandler = async ({ request }) => {
   }
   if (!Number.isFinite(startedAt) || startedAt <= 0) bad('Invalid startedAt');
 
-  await upsertHeartbeat(sessionId, problemId, activeMs, startedAt);
+  await upsertHeartbeat(locals.user!.id, sessionId, problemId, activeMs, startedAt);
   return json({ ok: true });
 };

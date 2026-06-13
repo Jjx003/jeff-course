@@ -8,6 +8,6 @@
 import type { PageServerLoad } from './$types';
 import { listSessions } from '$lib/server/sandbox/index.js';
 
-export const load: PageServerLoad = async () => ({
-  initial: await listSessions({ limit: 100 })
+export const load: PageServerLoad = async ({ locals }) => ({
+  initial: await listSessions(locals.user!.id, { limit: 100 })
 });

@@ -6,12 +6,12 @@ import type { Language } from '$lib/types/course.js';
 
 type DraftRow = { code: string; last_saved_at: number };
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ locals, params }) => {
   await dbReady;
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   const rows = await dbAll<DraftRow>(
-    'SELECT code, last_saved_at FROM drafts WHERE problem_id = ? AND language = ?',
-    [problemId, params.language]
+    'SELECT code, last_saved_at FROM drafts WHERE user_id = ? AND problem_id = ? AND language = ?',
+    [locals.user!.id, problemId, params.language]
   );
   if (!rows.length) return json({ draft: null });
   const draft: Draft = {
@@ -23,15 +23,15 @@ export const GET: RequestHandler = async ({ params }) => {
   return json({ draft });
 };
 
-export const PUT: RequestHandler = async ({ params, request }) => {
+export const PUT: RequestHandler = async ({ locals, params, request }) => {
   await dbReady;
   const { code } = (await request.json()) as { code: string };
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   await dbRun(
-    `INSERT INTO drafts (problem_id, language, code, last_saved_at) VALUES (?, ?, ?, ?)
-     ON CONFLICT (problem_id, language)
+    `INSERT INTO drafts (user_id, problem_id, language, code, last_saved_at) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT (user_id, problem_id, language)
      DO UPDATE SET code = EXCLUDED.code, last_saved_at = EXCLUDED.last_saved_at`,
-    [problemId, params.language, code, Date.now()]
+    [locals.user!.id, problemId, params.language, code, Date.now()]
   );
   return json({ ok: true });
 };

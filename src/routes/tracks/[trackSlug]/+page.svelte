@@ -18,6 +18,13 @@
   let completedCount = $derived(completions.filter((c) => c.completed).length);
   let totalCount = $derived(track.problems.length);
   let progress = $derived(totalCount === 0 ? 0 : completedCount / totalCount);
+  let nextProblem = $derived(track.problems.find((problem) => !isCompleted(problem.slug)) ?? track.problems[0] ?? null);
+  let totalMinutes = $derived(track.problems.reduce((sum, problem) => sum + problem.estimatedMinutes, 0));
+  let moduleCounts = $derived.by(() => {
+    const counts: Record<string, number> = { coding: 0, reading: 0, quiz: 0, test: 0, drill: 0 };
+    for (const problem of track.problems) counts[problem.type] = (counts[problem.type] ?? 0) + 1;
+    return counts;
+  });
 
   const DIFFICULTY_BADGE: Record<string, string> = {
     beginner:     'badge-green',
@@ -28,6 +35,22 @@
   function isCompleted(problemSlug: string): boolean {
     return completionMap.get(`${track.slug}/${problemSlug}`)?.completed ?? false;
   }
+
+  function moduleKind(type: string): string {
+    if (type === 'reading') return 'Read';
+    if (type === 'quiz') return 'Quiz';
+    if (type === 'test') return 'Test';
+    if (type === 'drill') return 'Drill';
+    return 'Code';
+  }
+
+  function typeTone(type: string): string {
+    if (type === 'reading') return 'type-reading';
+    if (type === 'quiz') return 'type-quiz';
+    if (type === 'test') return 'type-test';
+    if (type === 'drill') return 'type-drill';
+    return 'type-code';
+  }
 </script>
 
 <Header
@@ -37,17 +60,16 @@
   ]}
 />
 
-<main class="flex-1 overflow-y-auto px-6 py-10 max-w-3xl mx-auto w-full">
-  <!-- Track header with progress ring -->
-  <div class="track-header">
+<main class="flex-1 overflow-y-auto px-6 py-10 max-w-5xl mx-auto w-full">
+  <section class="track-hero">
     <div class="track-header-meta">
-      <div class="flex items-center gap-3 mb-2">
+      <div class="flex items-center gap-3 mb-2 flex-wrap">
         <h1 class="text-2xl font-bold text-slate-100">{track.title}</h1>
         <span class="badge {DIFFICULTY_BADGE[track.difficulty] ?? 'badge-blue'}">
           {track.difficulty}
         </span>
       </div>
-      <p class="text-slate-400 text-sm leading-relaxed max-w-xl">{track.description}</p>
+      <p class="text-slate-400 text-sm leading-relaxed max-w-2xl">{track.description}</p>
       {#if track.tags.length > 0}
         <div class="flex gap-2 mt-3 flex-wrap">
           {#each track.tags as tag}
@@ -58,17 +80,43 @@
     </div>
 
     {#if totalCount > 0}
-      <div class="track-progress" title="{completedCount} of {totalCount} modules completed">
+      <div class="track-hero-side">
         <ProgressRing
           value={progress}
-          size={84}
+          size={88}
           stroke={7}
           label="{Math.round(progress * 100)}%"
           sublabel="Progress"
         />
+        {#if nextProblem}
+          <a class="continue-link" href="/tracks/{track.slug}/problems/{nextProblem.slug}">
+            {completedCount > 0 && completedCount < totalCount ? 'Continue' : completedCount === totalCount ? 'Review track' : 'Start track'}
+          </a>
+        {/if}
       </div>
     {/if}
-  </div>
+  </section>
+
+  {#if totalCount > 0}
+    <section class="track-summary" aria-label="Track summary">
+      <div>
+        <span class="summary-value">{totalCount}</span>
+        <span class="summary-label">Modules</span>
+      </div>
+      <div>
+        <span class="summary-value">{Math.round(totalMinutes / 60 * 10) / 10}<span class="summary-unit">h</span></span>
+        <span class="summary-label">Estimated time</span>
+      </div>
+      <div>
+        <span class="summary-value">{moduleCounts.coding}</span>
+        <span class="summary-label">Coding</span>
+      </div>
+      <div>
+        <span class="summary-value">{moduleCounts.reading + moduleCounts.quiz + moduleCounts.test + moduleCounts.drill}</span>
+        <span class="summary-label">Study and practice</span>
+      </div>
+    </section>
+  {/if}
 
   <!-- Progress bar (linear) under the header for quick visual scan -->
   {#if totalCount > 0}
@@ -81,13 +129,12 @@
   {/if}
 
   <!-- Problem list -->
-  <div class="space-y-3 mt-6">
+  <div class="module-list mt-6">
     {#each track.problems as problem, idx}
       {@const done = isCompleted(problem.slug)}
       <a
         href="/tracks/{track.slug}/problems/{problem.slug}"
-        class="group flex items-center gap-4 rounded-lg border px-5 py-4
-               transition-colors duration-150 no-underline"
+        class="module-row group"
         class:row-done={done}
         class:row-default={!done}
       >
@@ -105,7 +152,7 @@
         </span>
 
         <!-- Title + description -->
-        <div class="flex-1 min-w-0">
+        <div class="module-copy">
           <div class="text-sm font-semibold truncate"
                class:text-slate-200={!done}
                class:text-slate-100={done}>
@@ -117,31 +164,13 @@
         </div>
 
         <!-- Metadata -->
-        <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="module-meta">
+          <span class="type-pill {typeTone(problem.type)}">{moduleKind(problem.type)}</span>
           <span class="badge {DIFFICULTY_BADGE[problem.difficulty] ?? 'badge-blue'}">
             {problem.difficulty}
           </span>
           <span class="text-xs text-slate-600">{problem.estimatedMinutes}m</span>
-          {#if problem.type === 'reading'}
-            <span class="text-xs text-slate-500 font-mono uppercase tracking-wider">Read</span>
-          {:else if problem.type === 'quiz' || problem.type === 'test'}
-            <span class="quiz-pill" title={problem.type === 'test' ? 'Exam-style test' : 'Self-assessment quiz'}>
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M9.5 9.5a2.5 2.5 0 1 1 4 2c-.8.7-1.5 1.3-1.5 2.5" />
-                <circle cx="12" cy="17" r="0.6" fill="currentColor" />
-              </svg>
-              {problem.type === 'test' ? 'Test' : 'Quiz'}
-            </span>
-          {:else if problem.type === 'drill'}
-            <span class="quiz-pill" title="Replayable speed drill">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 6v6l4 2" />
-                <circle cx="12" cy="12" r="9" />
-              </svg>
-              Drill
-            </span>
-          {:else}
+          {#if problem.type === 'coding'}
             {#each problem.languages as lang}
               <span class="text-xs text-slate-600 font-mono">{lang === 'cpp' ? 'C++' : 'Py'}</span>
             {/each}
@@ -171,12 +200,78 @@
     gap: 1.5rem;
     margin-bottom: 1.25rem;
   }
+  .track-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #1e293b;
+  }
   .track-header-meta {
     flex: 1;
     min-width: 0;
   }
-  .track-progress {
+  .track-hero-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
     flex-shrink: 0;
+  }
+  .continue-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 9rem;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid rgba(96, 165, 250, 0.45);
+    border-radius: 7px;
+    background: #1d4ed8;
+    color: #fff;
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 140ms ease, border-color 140ms ease;
+  }
+  .continue-link:hover {
+    background: #2563eb;
+    border-color: #93c5fd;
+  }
+  .track-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .track-summary > div {
+    min-width: 0;
+    padding: 0.85rem 1rem;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    background: #111827;
+  }
+  .summary-value {
+    display: block;
+    color: #f8fafc;
+    font-size: 1.25rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .summary-unit {
+    margin-left: 0.1rem;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .summary-label {
+    display: block;
+    margin-top: 0.25rem;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .progress-strip {
@@ -195,6 +290,69 @@
     font-size: 0.7rem;
     color: #64748b;
     font-variant-numeric: tabular-nums;
+  }
+  .module-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .module-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    border: 1px solid;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .module-copy {
+    flex: 1;
+    min-width: 0;
+  }
+  .module-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+  .type-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.4rem;
+    padding: 0.22rem 0.5rem;
+    border: 1px solid;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 750;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .type-code {
+    border-color: rgba(56, 189, 248, 0.3);
+    background: rgba(56, 189, 248, 0.09);
+    color: #7dd3fc;
+  }
+  .type-reading {
+    border-color: rgba(52, 211, 153, 0.28);
+    background: rgba(52, 211, 153, 0.08);
+    color: #86efac;
+  }
+  .type-quiz {
+    border-color: rgba(129, 140, 248, 0.32);
+    background: rgba(129, 140, 248, 0.1);
+    color: #a5b4fc;
+  }
+  .type-test {
+    border-color: rgba(251, 191, 36, 0.3);
+    background: rgba(251, 191, 36, 0.08);
+    color: #fde68a;
+  }
+  .type-drill {
+    border-color: rgba(244, 114, 182, 0.32);
+    background: rgba(244, 114, 182, 0.08);
+    color: #f9a8d4;
   }
 
   /* Row variants */
@@ -232,18 +390,47 @@
     color: #60a5fa;
   }
 
-  .quiz-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    padding: 0.2rem 0.55rem 0.2rem 0.45rem;
-    background: rgba(129, 140, 248, 0.1);
-    color: #a5b4fc;
-    border: 1px solid rgba(129, 140, 248, 0.28);
-    border-radius: 999px;
+  @media (max-width: 760px) {
+    .track-hero {
+      flex-direction: column;
+    }
+    .track-hero-side {
+      width: 100%;
+      align-items: stretch;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+    .track-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .module-row {
+      align-items: flex-start;
+    }
+    .module-meta {
+      align-items: flex-end;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .track-hero-side {
+      align-items: center;
+      flex-direction: column;
+    }
+    .track-summary {
+      grid-template-columns: 1fr;
+    }
+    .module-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 0.65rem 0.8rem;
+    }
+    .module-meta {
+      grid-column: 2;
+      align-items: flex-start;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
   }
 </style>
