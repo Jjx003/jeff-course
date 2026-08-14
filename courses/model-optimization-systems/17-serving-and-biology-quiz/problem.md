@@ -71,9 +71,11 @@ constraints, and sometimes affinity-like outputs.
 
 The practical systems trick from the last lab was sequence packing. It is a
 good fit for independent PLM-style embedding when masks prevent cross-sequence
-attention. It is not automatically safe for structure prediction, where pair
-features and geometry modules may treat packed residues as part of one molecular
-system.
+attention — and the lab checked that condition directly rather than assuming it,
+by confirming that a packed sequence's embeddings match the ones it gets alone,
+and that they stop matching the moment the mask is removed. Packing is not
+automatically safe for structure prediction, where pair features and geometry
+modules may treat packed residues as part of one molecular system.
 
 ## What completion means
 

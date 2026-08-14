@@ -1,89 +1,119 @@
-# Protein sequence packing
+# Protein sequence packing, verified against ESM-2
 
-Protein sequences have wildly different lengths. A batch might contain a
-36-residue peptide, a 210-residue enzyme domain, a 760-residue multidomain
-protein, and a 1,000-residue repeat protein. If the batch is padded to its
-longest sequence, the short proteins spend most of the forward pass pretending
-to be padding.
+The reading argued that packing independent protein sequences into shared
+token blocks saves padding, and that a block-diagonal attention mask is what
+makes the trick *safe*. This lab checks both halves against a real checkpoint:
+`facebook/esm2_t6_8M_UR50D`, the same 8M-parameter ESM-2 used in the protein
+folding track. About 30 MB downloads on the first run.
 
-In this lab you will implement **first-fit decreasing** sequence packing. The
-setting is intentionally narrow: independent protein sequences going through a
-protein-language-model-style workload where masks can prevent cross-sequence
-attention. That is the safe case. The broader lesson is how to quantify padding
-waste before reaching for heavier optimization.
+The property to prove is simple to state and easy to get wrong:
 
-## The batching problem
+> The per-residue embeddings of a sequence are the same whether that sequence
+> is processed alone or packed alongside others.
 
-For a static batch of size $B$ with sequence lengths $L_1, \ldots, L_B$, a naive
-padded representation uses:
+If the mask leaks, packed embeddings are not a faster version of independent
+inference — they are a different, silently corrupted computation. The negative
+control in this lab measures that corruption at 23% to 64% relative error, so
+it is not a rounding issue.
 
-$$
-B \max_i L_i
-$$
+Everything graded runs on CPU in float32 under `torch.manual_seed(0)`. Absolute
+embedding values never reach stdout: they would pin the grader to one
+checkpoint revision and one `transformers` version. stdout carries integers,
+shapes, `allclose` booleans, and packing percentages. Wall-clock timing and
+raw difference magnitudes go to **stderr**.
 
-token slots. The useful work is:
+## Part 1 — Packing real tokenized lengths
 
-$$
-\sum_i L_i
-$$
+The fourteen sequences are real peptides and small proteins, listed in arrival
+order. Tokenize them with the ESM-2 tokenizer. Each sequence occupies
+`residues + 2` tokens because of `<cls>` and `<eos>` — 444 residues become 472
+tokens, which is 28 slots the packing heuristic has to budget for and that a
+length-from-the-FASTA-header estimate would miss.
 
-The waste is:
+Implement `padded_slots` (naive batching in arrival order, batch size 4) and
+`first_fit_decreasing`. Also run the naive counter on length-sorted input, which
+is the "just bucket by length" baseline operators actually try before packing.
+Report useful tokens, padded slots, waste, and per-pack occupancy.
 
-$$
-B \max_i L_i - \sum_i L_i
-$$
+First-fit decreasing is a heuristic, not an algorithm. Bin packing is NP-hard;
+FFD is known to use at most $\frac{11}{9}\,\mathrm{OPT} + 1$ bins. The lab does
+not ask you to prove that bound, but it is why the packed layout is allowed to
+be slightly imperfect and still counted as a win.
 
-If one long sequence appears in a batch with several short sequences, the waste
-can be severe.
+## Part 2 — Isolation, and what HuggingFace ESM actually accepts
 
-## Packing intuition
+A 2D `attention_mask` of shape `(batch, seq)` expresses padding. It cannot
+express "these tokens belong to different sequences." You need a per-pair mask.
 
-Instead of representing each protein as its own padded row, a packing system can
-place several short proteins into one fixed-capacity pack:
+HuggingFace's `EsmModel.forward` will not take one. It rejects a 4D mask
+outright and crashes on a 3D one, because the embedding layer reuses the same
+tensor as a per-token padding mask. The starter therefore splits the work:
 
-```text
-pack capacity: 1024 tokens
+- the 2D padding mask goes to `model.embeddings`;
+- a 4D *additive* block-diagonal mask (`0` on allowed pairs, `-inf` on the
+  rest) goes straight to `model.encoder`.
 
-[ protein A: 420 ][ protein B: 310 ][ protein C: 180 ][ padding: 114 ]
-```
+You implement `block_diagonal_keep_mask`, `to_additive`, and the packing of
+`input_ids`. `encode_packed` is given, because the bypass is an API workaround
+rather than the learning objective.
 
-The model must receive boundary and attention-mask information so residues from
-different proteins do not communicate. If that masking is correct, padding slots
-are replaced by real residues, improving utilization.
+Then run three comparisons, all against the same standalone per-sequence
+forward passes:
 
-## Algorithm to implement
+1. **Padded batching.** A rectangular batch with a standard 2D padding mask
+   should match standalone. This is the related production bug class: getting
+   the padding mask wrong silently changes embeddings, and it is worth proving
+   the well-behaved path before the packed one.
+2. **Packed, block-diagonal.** Each segment sliced out of the packed output
+   should `allclose` its standalone reference.
+3. **Packed, padding-only mask (negative control).** The same packed batch,
+   but every real token may attend to every other real token in its pack.
+   Nothing should match. Report the worst and least relative corruption.
 
-Implement **first-fit decreasing**:
+A correctness test that cannot fail proves nothing. The negative control is
+the most memorable number in the module.
 
-1. Sort sequences by length from longest to shortest.
-2. Place each sequence into the first existing pack with enough remaining
-   capacity.
-3. If no pack fits, start a new pack.
-4. Print the naive padded-token count for batch size 4.
-5. Print the packed bins and packed-token count.
-6. Print the waste reduction percentage.
+## Part 2c — Position IDs, which ESM-2 happens not to need
 
-First-fit decreasing is greedy. It does not always find the globally optimal
-packing, but it is simple, fast, and often effective.
+ESM-2 uses *rotary* position embeddings. Rotary attention depends on $i - j$,
+so a constant offset on a packed segment cancels in every query-key pair
+inside that segment. Packed ESM-2 embeddings match standalone even if position
+IDs run continuously across the pack.
 
-## Why this matters for protein models
+That is a property of *this* architecture, not of packing in general. BERT,
+T5, and many folding trunks use learned absolute positions, and for those a
+continuous `position_ids` tensor silently shifts every embedding. The lab
+demonstrates this on a tiny attention block you fully control: the same packed
+tokens, the same block-diagonal mask, and two position tensors. Per-segment
+IDs match standalone 14 of 14. Continuous IDs match only the 4 segments that
+happen to sit at offset 0; the other 10 corrupt by up to 144%.
 
-For PLM embedding or sequence-level scoring, sequence packing can increase GPU
-utilization dramatically. It is especially useful when you process many short
-proteins or peptides together with a few longer chains.
+If you ever pack a model and skip this check because "ESM didn't need it,"
+that is the bug.
 
-For folding or complex prediction, be more careful:
+## Part 3 — What packing costs
 
-- pair representations may create residue-pair features across packed examples,
-- chain boundaries may have biological meaning,
-- templates and MSAs are tied to individual targets,
-- all-atom geometry modules may assume one coherent molecular system,
-- ligand and nucleic-acid inputs make "just pack tokens" unsafe.
+Attention is quadratic in the *packed* length, not in the useful length. A
+dense kernel over a pack of capacity 128 scores $128^2$ pairs even when the
+block-diagonal mask would have allowed only the per-segment squares. Report
+both. In this workload the packed dense kernel does **more** attention work
+than naive padded batching (`65536` vs `48528` score entries, `1.35x`). Packing
+saves memory traffic on the sequence axis and saves work only if the kernel
+can skip masked blocks.
 
-This lab uses the clean PLM-style version because it isolates the systems idea.
-The caveats are part of the lesson.
+The mask itself is quadratic in pack capacity. At this lab's size it is
+256 KiB. The same layout at capacity 8192 with 8 packs is 2 GiB in float32.
+That is why production packing often stores a bool mask, a compressed block
+index, or relies on a kernel that never materializes the mask at all.
 
-## Output contract
+Do not change the starter constants or the output labels. The grader checks
+printed stdout.
 
-Use the data and formatting in the starter file. Do not change the scenario list
-or print extra debug lines. The expected output checks the final text.
+## Recap
+
+You packed real protein sequences, proved against ESM-2 8M that a
+block-diagonal mask makes the packed batch identical to independent inference,
+measured what a missing mask actually does, and quantified the quadratic-work
+caveat that a padding-waste percentage conceals. The next module is a quiz
+over serving and biology; it will ask you when packing is safe and when it is
+not.

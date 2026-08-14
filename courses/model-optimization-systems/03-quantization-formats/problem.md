@@ -134,6 +134,7 @@ token perplexity.
 
 Quantization is not one knob. Weight quantization, activation quantization,
 KV-cache quantization, optimizer quantization, and quantized fine-tuning solve
-different problems and fail in different ways. The next coding exercise
-implements a tiny groupwise INT4 quantizer so the metadata/error tradeoff is
-visible in code.
+different problems and fail in different ways. The next coding exercise builds a
+groupwise INT4 quantizer against a real `torch` weight matrix, packs two codes
+into every byte, and measures what group size actually buys once outliers are
+present.

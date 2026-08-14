@@ -1,5 +1,33 @@
-scales: [0.171429, 0.314286, 0.485714]
-q: [-7, -5, -1, 0, 1, 4, 6, -7, 0, 0, 6, -7]
-restored: [-1.2, -0.857, -0.171, 0.0, 0.314, 1.257, 1.886, -2.2, 0.0, 0.0, 2.914, -3.4]
-mae: 0.0564
+=== INT4 groupwise quantization of a real nn.Linear ===
+weight shape: (256, 512)
+weight dtype: torch.float32
+weights: 131072
+
+--- group size 64 ---
+codes dtype: torch.int8
+codes min/max: -7 7
+scales shape: (256, 8)
+packed dtype: torch.uint8
+packed shape: (256, 256)
+unpack round-trip exact: True
+
+--- byte accounting (group size 64) ---
+fp16 baseline: 262144 bytes
+int4 payload: 65536 bytes
+fp16 scales: 4096 bytes
+int4 total: 69632 bytes
+compression: 3.76x
+effective bits/weight: 4.250
+
+--- group size sweep: gaussian weights ---
+  G=32   bits/weight=4.500 weight_mae=0.00148 out_rel_err=0.06854
+  G=64   bits/weight=4.250 weight_mae=0.00153 out_rel_err=0.06926
+  G=128  bits/weight=4.125 weight_mae=0.00155 out_rel_err=0.07093
+  G=512  bits/weight=4.031 weight_mae=0.00157 out_rel_err=0.07142
+
+--- group size sweep: with outliers ---
+  G=32   bits/weight=4.500 weight_mae=0.00513 out_rel_err=0.16341
+  G=64   bits/weight=4.250 weight_mae=0.00893 out_rel_err=0.23189
+  G=128  bits/weight=4.125 weight_mae=0.01645 out_rel_err=0.33301
+  G=512  bits/weight=4.031 weight_mae=0.02190 out_rel_err=0.40441
 

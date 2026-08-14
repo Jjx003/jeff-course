@@ -1,11 +1,17 @@
 title: "Protein sequence packing"
 slug: "protein-sequence-packing"
-description: "Pack variable-length protein sequences into efficient batches and measure padding waste."
+description: "Pack real tokenized protein sequences with first-fit decreasing, then prove against ESM-2 8M that a block-diagonal mask makes the packed batch identical to independent inference - and measure what happens when the mask is wrong."
 order: 16
-difficulty: intermediate
-estimatedMinutes: 40
-tags: [protein-language-models, batching, sequence-packing]
+difficulty: advanced
+estimatedMinutes: 75
+tags: [protein-language-models, batching, sequence-packing, attention-masks, torch]
 type: coding
 languages: [python]
 defaultLanguage: python
-
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

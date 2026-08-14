@@ -152,7 +152,9 @@ Useful evaluation pairs include:
 
 ## Transition
 
-The next module strips all of this down to the smallest useful mechanism:
-split a vector into groups, choose a symmetric scale, store signed 4-bit
-integers, reconstruct, and measure error. It is tiny, but it contains the core
-tradeoff that larger quantizers elaborate.
+The next module strips all of this down to the core mechanism and then puts it
+under load: split a real weight matrix into groups, choose a symmetric scale per
+group, pack signed 4-bit codes two per byte, reconstruct, and measure the error
+at the layer's output rather than on the weight. The same sweep runs twice, once
+on well-behaved weights and once with outlier channels, because the answer to
+"what group size should I use" is different in those two worlds.

@@ -1,11 +1,17 @@
 title: "Online softmax attention"
 slug: "online-softmax-attention"
-description: "Implement the numerically stable streaming softmax recurrence behind tiled attention."
+description: "Implement tiled multi-head attention with the online softmax recurrence, prove it matches both a naive reference and torch's fused kernel, add causal tile skipping, and account for the score memory it saves."
 order: 10
 difficulty: advanced
-estimatedMinutes: 45
-tags: [attention, kernels, softmax]
+estimatedMinutes: 70
+tags: [attention, kernels, softmax, flashattention, torch]
 type: coding
 languages: [python]
 defaultLanguage: python
-
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

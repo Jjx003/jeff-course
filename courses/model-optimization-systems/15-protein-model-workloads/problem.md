@@ -147,4 +147,7 @@ and recycling. AlphaFold3, Chai, and Boltz-style workloads add multimolecular
 inputs, all-atom geometry, constraints, and affinity-like outputs.
 
 The next lab tackles one simple but high-impact systems trick: reducing padding
-waste when batching variable-length protein sequences.
+waste when batching variable-length protein sequences. It also settles the
+question that makes the trick safe to use, by running a real ESM-2 checkpoint and
+checking whether a packed sequence's embeddings match the ones it gets when
+processed alone.

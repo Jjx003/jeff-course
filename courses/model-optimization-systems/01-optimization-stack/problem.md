@@ -141,4 +141,7 @@ family-level similarity.
 Modern model optimization is an end-to-end systems problem. The same model can
 be memory-bound, compute-bound, cache-bound, or scheduler-bound depending on
 request shape. The next module starts with the simplest useful tool: a
-roofline-style budget for one generated token.
+roofline-style budget for one generated token. You will then measure your own
+machine with `torch` and see how far real throughput sits from the vendor's peak
+numbers — which is the first lesson in why the roofline gives lower bounds on
+latency rather than predictions of it.

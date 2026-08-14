@@ -1,11 +1,17 @@
-title: "Continuous batching scheduler"
+title: "Continuous batching over a paged KV cache"
 slug: "continuous-batching-scheduler"
-description: "Simulate a token-level scheduler that admits new requests while old ones decode."
+description: "Drive a real paged KV cache through continuous-batching decode, recycle physical blocks as requests finish, and prove that a request batched alongside others produces the same output it would have produced alone."
 order: 12
 difficulty: intermediate
-estimatedMinutes: 40
-tags: [serving, batching, scheduling]
+estimatedMinutes: 65
+tags: [serving, batching, scheduling, kv-cache, torch]
 type: coding
 languages: [python]
 defaultLanguage: python
-
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

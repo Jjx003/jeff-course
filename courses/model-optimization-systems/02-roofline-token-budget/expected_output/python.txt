@@ -1,4 +1,17 @@
 === 70B decode roofline ===
+params: 70000000000
+weight dtype: torch.bfloat16
+bytes per weight: 2
+weight bytes: 140000000000
+layers: 80
+context tokens: 8192
+KV dtype: torch.bfloat16
+GQA slab shape: (80, 2, 8, 128)
+GQA slab bytes per token: 327680
+MHA slab shape: (80, 2, 64, 128)
+MHA slab bytes per token: 2621440
+
+--- one decode step at batch 1 ---
 weight read: 140.0 GB
 matmul work: 140.0 GFLOP
 memory lower bound: 41.79 ms
@@ -6,4 +19,17 @@ compute lower bound: 0.142 ms
 bottleneck guess: memory
 GQA KV cache: 2.50 GiB
 MHA KV cache: 20.00 GiB
+
+--- machine ridge point ---
+peak compute: 989.0 TFLOP/s
+peak bandwidth: 3350.0 GB/s
+ridge point: 295.22 FLOP/byte
+
+--- arithmetic intensity vs batch size ---
+  batch=1     GFLOP=140.0     intensity=1.00     regime=memory   step_floor_ms=41.79     per_token_floor_ms=41.791
+  batch=4     GFLOP=560.0     intensity=4.00     regime=memory   step_floor_ms=41.79     per_token_floor_ms=10.448
+  batch=16    GFLOP=2240.0    intensity=16.00    regime=memory   step_floor_ms=41.79     per_token_floor_ms=2.612
+  batch=64    GFLOP=8960.0    intensity=64.00    regime=memory   step_floor_ms=41.79     per_token_floor_ms=0.653
+  batch=256   GFLOP=35840.0   intensity=256.00   regime=memory   step_floor_ms=41.79     per_token_floor_ms=0.163
+  batch=1024  GFLOP=143360.0  intensity=1024.00  regime=compute  step_floor_ms=144.95    per_token_floor_ms=0.142
 

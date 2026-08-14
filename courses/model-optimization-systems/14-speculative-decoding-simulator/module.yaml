@@ -1,11 +1,17 @@
-title: "Speculative decoding simulator"
+title: "Implement speculative sampling and prove it is lossless"
 slug: "speculative-decoding-simulator"
-description: "Estimate speedup from draft length, acceptance rate, and verification cost."
+description: "Implement the draft/verify accept-reject rule against real torch modules, prove algebraically and empirically that the emitted distribution is exactly the target's, and test the committed-token formula from the reading against measurement."
 order: 14
-difficulty: intermediate
-estimatedMinutes: 35
-tags: [speculative-decoding, simulation]
+difficulty: advanced
+estimatedMinutes: 70
+tags: [speculative-decoding, sampling, inference, torch]
 type: coding
 languages: [python]
 defaultLanguage: python
-
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

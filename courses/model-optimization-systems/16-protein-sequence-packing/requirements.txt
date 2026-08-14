@@ -1,0 +1,3 @@
+torch>=2.0,<2.5
+numpy>=1.24,<3
+transformers>=4.30,<4.50

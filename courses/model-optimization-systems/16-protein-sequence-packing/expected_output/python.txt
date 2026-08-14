@@ -1,9 +1,112 @@
-real tokens: 3488
-naive padded tokens: 6760
-packed tokens: 4096
-waste reduction: 39.4%
-pack 1: used=1006 items=kinase_A,mini_helix
-pack 2: used=972 items=receptor_C,binder_1,peptide_x
-pack 3: used=990 items=enzyme_B,domain_D
-pack 4: used=520 items=antibody_frag
+=== Sequence packing, verified against real ESM-2 ===
+checkpoint: facebook/esm2_t6_8M_UR50D
+hidden size: 320
+layers: 6
+attention heads: 20
+position embedding type: rotary
+pack capacity: 128
 
+--- part 1: real tokenized lengths ---
+  ubiquitin       residues= 76 tokens= 78
+  oxytocin        residues=  9 tokens= 11
+  crambin         residues= 46 tokens= 48
+  bradykinin      residues=  9 tokens= 11
+  aprotinin       residues= 58 tokens= 60
+  vasopressin     residues=  9 tokens= 11
+  acth            residues= 39 tokens= 41
+  somatostatin    residues= 14 tokens= 16
+  amyloid_beta    residues= 42 tokens= 44
+  insulin_a       residues= 21 tokens= 23
+  neuropeptide_y  residues= 36 tokens= 38
+  melittin        residues= 26 tokens= 28
+  glucagon        residues= 29 tokens= 31
+  insulin_b       residues= 30 tokens= 32
+  sequences: 14
+  residues: 444
+  tokens with <cls>/<eos>: 472
+  special-token overhead: 28
+
+--- part 1: padding waste ---
+  useful tokens: 472
+  naive batching, batch 4, arrival order
+    padded slots: 792
+    wasted slots: 320 (40.4%)
+  length-bucketed batching, batch 4, sorted
+    padded slots: 610
+    wasted slots: 138 (22.6%)
+  first-fit-decreasing packing, capacity 128
+    packs: 4
+    allocated slots: 512
+    wasted slots: 40 (7.8%)
+    pack 1: segments=2 used=126 free=2 occupancy=98.4% items=ubiquitin,crambin
+    pack 2: segments=3 used=127 free=1 occupancy=99.2% items=aprotinin,amyloid_beta,insulin_a
+    pack 3: segments=4 used=127 free=1 occupancy=99.2% items=acth,neuropeptide_y,insulin_b,somatostatin
+    pack 4: segments=5 used=92 free=36 occupancy=71.9% items=glucagon,melittin,oxytocin,bradykinin,vasopressin
+  slots saved vs naive: 280 (35.4% fewer)
+  slots saved vs bucketed: 98 (16.1% fewer)
+
+--- part 2a: padded batching equals one-at-a-time ---
+  batch input_ids shape: (14, 78)
+  padding mask shape: (14, 78)
+  sequences matching standalone: 14 of 14
+  all match: True
+
+--- part 2b: block-diagonal packing equals standalone ---
+  packed input_ids shape: (4, 128)
+  block-diagonal mask shape: (4, 1, 128, 128)
+  attend-allowed entries: 20966 of 65536
+  attend-allowed fraction: 32.0%
+  pack 1 ubiquitin       offset=  0 len= 78 match=True
+  pack 1 crambin         offset= 78 len= 48 match=True
+  pack 2 aprotinin       offset=  0 len= 60 match=True
+  pack 2 amyloid_beta    offset= 60 len= 44 match=True
+  pack 2 insulin_a       offset=104 len= 23 match=True
+  pack 3 acth            offset=  0 len= 41 match=True
+  pack 3 neuropeptide_y  offset= 41 len= 38 match=True
+  pack 3 insulin_b       offset= 79 len= 32 match=True
+  pack 3 somatostatin    offset=111 len= 16 match=True
+  pack 4 glucagon        offset=  0 len= 31 match=True
+  pack 4 melittin        offset= 31 len= 28 match=True
+  pack 4 oxytocin        offset= 59 len= 11 match=True
+  pack 4 bradykinin      offset= 70 len= 11 match=True
+  pack 4 vasopressin     offset= 81 len= 11 match=True
+  sequences matching standalone: 14 of 14
+  all match: True
+
+--- part 2b: negative control, padding-only mask ---
+  every real token can attend to every other real token in its pack
+  sequences matching standalone: 0 of 14
+  any match: False
+  worst relative corruption: 64%
+  least affected sequence: 23%
+  corruption above 1 percent everywhere: True
+
+--- part 2c: position ids, on a block we control ---
+  ESM-2 position embedding type: rotary
+  rotary attention depends on i-j only, so segment offsets cancel
+  the toy block below uses learned absolute positions instead
+  per-segment position ids: 14 of 14 match
+  continuous position ids: 4 of 14 match
+  segments at a nonzero offset: 10
+  worst relative corruption from continuous ids: 144%
+
+--- part 3: what packing costs and saves ---
+  token slots processed
+    naive padded: 792
+    length-bucketed: 610
+    packed: 512
+    useful: 472
+  attention score entries, one per query-key pair per head per layer
+    naive padded: 48528
+    length-bucketed: 34438
+    packed, dense kernel: 65536
+    packed, block-sparse kernel: 20966
+    one at a time, no padding: 20966
+    packed dense vs block-sparse ideal: 3.13x more
+    packed dense vs naive padded: 1.35x more
+    packed dense vs length-bucketed: 1.90x more
+  attention mask memory
+    padding mask, float32: 2048 bytes
+    block-diagonal mask, float32: 262144 bytes
+    block-diagonal mask, bool: 65536 bytes
+    same mask at capacity 8192 with 8 packs, float32: 2147483648 bytes

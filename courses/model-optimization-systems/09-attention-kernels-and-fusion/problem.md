@@ -83,4 +83,4 @@ The warning is important: "uses FlashAttention" is not a full performance claim.
 
 ## Recap
 
-Attention kernels are about data movement as much as arithmetic. The equation $\operatorname{softmax}(QK^\top)V$ is the same, but the implementation can either materialize massive temporary matrices or stream tiles with online statistics. The next lab makes that recurrence concrete in plain Python.
+Attention kernels are about data movement as much as arithmetic. The equation $\operatorname{softmax}(QK^\top)V$ is the same, but the implementation can either materialize massive temporary matrices or stream tiles with online statistics. The next lab implements that streaming recurrence over real multi-head tensors and checks it against `torch.nn.functional.scaled_dot_product_attention`, so you can confirm for yourself that the memory-bounded algorithm computes the same function as the textbook one.

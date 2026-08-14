@@ -1,11 +1,17 @@
 title: "Roofline math for token budgets"
 slug: "roofline-token-budget"
-description: "Estimate when an inference step is memory-bound, compute-bound, or KV-cache-bound."
+description: "Derive decode-time memory and compute floors from real tensor dtypes, find the batch size where the workload crosses the ridge point, then measure a memory-bound and a compute-bound torch kernel to see how far real hardware sits below peak."
 order: 2
 difficulty: intermediate
-estimatedMinutes: 35
-tags: [roofline, memory-bandwidth, inference]
+estimatedMinutes: 45
+tags: [roofline, memory-bandwidth, arithmetic-intensity, inference, torch]
 type: coding
 languages: [python]
 defaultLanguage: python
-
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

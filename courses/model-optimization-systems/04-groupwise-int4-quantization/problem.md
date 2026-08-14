@@ -1,101 +1,108 @@
 # Implement groupwise INT4 quantization
 
-In this exercise you will implement the smallest useful version of weight
-quantization: symmetric groupwise INT4. The point is not to build a production
-quantizer. The point is to make the data structure visible.
+The reading module argued that a low-bit format is integer codes *plus* enough
+metadata to reconstruct approximate real values. Now you will build one against
+a real weight matrix and check whether the argument survives contact with data.
 
-Low-bit weights are not just tiny integers. They are tiny integers plus enough
-metadata to reconstruct approximate real values. In this module, the metadata
-is one scale per group.
+You will quantize the weight of a `torch.nn.Linear(512, 256, bias=False)` — 131,072
+real parameters, not a hand-written list. By the end you will have answered three
+questions with measurements rather than assertions:
 
-Given the weight vector in the starter code:
+1. Does the packed format round-trip exactly?
+2. What does the format actually cost, in bytes, including metadata?
+3. What does a smaller group size buy you — and when does it buy you nothing?
 
-1. Split it into groups of 4.
-2. For each group, compute:
+Everything runs on CPU in float32. That is deliberate: quantization is a
+numerics exercise, and a fixed device plus a fixed seed means your numbers match
+the grader's exactly.
 
-$$
-s = \frac{\max |x|}{7}
-$$
+## Part 1 — Quantize and dequantize
 
-3. Quantize each value:
+Implement `quantize_groupwise(weight, group_size)`. Groups run along the input
+dimension, so a `(256, 512)` weight with group size 64 has 8 groups per output
+row and `256 x 8 = 2048` scales in total.
 
-$$
-q = \operatorname{clip}(\operatorname{round}(x/s), -7, 7)
-$$
-
-4. Dequantize with:
-
-$$
-\hat{x} = qs
-$$
-
-5. Print group scales, quantized values, dequantized values, and mean absolute
-   error.
-
-Do not change the starter constants or output labels. The grader checks the
-printed values.
-
-## Why the range is -7 to 7
-
-Signed 4-bit integers can represent 16 code points. Many symmetric quantizers
-use a range like `[-7, 7]` rather than `[-8, 7]` because it keeps the positive
-and negative sides balanced around zero. That leaves one code point unused, but
-it simplifies the scale convention and avoids giving the negative side one
-extra level.
-
-The scale maps the largest absolute value in the group to magnitude 7:
+For each group, with $Q_{\max} = 7$:
 
 $$
-\max_i |x_i| \mapsto 7
+s_g = \frac{\max_{i \in g} |x_i|}{Q_{\max}}, \qquad
+q_i = \operatorname{clip}\!\left(\operatorname{round}\!\left(\frac{x_i}{s_g}\right), -Q_{\max}, Q_{\max}\right)
 $$
 
-Every other value in the group lands on the nearest integer grid point.
+Return `codes` as `torch.int8` in the weight's original shape, and `scales` as
+`float32` with shape `(out_features, n_groups)`. Use a scale of `1.0` for any
+all-zero group so you never divide by zero.
 
-## Worked example
+Then implement `dequantize_groupwise` to reconstruct $\hat{x}_i = q_i s_g$.
 
-For the group:
+The reshape-to-groups trick is the whole technique: view the weight as
+`(out_features, n_groups, group_size)` and every reduction over `dim=-1` becomes
+a per-group reduction.
+
+## Part 2 — Pack two codes per byte
+
+This is the part the previous framing left out, and it is where "4-bit" stops
+being a figure of speech.
+
+`torch.int8` codes still occupy one byte each, so `codes` alone saves nothing
+over INT8. Implement `pack_int4` to place two codes in every byte:
+
+- shift the signed range `[-7, 7]` up by 8 into the nibble range `[1, 15]`;
+- put even columns in the low nibble and odd columns in the high nibble;
+- return a `torch.uint8` tensor of shape `(out_features, in_features // 2)`.
+
+Then implement `unpack_int4` to invert it. Packing is only legitimate if it is
+lossless, so the program asserts nothing and simply prints whether
 
 ```text
-[-1.2, -0.8, -0.1, 0.0]
+unpack_int4(pack_int4(codes)) == codes
 ```
 
-the scale is:
+holds exactly. That line must print `True`. Bit manipulation either round-trips
+or it does not — there is no "close enough" here.
+
+Use `torch.bitwise_or`, `torch.bitwise_and`, `torch.bitwise_left_shift`, and
+`torch.bitwise_right_shift`. Note that `>>` on a signed dtype propagates the
+sign bit, which is exactly the bug the `+8` bias exists to avoid.
+
+## Part 3 — Count the bytes honestly
+
+Implement `int4_bytes` returning `(payload_bytes, scale_bytes, total_bytes)`.
+The payload holds two weights per byte; scales are fp16, one per group.
+
+A format that ignores its own metadata is lying about its compression ratio, so
+report `effective bits/weight` as `total_bytes * 8 / n_weights`. For group size
+64 you should land on exactly `4.250` — the `4 + 16/64` from the theory table,
+now computed rather than tabulated.
+
+## Part 4 — What group size actually buys
+
+Fill in the measurement loop in `sweep_table`. For each group size, report
+`bits/weight`, the mean absolute error of the reconstructed weight, and the
+relative error of the **layer output**:
 
 $$
-s = 1.2 / 7 \approx 0.171429
+\text{out\_rel\_err} = \frac{\lVert x\hat{W}^{\top} - xW^{\top} \rVert_F}{\lVert xW^{\top} \rVert_F}
 $$
 
-Then:
+The output error is the one that matters. Nobody deploys a weight matrix; they
+deploy the function it computes.
 
-| Value | Value / scale | Rounded | Dequantized |
-|---:|---:|---:|---:|
-| -1.2 | -7.00 | -7 | -1.200 |
-| -0.8 | -4.67 | -5 | -0.857 |
-| -0.1 | -0.58 | -1 | -0.171 |
-| 0.0 | 0.00 | 0 | 0.000 |
+The sweep runs twice. The first pass uses the layer's own Gaussian-initialized
+weights. The second pass calls `inject_outliers`, which multiplies every 137th
+column by 25 to imitate the outlier channels that real trained transformers
+develop.
 
-The largest value reconstructs exactly because it defined the scale. The
-others move to nearby grid points. That movement is quantization error.
+Compare the two tables before reading the tips. The gap between them is the
+entire reason production quantizers use group sizes of 32 to 128 instead of one
+scale per tensor, and it is not visible at all in the Gaussian case.
 
-## What this leaves out
-
-Production quantizers add many details this exercise omits:
-
-- packing two 4-bit values into one byte;
-- vectorized dequantization kernels;
-- group sizes like 32, 64, or 128;
-- per-channel or per-block scales;
-- zero points for asymmetric ranges;
-- calibration data;
-- outlier handling;
-- mixed precision for fragile layers.
-
-Those details matter, but they build on the same mechanism: choose a scale,
-round to low-bit codes, store metadata, and reconstruct approximately.
+Do not change the starter constants or the output labels. The grader checks
+printed stdout.
 
 ## Recap
 
-After this exercise, groupwise INT4 should feel less like a buzzword and more
-like a concrete representation. The next quiz checks whether you can separate
-weight quantization, activation quantization, KV-cache compression, and QLoRA's
-adapter-based memory plan.
+You now have a groupwise INT4 quantizer that packs real bytes, reports its true
+metadata cost, and measures error where it counts. The next module is a
+checkpoint that asks you to sort optimization claims by which tensor is being
+compressed and which bottleneck is being targeted.

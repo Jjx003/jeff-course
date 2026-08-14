@@ -1,4 +1,38 @@
-naive: [0.179249, 1.385252]
-online: [0.179249, 1.385252]
-max diff: 0.00000000
+=== Online softmax attention on real multi-head tensors ===
+Q/K/V shape: (2, 4, 256, 64)
+dtype: torch.float32
+softmax scale (1/sqrt(head_dim)): 0.12500
+KV tile: 64
+KV tiles per query row: 4
+
+--- full attention: one query pass, streamed KV tiles ---
+output shape: (2, 4, 256, 64)
+output dtype: torch.float32
+KV tiles computed: 4
+KV tiles skipped: 0
+  tiled vs naive     allclose: True   max abs diff < 1e-05: True
+  tiled vs sdpa      allclose: True   max abs diff < 1e-05: True
+  naive vs sdpa      allclose: True   max abs diff < 1e-05: True
+
+--- causal attention: query tile 64, KV tile 64 ---
+tile pairs total: 16
+tile pairs computed: 10
+tile pairs skipped as fully masked: 6
+fraction of tile pairs skipped: 0.3750
+  tiled vs naive     allclose: True   max abs diff < 1e-05: True
+  tiled vs sdpa      allclose: True   max abs diff < 1e-05: True
+  naive vs sdpa      allclose: True   max abs diff < 1e-05: True
+
+--- score-matrix memory at this shape ---
+element size: 4 bytes
+full score matrix elements: 524288
+full score matrix bytes: 2097152
+one KV tile of scores bytes: 524288
+reduction factor: 4.0x
+
+--- score memory versus sequence length (batch 2, heads 4, tile 64) ---
+  L=1024   full=      32.0 MiB  tiled=    2.0 MiB  reduction=   16.0x
+  L=4096   full=     512.0 MiB  tiled=    8.0 MiB  reduction=   64.0x
+  L=16384  full=    8192.0 MiB  tiled=   32.0 MiB  reduction=  256.0x
+  L=65536  full=  131072.0 MiB  tiled=  128.0 MiB  reduction= 1024.0x
 

@@ -1,11 +1,17 @@
 title: "Implement groupwise INT4 quantization"
 slug: "groupwise-int4-quantization"
-description: "Write a tiny symmetric groupwise quantizer and measure reconstruction error."
+description: "Quantize a real torch weight matrix to groupwise INT4, pack two codes per byte, and measure the output error that group size actually buys you."
 order: 4
 difficulty: intermediate
-estimatedMinutes: 40
-tags: [quantization, int4, compression]
+estimatedMinutes: 55
+tags: [quantization, int4, compression, torch]
 type: coding
 languages: [python]
 defaultLanguage: python
-
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

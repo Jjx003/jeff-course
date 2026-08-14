@@ -99,4 +99,4 @@ Compression can be exact only in special lossless cases. Usually it is approxima
 
 ## Recap
 
-For long-context LLM serving, the KV cache is often the system. Kernels decide how fast attention can read it; allocators decide how many requests fit; schedulers decide which requests get tokens next. The next coding lab simulates the scheduling half of this story with a tiny continuous batching model.
+For long-context LLM serving, the KV cache is often the system. Kernels decide how fast attention can read it; allocators decide how many requests fit; schedulers decide which requests get tokens next. The next coding lab builds all three against real tensors: a paged KV cache, a continuous-batching scheduler that admits and retires requests mid-flight, and real attention decode steps that read from the cache. The payoff is a correctness test — proving that a request batched alongside others produces the same output it would have produced alone, which is exactly the property that cache-indexing bugs silently break.

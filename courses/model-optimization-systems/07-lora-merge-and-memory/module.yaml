@@ -1,11 +1,17 @@
 title: "Merge LoRA and count the memory"
 slug: "lora-merge-and-memory"
-description: "Implement the LoRA delta, merge it into a base matrix, and compute adapter memory."
+description: "Build a LoRALinear module around a frozen nn.Linear, prove the adapter starts as an exact no-op and merges without changing the function, and measure the optimizer memory and rank ceiling from real tensors."
 order: 7
 difficulty: intermediate
-estimatedMinutes: 35
-tags: [lora, qlora, memory]
+estimatedMinutes: 60
+tags: [lora, qlora, memory, torch]
 type: coding
 languages: [python]
 defaultLanguage: python
-
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

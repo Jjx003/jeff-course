@@ -4,8 +4,13 @@ description: >
   The practical systems layer behind modern LLM and protein-model deployment:
   quantization, LoRA and QLoRA, fused kernels, KV-cache memory, speculative
   decoding, batching, and sequence-packing tricks that standard ML courses
-  usually skip.
-tags: [machine-learning, llm, protein-folding, systems, optimization]
+  usually skip. Every coding module is built on real PyTorch tensors and ends by
+  verifying that its optimization is actually correct — that packed INT4
+  round-trips exactly, that a merged LoRA adapter equals the adapter path, that
+  tiled attention matches the fused kernel, and that speculative decoding leaves
+  the output distribution unchanged. Reading, quiz, and drill modules need no
+  local tooling; coding modules run on CPU via PyTorch, with one module loading a
+  small ESM-2 checkpoint.
+tags: [machine-learning, llm, protein-folding, systems, optimization, pytorch]
 difficulty: advanced
 order: 8
-

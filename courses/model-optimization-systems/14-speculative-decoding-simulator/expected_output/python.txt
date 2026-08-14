@@ -1,5 +1,81 @@
-weak draft: committed=2.11 speedup=1.60x
-solid draft: committed=3.05 speedup=2.31x
-long draft: committed=3.70 speedup=2.26x
-expensive draft: committed=3.05 speedup=1.53x
+=== Speculative sampling from a tiny target/draft pair ===
+vocab: 64
+target hidden dim: 64
+p table shape: (64, 64)
+p table dtype: torch.float32
+context token: 7
+p entropy: 1.9303 nats (uniform = 4.1589)
+p top-1: 0.4602
+
+=== strong draft (hidden 48, temperature 0.20) ===
+draft parameters: 6208
+q entropy: 1.8449 nats
+TV(p, q): 0.2887
+alpha: 0.7113
+alpha == 1 - TV(p, q): True
+alpha across all 64 contexts: min=0.3205 mean=0.6165 max=0.9639
+
+--- exact identity: q*min(1, p/q) + (1 - alpha)*p_res == p ---
+max |emitted - p|: 0.000000
+allclose(emitted, p): True
+emitted sums to 1: True
+replacement drawn from p instead: TV(wrong, p) = 0.1785
+
+--- Monte Carlo, 200000 trials ---
+empirical acceptance: 0.7115 (alpha 0.7113)
+TV(speculative, direct p samples): 0.0047
+TV(speculative, p exact): 0.0040
+TV(q, p) for contrast: 0.2887
+lossless within 0.02: True
+
+--- prefix survival over 100000 speculative steps ---
+  i=1 measured=0.7101 alpha^i=0.7113
+  i=2 measured=0.4517 alpha^i=0.5059
+  i=3 measured=0.2904 alpha^i=0.3599
+  i=4 measured=0.1758 alpha^i=0.2560
+  i=5 measured=0.1085 alpha^i=0.1821
+  i=6 measured=0.0674 alpha^i=0.1295
+  i=7 measured=0.0413 alpha^i=0.0921
+  i=8 measured=0.0250 alpha^i=0.0655
+
+--- committed tokens per verification step ---
+  k=2 measured=2.1618 predicted=2.2172 rel_err=-0.0250
+  k=4 measured=2.6281 predicted=2.8331 rel_err=-0.0724
+  k=8 measured=2.8703 predicted=3.3023 rel_err=-0.1308
+
+=== weak draft (hidden 2, temperature 0.60) ===
+draft parameters: 320
+q entropy: 4.1371 nats
+TV(p, q): 0.7717
+alpha: 0.2283
+alpha == 1 - TV(p, q): True
+alpha across all 64 contexts: min=0.0631 mean=0.3649 max=0.5758
+
+--- exact identity: q*min(1, p/q) + (1 - alpha)*p_res == p ---
+max |emitted - p|: 0.000000
+allclose(emitted, p): True
+emitted sums to 1: True
+replacement drawn from p instead: TV(wrong, p) = 0.1319
+
+--- Monte Carlo, 200000 trials ---
+empirical acceptance: 0.2280 (alpha 0.2283)
+TV(speculative, direct p samples): 0.0044
+TV(speculative, p exact): 0.0030
+TV(q, p) for contrast: 0.7717
+lossless within 0.02: True
+
+--- prefix survival over 100000 speculative steps ---
+  i=1 measured=0.2283 alpha^i=0.2283
+  i=2 measured=0.0829 alpha^i=0.0521
+  i=3 measured=0.0302 alpha^i=0.0119
+  i=4 measured=0.0110 alpha^i=0.0027
+  i=5 measured=0.0039 alpha^i=0.0006
+  i=6 measured=0.0014 alpha^i=0.0001
+  i=7 measured=0.0005 alpha^i=0.0000
+  i=8 measured=0.0002 alpha^i=0.0000
+
+--- committed tokens per verification step ---
+  k=2 measured=1.3112 predicted=1.2805 rel_err=+0.0240
+  k=4 measured=1.3524 predicted=1.2951 rel_err=+0.0443
+  k=8 measured=1.3584 predicted=1.2959 rel_err=+0.0483
 

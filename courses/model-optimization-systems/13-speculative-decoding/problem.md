@@ -164,6 +164,10 @@ serving system can exploit the extra parallelism. It fails when the draft is too
 slow, acceptance is too low, memory pressure gets worse, or the workload is
 already throughput-bound.
 
-The next coding module turns this story into a small estimator. You will not
-build a production scheduler, but you will build the mental calculator every
-inference engineer needs before they reach for speculative decoding.
+The next coding module implements the algorithm itself: a draft proposal, the
+`min(1, p/q)` acceptance test, and the residual distribution that replacement
+tokens are drawn from after a rejection. You will then verify the claim this
+entire technique rests on — that speculative decoding does not change the output
+distribution at all — both algebraically and by Monte Carlo. Along the way the
+acceptance rate stops being a parameter you assume and becomes a quantity you
+derive from the two distributions.

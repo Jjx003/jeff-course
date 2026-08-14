@@ -1,7 +1,93 @@
-t=0: active=A,B
-t=1: active=A,C
-t=2: active=A,C
-t=3: active=D
-t=4: active=D
-completed: A:3 B:1 C:3 D:5
+=== Continuous batching over a real paged KV cache ===
+n_kv_heads: 8
+head_dim: 64
+d_model: 512
+block_size: 16
+n_blocks: 6
+max_active: 3
+
+cache_k shape: (6, 16, 8, 64)
+cache dtype: torch.float32
+total cache slots: 96
+total cache bytes: 393216
+
+--- workload ---
+  R0 arrival=0 prompt=10 gen=6 total=16 blocks_needed=1
+  R1 arrival=0 prompt=20 gen=12 total=32 blocks_needed=2
+  R2 arrival=1 prompt=6 gen=3 total=9 blocks_needed=1
+  R3 arrival=2 prompt=34 gen=8 total=42 blocks_needed=3
+  R4 arrival=4 prompt=12 gen=10 total=22 blocks_needed=2
+  R5 arrival=5 prompt=8 gen=4 total=12 blocks_needed=1
+  R6 arrival=14 prompt=6 gen=5 total=11 blocks_needed=1
+  R7 arrival=15 prompt=18 gen=6 total=24 blocks_needed=2
+
+--- decode timeline (active requests before each step) ---
+  step  0: active=R0,R1
+  step  1: active=R0,R1,R2
+  step  2: active=R0,R1,R2
+  step  3: active=R0,R1,R2
+  step  4: active=R0,R1,R3
+  step  5: active=R0,R1,R3
+  step  6: active=R1,R3,R5
+  step  7: active=R1,R3,R5
+  step  8: active=R1,R3,R5
+  step  9: active=R1,R3,R5
+  step 10: active=R1,R3
+  step 11: active=R1,R3
+  step 12: active=R4
+  step 13: active=R4
+  step 14: active=R4,R6
+  step 15: active=R4,R6,R7
+  step 16: active=R4,R6,R7
+  step 17: active=R4,R6,R7
+  step 18: active=R4,R6,R7
+  step 19: active=R4,R7
+  step 20: active=R4,R7
+  step 21: active=R4
+  decode steps: 22
+  finished: R0:6 R1:12 R2:4 R3:12 R4:22 R5:10 R6:19 R7:21
+
+--- block table activity ---
+peak concurrent requests: 3
+peak blocks in use: 6
+total block allocations: 13
+recycled physical blocks: 5
+  block 0: R0 -> R5 -> R4
+  block 1: R1 -> R6
+  block 2: R1 -> R7
+  block 3: R2 -> R3 -> R7
+  block 4: R3 -> R4
+free blocks at end: 6
+
+--- memory at peak block usage (step 4) ---
+blocks in use: 6
+block table entries: 6
+allocated slots: 96
+live tokens: 75
+total cache bytes: 393216
+allocated bytes: 393216
+live token bytes: 307200
+wasted slots: 21
+internal fragmentation: 21.875%
+mean internal fragmentation over all steps: 25.399%
+total block-table reads during gather: 94
+
+--- batched vs individual equivalence ---
+tolerance: rtol=1e-04 atol=1e-05
+  R0 out shape=(6, 512) max_abs_diff=0.00000 allclose=True
+  R1 out shape=(12, 512) max_abs_diff=0.00000 allclose=True
+  R2 out shape=(3, 512) max_abs_diff=0.00000 allclose=True
+  R3 out shape=(8, 512) max_abs_diff=0.00000 allclose=True
+  R4 out shape=(10, 512) max_abs_diff=0.00000 allclose=True
+  R5 out shape=(4, 512) max_abs_diff=0.00000 allclose=True
+  R6 out shape=(5, 512) max_abs_diff=0.00000 allclose=True
+  R7 out shape=(6, 512) max_abs_diff=0.00000 allclose=True
+all requests match individual replay: True
+
+--- block size sweep (total slots held at 256) ---
+  B=1   n_blocks=256  peak_blocks=92   table_entries=92   frag= 0.000% block_reads=1122  equiv=True
+  B=8   n_blocks=32   peak_blocks=13   table_entries=13   frag=13.426% block_reads=162   equiv=True
+  B=16  n_blocks=16   peak_blocks=7    table_entries=7    frag=25.399% block_reads=94    equiv=True
+  B=32  n_blocks=8    peak_blocks=4    table_entries=4    frag=43.448% block_reads=62    equiv=True
+  B=64  n_blocks=4    peak_blocks=3    table_entries=3    frag=67.535% block_reads=54    equiv=True
 
