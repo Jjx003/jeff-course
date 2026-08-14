@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" role="img" aria-labelledby="title desc">
+  <title id="title">Immune search circuit from infected tissue to lymph node and back</title>
+  <desc id="desc">Antigen and dendritic cells leave infected skin through afferent lymph, meet naive lymphocytes in a draining node, and activated effectors return through efferent lymph and blood.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>.h{font:700 22px system-ui;fill:#0f172a}.t{font:16px system-ui;fill:#1e293b}.s{font:13px system-ui;fill:#475569}.a{fill:none;stroke:#334155;stroke-width:3;marker-end:url(#arrow)}.box{stroke-width:2}</style>
+  </defs>
+  <rect width="1000" height="520" rx="24" fill="#f8fafc"/>
+  <rect x="40" y="65" width="255" height="345" rx="28" fill="#fff1f2" stroke="#e11d48" class="box"/>
+  <text x="68" y="105" class="h">1  Infected fingertip</text>
+  <path d="M85 310 C110 245 165 230 225 250 C250 260 265 300 245 335 C215 385 125 380 85 310" fill="#fecdd3" stroke="#be123c" stroke-width="2"/>
+  <circle cx="145" cy="270" r="12" fill="#7f1d1d"/><circle cx="178" cy="292" r="9" fill="#7f1d1d"/><circle cx="210" cy="265" r="10" fill="#7f1d1d"/>
+  <path d="M120 210 C140 180 180 180 200 210 C180 235 140 235 120 210" fill="#fde68a" stroke="#a16207" stroke-width="2"/>
+  <text x="76" y="145" class="t">Resident sensing recruits</text><text x="76" y="168" class="t">blood leukocytes.</text>
+  <text x="88" y="442" class="s">Antigen + migratory dendritic cells</text>
+  <rect x="405" y="70" width="270" height="340" rx="135" fill="#ecfeff" stroke="#0891b2" class="box"/>
+  <text x="446" y="110" class="h">3  Draining node</text>
+  <path d="M445 160 Q540 115 635 160 L635 305 Q540 360 445 305 Z" fill="#cffafe" stroke="#0e7490" stroke-width="2"/>
+  <circle cx="500" cy="210" r="22" fill="#fbbf24"/><circle cx="565" cy="190" r="14" fill="#60a5fa"/><circle cx="590" cy="245" r="14" fill="#60a5fa"/><circle cx="520" cy="275" r="14" fill="#60a5fa"/>
+  <text x="467" y="329" class="s">rare-cell scanning + clonal selection</text>
+  <rect x="780" y="65" width="180" height="345" rx="28" fill="#eff6ff" stroke="#2563eb" class="box"/>
+  <text x="818" y="105" class="h">5  Blood</text>
+  <path d="M830 145 C800 220 920 250 865 330" fill="none" stroke="#ef4444" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="835" cy="176" r="11" fill="#dbeafe" stroke="#1d4ed8" stroke-width="3"/><circle cx="885" cy="260" r="11" fill="#dbeafe" stroke="#1d4ed8" stroke-width="3"/>
+  <text x="806" y="375" class="s">effectors home to</text><text x="806" y="394" class="s">inflamed tissue</text>
+  <path d="M295 210 C345 170 365 160 405 170" class="a"/><text x="307" y="145" class="t">2  afferent lymph</text>
+  <path d="M675 250 C720 250 745 235 780 210" class="a"/><text x="681" y="225" class="t">4  efferent lymph</text>
+  <path d="M815 425 C650 505 265 500 185 413" class="a"/><text x="445" y="485" class="t">6  activated cells and antibody return</text>
+</svg>

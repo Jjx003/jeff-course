@@ -7,6 +7,7 @@
 
   let track = $derived(data.track);
   let completions = $derived(data.completions);
+  let enrolled = $derived(data.enrolled);
 
   // Build a quick lookup: problemId → completion record.
   let completionMap = $derived.by(() => {
@@ -79,7 +80,7 @@
       {/if}
     </div>
 
-    {#if totalCount > 0}
+    {#if totalCount > 0 && enrolled}
       <div class="track-hero-side">
         <ProgressRing
           value={progress}
@@ -94,10 +95,18 @@
           </a>
         {/if}
       </div>
+    {:else if totalCount > 0}
+      <div class="track-hero-side enroll-side">
+        <span class="preview-label">Syllabus preview</span>
+        <form method="POST" action="?/enroll">
+          <button class="continue-link" type="submit">Enroll in course</button>
+        </form>
+        <span class="enroll-note">Add this course to My courses to begin.</span>
+      </div>
     {/if}
   </section>
 
-  {#if totalCount > 0}
+  {#if totalCount > 0 && enrolled}
     <section class="track-summary" aria-label="Track summary">
       <div>
         <span class="summary-value">{totalCount}</span>
@@ -132,11 +141,13 @@
   <div class="module-list mt-6">
     {#each track.problems as problem, idx}
       {@const done = isCompleted(problem.slug)}
-      <a
-        href="/tracks/{track.slug}/problems/{problem.slug}"
+      <svelte:element
+        this={enrolled ? 'a' : 'div'}
+        href={enrolled ? `/tracks/${track.slug}/problems/${problem.slug}` : undefined}
         class="module-row group"
         class:row-done={done}
         class:row-default={!done}
+        class:row-locked={!enrolled}
       >
         <!-- Order number / check -->
         <span class="row-status">
@@ -178,7 +189,7 @@
         </div>
 
         <span class="text-slate-600 group-hover:text-slate-400 transition-colors">→</span>
-      </a>
+      </svelte:element>
     {/each}
   </div>
 
@@ -218,6 +229,10 @@
     gap: 0.75rem;
     flex-shrink: 0;
   }
+  .enroll-side { align-items: stretch; width: 190px; }
+  .enroll-side form, .enroll-side .continue-link { width: 100%; }
+  .preview-label { color: #93c5fd; font-size: 0.68rem; font-weight: 750; letter-spacing: 0.08em; text-align: center; text-transform: uppercase; }
+  .enroll-note { color: #64748b; font-size: 0.7rem; line-height: 1.45; text-align: center; }
   .continue-link {
     display: inline-flex;
     align-items: center;
@@ -306,6 +321,10 @@
     text-decoration: none;
     transition: border-color 150ms ease, background 150ms ease;
   }
+  .row-locked { cursor: default; opacity: 0.72; }
+  .row-locked:hover { border-color: #334155; background: #16181b; }
+  .row-locked > span:last-child { display: none; }
+  .row-locked::after { content: 'Enroll to unlock'; flex-shrink: 0; color: #64748b; font-size: 0.68rem; font-weight: 650; }
   .module-copy {
     flex: 1;
     min-width: 0;

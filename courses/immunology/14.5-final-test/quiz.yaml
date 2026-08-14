@@ -1,0 +1,160 @@
+questions:
+  - id: adjuvant_comparison
+    type: multiple_choice
+    stem: "Two vaccines contain identical antigen. Vaccine A produces higher antibody titers; vaccine B produces lower titers but stronger tissue-homing CD8 memory. What is the most defensible conclusion?"
+    options:
+      - "Their formulations shaped different adaptive features, so 'more immunogenic' depends on the protective endpoint"
+      - "Vaccine A is superior for every pathogen because serum titer is the only immune outcome"
+      - "Vaccine B cannot contain an adjuvant because its antibody titer is lower"
+      - "The antigen sequence must differ despite the stated design"
+    correct: 0
+    explanation: "Adjuvants and delivery systems shape magnitude, quality, location, and durability. Ranking them requires a defined correlate or clinical endpoint."
+  - id: endpoint_table
+    type: multiple_choice
+    stem: "In a trial, infection occurs in 100/1,000 placebo and 80/1,000 vaccine recipients; symptomatic disease occurs in 80/1,000 placebo and 20/1,000 vaccine recipients. Which interpretation is correct?"
+    options:
+      - "Efficacy is 20% against infection and 75% against symptomatic disease, showing endpoint-specific protection"
+      - "Efficacy is 75% against both endpoints because symptoms are easier to count"
+      - "The vaccine increases infection by 20% but prevents every symptom"
+      - "No efficacy can be calculated from risks in randomized groups"
+    correct: 0
+    explanation: "Vaccine efficacy is 1 minus the risk ratio. Infection: 1 - 0.08/0.10 = 20%. Symptomatic disease: 1 - 0.02/0.08 = 75%."
+  - id: herd_threshold
+    type: parametric
+    stem_template: "Under a homogeneous model with a perfectly protective intervention, R0 is {{r}}. What immune percentage gives the threshold 100*(1-1/R0), rounded to the nearest whole percent?"
+    params:
+      r: { min: 2, max: 8, step: 1 }
+    correct_formula: "Math.round(100 * (1 - 1 / r))"
+    distractor_formulas: ["Math.round(100 / r)", "Math.round(100 * (1 - 1 / (r + 1)))", "Math.round(100 * r / (r + 1))"]
+    answer_suffix: "%"
+    explanation_template: "The simplified threshold is 1 - 1/R0, or {{Math.round(100 * (1 - 1 / r))}}% for R0={{r}}. Real populations violate the assumptions through heterogeneity, imperfect protection, and waning."
+  - id: checkpoint_chain
+    type: multiple_choice
+    stem: "A tumor is PD-L1 positive. After PD-1 blockade, peripheral T cells activate, but imaging shows no T-cell entry into tumor nests and the tumor does not shrink. Which bottleneck is most directly supported?"
+    options:
+      - "Trafficking or spatial exclusion remains limiting despite release of an inhibitory checkpoint"
+      - "PD-1 blockade failed to bind its target because peripheral T cells activated"
+      - "Tumor antigen presentation must be perfect because PD-L1 is present"
+      - "The only remaining explanation is terminal complement deficiency"
+    correct: 0
+    explanation: "The perturbation has a systemic pharmacodynamic effect, but the spatial observation localizes a downstream bottleneck at entry or positioning in the tumor."
+  - id: spatial_neighborhoods
+    type: multiple_choice
+    stem: "Two tumors have the same bulk abundance of CD8, dendritic-cell, and tumor transcripts. Only tumor X responds to therapy. Spatial imaging shows CD8 cells adjacent to antigen-presenting cells and tumor cells in X but trapped at the stromal margin in Y. What information changed the mechanism?"
+    options:
+      - "Cellular neighborhood and exclusion geometry, which bulk averages cannot recover"
+      - "The existence of RNA in both tumors"
+      - "The total number of genes in the reference genome"
+      - "Whether either biopsy contained any cells"
+    correct: 0
+    explanation: "Equal abundance does not imply equal opportunity for cell-cell interaction. Spatial organization distinguishes productive immune neighborhoods from exclusion."
+  - id: irae_tradeoff
+    type: multiple_choice
+    stem: "A patient responds to checkpoint blockade but develops autoimmune colitis. Tumor control persists after immunosuppression resolves the colitis. Which conclusion is justified?"
+    options:
+      - "Lowering inhibitory thresholds can affect tumor and healthy tissues, but toxicity and antitumor effect are not necessarily inseparable at every later time point"
+      - "The colitis proves the drug contained a gastrointestinal pathogen"
+      - "Any treatment of toxicity must immediately erase tumor memory"
+      - "The adverse event is unrelated to immune regulation because the tumor responded"
+    correct: 0
+    explanation: "Checkpoint pathways restrain responses in multiple tissues. The shared origin explains mechanism-linked toxicity, while different cells, antigens, and kinetics permit the outcomes to diverge."
+  - id: car_signal_tradeoff
+    type: multiple_choice
+    stem: "Two CAR-T products use the same antigen-binding domain. Product A expands rapidly and causes early cytokine toxicity but contracts; product B expands more slowly and persists. Which design difference could plausibly produce this pattern?"
+    options:
+      - "Different intracellular costimulatory and signaling modules"
+      - "A different tumor antigen recognized by the unchanged binding domain"
+      - "Loss of all genetic material from product B"
+      - "Replacement of the CAR with secreted antibody in both products"
+    correct: 0
+    explanation: "Binding controls recognition, while intracellular modules influence activation strength, metabolism, expansion, exhaustion, persistence, and toxicity."
+  - id: allogeneic_edit
+    type: multiple_choice
+    stem: "An off-the-shelf donor T-cell product is edited to remove its endogenous TCR. This chiefly reduces one hazard, but which separate hazard remains?"
+    options:
+      - "Recipient immunity can still recognize and reject the donor cells"
+      - "The engineered CAR can no longer recognize antigen by definition"
+      - "The cells can no longer be manufactured before the patient arrives"
+      - "The product necessarily causes antibody-mediated allergy"
+    correct: 0
+    explanation: "Removing endogenous TCR reduces graft-versus-host recognition. Host-versus-graft rejection is a distinct direction of alloreactivity and requires separate control."
+  - id: reset_evidence
+    type: multiple_choice
+    stem: "After autoimmune cell therapy, circulating B cells disappear, then recover. Which additional result most strongly distinguishes durable immune reset from temporary depletion?"
+    options:
+      - "Years of drug-free remission with loss of pathogenic function, repertoire reorganization, and retained responses to vaccines or infection"
+      - "A low B-cell count one week after conditioning"
+      - "Transient fever during infusion"
+      - "A single lower cytokine value before B-cell recovery"
+    correct: 0
+    explanation: "Reset is a longitudinal claim about rebuilt regulation and function. Depletion is expected early and does not by itself establish durable remission or preserved protective immunity."
+  - id: nested_design
+    type: multiple_choice
+    stem: "A study has 6 patients per group and 5,000 cells per patient. A cell-level test reports p<0.0001, but patient-level averages overlap strongly. Which redesign best addresses the inference problem?"
+    options:
+      - "Model cells as nested within patients and increase independent patient replication"
+      - "Sequence more cells from the same 12 patients and treat each as independent"
+      - "Discard patient identifiers before analysis"
+      - "Select only the cells with the largest group difference"
+    correct: 0
+    explanation: "Treatment was assigned or disease status observed at the patient level. Cells refine each patient's estimate but do not replace independent biological replicates."
+  - id: leakage_transfer
+    type: multiple_choice
+    stem: "A TCR-peptide model scores 0.96 AUROC under a random pair split but 0.61 when entire peptide families and near-neighbor TCRs are held out. What is the best interpretation?"
+    options:
+      - "The random split overstated transfer by allowing related examples across train and test sets"
+      - "The held-out-family split is invalid because difficult examples should remain in training"
+      - "The model has proven causal rules of antigen recognition"
+      - "AUROC cannot be used for any classification problem"
+    correct: 0
+    explanation: "The sharp drop under grouped holdout reveals dependence on similarity to training examples. The harder split better matches generalization to new antigen families."
+  - id: rare_screen
+    type: multiple_choice
+    stem: "A receptor screen tests 10,000 pairs, of which 100 truly bind. Model A has 99% accuracy but predicts every pair nonbinding. Model B retrieves 60 binders among 120 positive calls. Which statement is correct?"
+    options:
+      - "Model A is useless for discovery despite high accuracy; Model B has 50% precision and 60% recall"
+      - "Model A is perfect because accuracy exceeds 95%"
+      - "Model B has 60% precision and 50% recall"
+      - "Class imbalance makes false positives irrelevant"
+    correct: 0
+    explanation: "Always predicting the majority class gives 9,900/10,000 = 99% accuracy and finds no binders. Model B precision is 60/120 = 50%; recall is 60/100 = 60%."
+  - id: compositional_counts
+    type: multiple_choice
+    stem: "Before treatment a biopsy has 100 T cells and 100 myeloid cells. After treatment it has 100 T cells and 300 myeloid cells. Which report is accurate?"
+    options:
+      - "The T-cell fraction fell from 50% to 25% even though the absolute T-cell count was unchanged"
+      - "The treatment killed half the T cells because their fraction halved"
+      - "Both absolute cell counts must sum to one"
+      - "Myeloid expansion cannot alter another population's fraction"
+    correct: 0
+    explanation: "Compositional fractions share a denominator. Absolute counts or an external reference are needed before interpreting a lower fraction as cell loss."
+  - id: causal_bridge
+    type: multiple_choice
+    stem: "A spatial dendritic-cell/T-cell neighborhood predicts response in two retrospective cohorts. Which next study most directly tests whether the neighborhood contributes causally rather than merely marking responsive tumors?"
+    options:
+      - "Perturb formation or function of the neighborhood in a suitable model, prespecify a response readout, and test rescue"
+      - "Fit a larger predictor to the same retrospective samples without intervention"
+      - "Rename the signature as a mechanism"
+      - "Remove nonresponders from the analysis"
+    correct: 0
+    explanation: "Replication strengthens association. A targeted perturbation plus rescue tests whether changing the proposed mediator changes outcome as predicted."
+  - id: falsification_design
+    type: multiple_choice
+    stem: "Hypothesis: therapy fails because dendritic cells cannot enter the tumor. Which result would most clearly falsify this specific bottleneck?"
+    options:
+      - "Direct tracking shows abundant functional dendritic-cell entry before treatment, yet restoring additional entry does not improve T-cell priming or response"
+      - "Responders contain more dendritic-cell RNA than nonresponders"
+      - "The therapy fails in a second cohort"
+      - "A review article describes dendritic cells as important"
+    correct: 0
+    explanation: "The hypothesis predicts deficient entry and benefit from correcting it. Demonstrating that entry is already functional and that further restoration does not affect downstream events contradicts the proposed limiting step."
+  - id: structural_escape_chain
+    type: multiple_choice
+    stem: "A high-confidence complex model places a viral mutation at an antibody interface, and the mutant shows less binding in one plate assay. Which next result most directly supports epitope-specific immune escape rather than global antigen disruption?"
+    options:
+      - "The mutant retains expression and native conformation, selectively reduces that antibody's kinetics and neutralization, and a compensatory antibody mutation rescues the effect"
+      - "The mutant protein is barely expressed and every tested antibody loses binding"
+      - "The predicted monomer has high average pLDDT away from the epitope"
+      - "A second rendering program colors the interface similarly"
+    correct: 0
+    explanation: "Expression and fold controls rule against global disruption; selective binding and function connect the contact to escape; compensatory rescue provides stronger geometric evidence than the predicted pose alone."

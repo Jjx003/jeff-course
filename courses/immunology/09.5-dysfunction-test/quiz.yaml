@@ -1,0 +1,111 @@
+questions:
+  - id: aire_pattern
+    type: multiple_choice
+    stem: "A child has autoimmune injury in several endocrine organs. Thymic epithelial cells express ordinary MHC II but fail to express many tissue-restricted proteins. Which broken checkpoint best connects these findings?"
+    options:
+      - "Developing T cells receive an incomplete sample of peripheral self antigens during negative selection"
+      - "Mature B cells cannot class-switch from IgM to IgG"
+      - "Neutrophils cannot generate an oxidative burst"
+      - "Plasma cells cannot secrete antibody into blood"
+    correct: 0
+    explanation: "AIRE-dependent expression of tissue-associated antigens broadens the thymic self sample. Losing it allows some organ-reactive clones to escape central deletion or diversion."
+  - id: treg_transfer
+    type: multiple_choice
+    stem: "Autoreactive T cells cause disease after transfer into lymphopenic mice. Cotransfer of regulatory T cells prevents disease, although the autoreactive clones remain detectable. What does this result demonstrate most directly?"
+    options:
+      - "A dominant tolerance mechanism can restrain pathogenic clones without deleting them"
+      - "The autoreactive clones repaired their antigen receptors"
+      - "Negative selection occurred in the recipient thymus before transfer"
+      - "Self antigen disappeared from the target tissue"
+    correct: 0
+    explanation: "Protection supplied by a second cell population is dominant tolerance. Persistence of the autoreactive clones argues against deletion as the immediate explanation."
+  - id: epitope_spread_timeline
+    type: multiple_choice
+    stem: "At disease onset, patient antibodies recognize self protein A. Months later, they recognize additional epitopes on A and proteins B and C from the same damaged tissue. Which result would best support damage-driven epitope spreading?"
+    options:
+      - "Responses to B and C arise after tissue injury and are reduced when the initial anti-A injury is prevented"
+      - "Proteins A, B, and C are encoded on different chromosomes"
+      - "Antibodies to B are detectable before any response to A"
+      - "Every antibody binds an unrelated microbial protein equally well"
+    correct: 0
+    explanation: "The proposed causal chain is initial response, tissue damage, release or presentation of new determinants, then repertoire broadening. Temporal order plus prevention of broadening when initial injury is blocked supports that chain."
+  - id: mimicry_test
+    type: multiple_choice
+    stem: "A microbial peptide resembles a cardiac peptide, and infection precedes myocarditis. Which experiment adds the strongest mechanistic evidence for molecular mimicry?"
+    options:
+      - "Isolate patient lymphocyte receptors that respond to both peptides and show that blocking the cross-reactive response reduces cardiac injury in a model"
+      - "Search a sequence database for more vaguely similar peptides"
+      - "Show that inflammation is present in the heart"
+      - "Measure total serum immunoglobulin after infection"
+    correct: 0
+    explanation: "Mimicry requires more than sequence resemblance and timing. Cross-reactive receptors, functional recognition, and a link to pathology directly test the proposed bridge."
+  - id: b_cell_depletion_timecourse
+    type: multiple_choice
+    stem: "After anti-CD20 treatment, circulating B cells fall within days, T-cell activation in lesions falls over weeks, symptoms improve, but serum autoantibody remains nearly unchanged for months. Which explanation fits the full time course?"
+    options:
+      - "Depleted B cells had antigen-presentation or cytokine roles, while long-lived antibody-secreting cells were relatively spared"
+      - "Autoantibody cannot contribute to any autoimmune disease"
+      - "Anti-CD20 directly removed all long-lived plasma cells on day one"
+      - "The treatment worked by eliminating terminal complement proteins"
+    correct: 0
+    explanation: "The discordance separates B-cell network functions from existing antibody production. Many long-lived plasma cells lack the targeted mature-B-cell marker and can sustain antibody titers."
+  - id: anaphylaxis_intervention
+    type: multiple_choice
+    stem: "Minutes after allergen challenge, a patient develops wheeze, hives, and hypotension. Which intervention targets the most immediate life-threatening physiology rather than the upstream sensitization history?"
+    options:
+      - "Epinephrine to reverse vasodilation, vascular leak, and bronchoconstriction"
+      - "Months of allergen avoidance begun after blood pressure has collapsed"
+      - "Blocking V(D)J recombination in bone marrow"
+      - "Replacing terminal complement components"
+    correct: 0
+    explanation: "IgE-triggered mast-cell mediators rapidly alter vascular tone, permeability, and airways. Epinephrine directly counters those acute effects; it does not erase sensitization."
+  - id: immune_complex_pattern
+    type: multiple_choice
+    stem: "After prolonged exposure to a soluble antigen, a patient develops low serum complement, vasculitic rash, and granular antigen-antibody deposits in vessel walls. Which mechanism best links the observations?"
+    options:
+      - "Circulating immune complexes deposit, activate complement, and recruit inflammatory cells"
+      - "IgE cross-linking causes only mast-cell degranulation at mucosal surfaces"
+      - "Cytotoxic T cells recognize a single tissue peptide without antibody involvement"
+      - "A congenital absence of all lymphocytes produces local deposits"
+    correct: 0
+    explanation: "Deposited soluble immune complexes consume complement and create focal inflammation, the core mechanism of a Type III reaction."
+  - id: complement_localization
+    type: multiple_choice
+    stem: "A patient has recurrent disseminated Neisseria infection. C3 deposition on bacteria is normal, but serum cannot lyse them; adding purified C8 restores lysis. Where is the defect?"
+    options:
+      - "Downstream of C3 deposition in membrane-attack-complex assembly"
+      - "Upstream in every complement initiation pathway"
+      - "In thymic expression of tissue-restricted antigens"
+      - "In IgE binding to mast cells"
+    correct: 0
+    explanation: "Normal opsonization localizes function through C3, while rescue by C8 identifies a terminal-pathway defect affecting membrane attack."
+  - id: neutrophil_function_data
+    type: multiple_choice
+    stem: "A child has normal neutrophil counts, recurrent deep bacterial and fungal abscesses, normal migration into tissue, and absent oxidative-burst signal after stimulation. Which defect is most directly implicated?"
+    options:
+      - "Intracellular reactive-oxygen-dependent killing"
+      - "Production of neutrophils in bone marrow"
+      - "Adhesion-dependent exit from blood"
+      - "Antibody class switching"
+    correct: 0
+    explanation: "The count and migration controls are intact, while the stimulated functional assay localizes failure to oxidative killing. Cell number alone would miss it."
+  - id: hiv_interruption
+    type: multiple_choice
+    stem: "During suppressive antiretroviral therapy, plasma virus is undetectable. When therapy stops, genetically related virus reappears within weeks. Which inference is strongest?"
+    options:
+      - "Replication-competent infected cells persisted during treatment and reseeded viremia"
+      - "Therapy permanently removed the viral genome from every cell"
+      - "The rebound proves antibodies cannot recognize viral proteins"
+      - "The patient acquired a new virus at the exact moment treatment stopped"
+    correct: 0
+    explanation: "Rapid rebound after interruption is functional evidence for a persistent reservoir. Sequence relatedness makes a wholly new infection less parsimonious."
+  - id: aging_composition
+    type: multiple_choice
+    stem: "Older and younger groups have equal total T-cell counts. The older group has fewer naive clones, expanded memory clones, weaker responses to new antigens, and higher baseline inflammatory cytokines. What was missed by the total count?"
+    options:
+      - "Changes in repertoire composition, functional reserve, and inflammatory state"
+      - "A uniform absence of all adaptive immune cells"
+      - "Proof that immune memory is completely lost with age"
+      - "A selective defect in terminal complement lysis"
+    correct: 0
+    explanation: "Immunosenescence is remodeling, not a single scalar decline. Equal totals can conceal reduced naive diversity, clonal skew, and altered regulation."

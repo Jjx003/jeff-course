@@ -31,6 +31,9 @@ export { apiDrillService as drillService } from './api/drillService.api.js';
 export { localExecutionService as executionService } from './local/executionService.local.js';
 export { generateId } from './local/executionService.local.js';
 
+// AI tutor — per-module chat backed by an OpenRouter model.
+export { apiTutorService as tutorService } from './api/tutorService.api.js';
+
 // Sandbox session service — new sandboxed pipeline with live SSE output,
 // containerized execution, and per-track resource preferences.
 export { apiSessionsService as sessionsService } from './api/sessionsService.api.js';

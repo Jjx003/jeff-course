@@ -1,0 +1,10 @@
+title: "Coding Lab: Audit a Predicted Immune Interface"
+slug: "immune-interface-audit"
+description: "Use Python to find antibody-antigen contacts, propagate local confidence to the interface, and prioritize controlled mutation experiments."
+order: 13.6
+difficulty: intermediate
+estimatedMinutes: 25
+tags: [python, structural-immunology, antibodies, confidence, experimental-design]
+type: coding
+languages: [python]
+defaultLanguage: python

@@ -20,29 +20,77 @@
   }
 
   let { tabs, activeId = $bindable(tabs[0]?.id ?? ''), onchange, children }: Props = $props();
+  const groupId = $props.id();
+  const panelId = `${groupId}-tabpanel`;
+
+  function tabId(id: string) {
+    return `${groupId}-tab-${encodeURIComponent(id)}`;
+  }
 
   function select(id: string) {
     activeId = id;
     onchange?.(id);
   }
+
+  function handleKeydown(event: KeyboardEvent, index: number) {
+    let nextIndex: number;
+
+    switch (event.key) {
+      case 'ArrowLeft':
+        nextIndex = (index - 1 + tabs.length) % tabs.length;
+        break;
+      case 'ArrowRight':
+        nextIndex = (index + 1) % tabs.length;
+        break;
+      case 'Home':
+        nextIndex = 0;
+        break;
+      case 'End':
+        nextIndex = tabs.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    const nextTab = tabs[nextIndex];
+    const tabList = (event.currentTarget as HTMLButtonElement).parentElement;
+    const nextButton = tabList?.children[nextIndex] as HTMLButtonElement | undefined;
+
+    if (nextTab && nextButton) {
+      select(nextTab.id);
+      nextButton.focus();
+    }
+  }
 </script>
 
 <div class="tab-group">
   <div class="tab-bar" role="tablist">
-    {#each tabs as tab}
+    {#each tabs as tab, index (tab.id)}
       <button
+        id={tabId(tab.id)}
+        type="button"
         role="tab"
         class="tab-btn"
         class:active={activeId === tab.id}
         aria-selected={activeId === tab.id}
+        aria-controls={panelId}
+        tabindex={activeId === tab.id ? 0 : -1}
         onclick={() => select(tab.id)}
+        onkeydown={(event) => handleKeydown(event, index)}
       >
         {tab.label}
       </button>
     {/each}
   </div>
 
-  <div class="tab-content">
+  <div
+    id={panelId}
+    class="tab-content"
+    role="tabpanel"
+    aria-labelledby={activeId ? tabId(activeId) : undefined}
+    tabindex="0"
+  >
     {@render children({ activeId })}
   </div>
 </div>

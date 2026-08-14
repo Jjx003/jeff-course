@@ -35,6 +35,13 @@ Keep these aligned with this file:
 - `README.md` - front door: purpose, quick start, features, sharing model.
 - `docs/setup.md` - platform/device setup, optional execution tools, Docker.
 - `docs/course-authoring.md` - course file format and sharing workflow.
+- `docs/experience-plan.md` - product philosophy, experience priorities,
+  quality gates, roadmap, ownership, and success measures.
+
+Use `docs/experience-plan.md` for durable product decisions. New learner or
+creator experiences should name the principle, priority, acceptance criterion,
+and workstream they advance. Do not treat activity, time-on-site, points, or
+content volume as success without outcome evidence.
 
 ## Tech Stack
 
@@ -47,6 +54,7 @@ Keep these aligned with this file:
 | Markdown | unified, remark, rehype, KaTeX, Mermaid |
 | Course parsing | `js-yaml` + Node `fs`, server-side only |
 | Persistence | DuckDB native addon, server-side singleton |
+| AI tutor | OpenRouter chat completions over `fetch`, streamed to the client as SSE |
 | Execution | Session-based sandbox pipeline using `uv`, `g++`, and optional Docker |
 | Deployment | `@sveltejs/adapter-node` |
 | Build tool | Vite 6 |
@@ -124,6 +132,15 @@ Environment variables:
 | `DB_PATH` | Override DuckDB file path. Defaults to `<repo>/data/jeff-course.duckdb`. |
 | `TORCH_INDEX_URL` | Override PyTorch wheel index for Python modules using `torch`. |
 | `SANDBOX_SKIP_GPU_PROBE=1` | Skip Docker GPU probing at startup. |
+| `OPENROUTER_API_KEY` | Enables the AI tutor. Absent means the tutor is disabled. |
+| `OPENROUTER_MODEL` | Tutor model slug. Defaults to `openai/gpt-4o-mini`. |
+| `OPENROUTER_BASE_URL` | OpenAI-compatible endpoint for the tutor. Defaults to `https://openrouter.ai/api/v1`. |
+| `TUTOR_ALLOW_SOLUTIONS=1` | Allow the tutor to read solutions and quiz answer keys. Off by default. |
+
+Tutor variables are read through `$env/dynamic/private`, not `process.env`,
+because that is the only way a repo-root `.env` file reaches server code in this
+setup. Everything else in the table is read from `process.env` directly. See
+`.env.example`.
 
 ## Directory Layout
 
@@ -134,6 +151,7 @@ jeff-course/
   docs/
     setup.md
     course-authoring.md
+    experience-plan.md
   courses/
     <track-slug>/
       course.yaml
@@ -163,6 +181,7 @@ jeff-course/
     lib/markdown/            Markdown, math, proof callout rendering
     lib/reading/             gradual reading splitting
     lib/server/              DuckDB, stats, grading, sandbox
+    lib/server/tutor/        OpenRouter client, prompt context, conversations
     lib/services/            service interfaces and client implementations
     lib/components/          Svelte UI components
     routes/                  pages and API routes
@@ -257,9 +276,13 @@ packs:
     # coursesDir: courses
 ```
 
-Bundled courses win track-slug collisions. Treat packs with coding modules,
-`requirements.txt`, or starter code as trusted local code because exercises may
-install dependencies and execute on the user's machine.
+Bundled courses win track-slug collisions. Treat every course pack as trusted
+authored behavior, not only packs with coding modules. Markdown may render raw
+HTML and external resources; parametric quiz and drill formulas are evaluated
+as JavaScript expressions in the browser; coding modules and dependencies may
+execute on the host or in containers. Structural validation does not establish
+security, factual accuracy, or assessment validity. Review pack updates before
+enabling them, especially when following a moving git ref.
 
 ## Services And Boundaries
 
@@ -288,6 +311,7 @@ Current services:
 | Stats | API service backed by server aggregate helpers |
 | Sessions | API service with SSE output and DuckDB session records |
 | Execution | Local client service that calls the session/execute APIs |
+| AI tutor | API service with SSE reply streaming and DuckDB conversation records |
 
 ## Persistence
 
@@ -298,6 +322,7 @@ Main tables:
 
 - `users`
 - `auth_sessions`
+- `course_enrollments`
 - `drafts`
 - `runs`
 - `submissions`
@@ -308,10 +333,18 @@ Main tables:
 - `drill_attempts`
 - `sandbox_sessions`
 - `sandbox_preferences`
+- `tutor_messages`
 
 Learner-owned tables include `user_id` so profiles have separate progress,
 drafts, attempts, achievements, study time, sandbox sessions, and sandbox
-preferences. Course files and enabled course packs remain shared by the server.
+preferences. Enrollment is also profile-scoped: `/tracks` shows enrolled courses
+as the learner's active list and keeps other courses in a compact discovery
+catalog. Course detail pages are syllabus previews, while module pages require
+enrollment. Pausing a course keeps its `course_enrollments` row with
+`enrolled_at = 0`, which preserves learner work and prevents startup progress
+backfill from re-enrolling it; enrolling again replaces that marker with the
+current timestamp. Course files and enabled course packs remain shared by the
+server.
 
 There is no migration framework. For breaking local schema changes during
 development, stop the server and remove the DB file.
@@ -362,6 +395,38 @@ runtime:
 The UI respects saved per-track preferences first. A module hint is only a
 fallback when available on the host.
 
+## AI Tutor
+
+`TutorPanel.svelte` is a collapsed drawer rendered once per module page,
+outside the module-type branch, so reading, coding, quiz, test, and drill pages
+all get it. Only coding modules offer the editor buffer as context.
+
+```text
+TutorPanel
+  -> tutorService
+    -> POST /api/tutor/[trackSlug]/[problemSlug]/message
+      -> buildTutorContext()   reads module markdown from disk
+      -> streamChatCompletion() OpenRouter, SSE in and SSE out
+      -> tutor_messages        learner turn + completed reply
+```
+
+Rules to preserve:
+
+- The API key stays server-side. `/api/tutor/config` exposes only `enabled` and
+  the model slug.
+- Grounding context is assembled on the server from `trackSlug`/`problemSlug`.
+  The client sends the message plus optional page context (editor buffer,
+  language, active tab), never the course material itself.
+- `solution.md`, `solution/` code, and quiz answer keys are excluded from the
+  prompt unless `TUTOR_ALLOW_SOLUTIONS=1`. The system prompt tells the model to
+  hint first and escalate only when the learner stays stuck.
+- Threads are scoped to `(user_id, problem_id)` and persist across reloads.
+  Aborted replies are saved with whatever text arrived.
+- The tutor is optional. With no key configured, the drawer explains the setup
+  and every other feature is unaffected. Do not make it a hard dependency.
+- `tools/tutor-mock-openrouter.mjs` is a local stand-in endpoint for testing
+  the pipeline without a key.
+
 ## Routes
 
 Pages:
@@ -370,8 +435,8 @@ Pages:
 - `/auth/setup` - first local learner profile setup
 - `/auth/sign-in` - trusted-user profile picker and switching
 - `/auth/users` - profile list and learner creation
-- `/tracks` - all tracks
-- `/tracks/[trackSlug]` - track detail
+- `/tracks` - enrolled courses plus the discovery catalog
+- `/tracks/[trackSlug]` - course detail and enrollment preview
 - `/tracks/[trackSlug]/problems/[problemSlug]` - reading/coding/quiz/test/drill page
 - `/stats` - progress and gamification dashboard
 - `/sessions` - sandbox session history and live logs
@@ -380,6 +445,9 @@ API routes include:
 
 - `/auth/sign-out`
 - `/api/sessions` and `/api/sessions/[id]/*`
+- `/api/tutor/config`
+- `/api/tutor/[trackSlug]/[problemSlug]` (GET thread, DELETE thread)
+- `/api/tutor/[trackSlug]/[problemSlug]/message` (POST, SSE reply stream)
 - `/api/sandbox/capabilities`
 - `/api/sandbox/preferences/[trackSlug]`
 - `/api/execute`
@@ -444,8 +512,12 @@ When asked to create a course:
 6. Put bundled figures under `static/courses/<track-slug>/`.
 7. Run parser-facing checks and `npm run check` / `npm.cmd run check` when
    content or app code changes.
-8. Update `README.md`, `docs/course-authoring.md`, or this file if the course
-   format or workflow changes.
+8. Follow the publication checklist and course-quality rubric in
+   `docs/course-authoring.md` and `docs/experience-plan.md` for substantial or
+   shared courses.
+9. Update `README.md`, `docs/course-authoring.md`,
+   `docs/experience-plan.md`, or this file if the course format, workflow, trust
+   model, or major product assumptions change.
 
 For large courses, use multi-agent authoring:
 
@@ -464,3 +536,5 @@ For large courses, use multi-agent authoring:
 - A new dependency or deployment target is introduced.
 - The cross-platform user story changes.
 - A major doc page is added or reorganized.
+- Product principles, experience priorities, quality gates, ownership, or
+  success measures change.

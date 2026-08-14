@@ -1,0 +1,8 @@
+title: "Computational and Systems Immunology"
+slug: "computational-systems-immunology"
+description: "Interpret repertoire, single-cell, spatial, immunopeptidomic, and predictive modeling workflows without confusing correlation for mechanism."
+order: 13
+difficulty: advanced
+estimatedMinutes: 85
+tags: [single-cell, repertoire-sequencing, spatial-omics, machine-learning]
+type: reading

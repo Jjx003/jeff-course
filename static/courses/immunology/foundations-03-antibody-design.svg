@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" role="img" aria-labelledby="title desc">
+  <title id="title">Antibody design separates target binding from effector function</title>
+  <desc id="desc">A Y-shaped antibody has variable tips that bind epitope and a constant Fc stem that recruits complement, phagocytes, NK cells, or transport. VDJ recombination and hypermutation affect variable regions while class switching replaces the constant region.</desc>
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#475569"/></marker><style>.h{font:700 20px system-ui;fill:#0f172a}.t{font:15px system-ui;fill:#1e293b}.s{font:13px system-ui;fill:#475569}.l{stroke:#475569;stroke-width:3;fill:none;marker-end:url(#a)}</style></defs>
+  <rect width="1000" height="520" rx="24" fill="#f8fafc"/>
+  <text x="40" y="48" class="h">BUILD TARGET RECOGNITION</text><text x="700" y="48" class="h">CHOOSE DEPLOYMENT</text>
+  <rect x="35" y="80" width="250" height="90" rx="16" fill="#ede9fe" stroke="#7c3aed"/><text x="62" y="116" class="t">V(D)J recombination</text><text x="62" y="143" class="s">before antigen; creates specificity</text>
+  <rect x="35" y="205" width="250" height="90" rx="16" fill="#fae8ff" stroke="#c026d3"/><text x="62" y="241" class="t">Somatic hypermutation</text><text x="62" y="268" class="s">after activation; edits variable DNA</text>
+  <rect x="35" y="330" width="250" height="90" rx="16" fill="#fef3c7" stroke="#d97706"/><text x="62" y="366" class="t">Class switching</text><text x="62" y="393" class="s">replaces heavy-chain constant DNA</text>
+  <path d="M285 125L380 175" class="l"/><path d="M285 250L380 205" class="l"/><path d="M285 375L470 360" class="l"/>
+  <g stroke-linecap="round" fill="none"><path d="M500 365L500 255L420 135" stroke="#2563eb" stroke-width="30"/><path d="M500 255L580 135" stroke="#2563eb" stroke-width="30"/><path d="M500 365L500 255L420 135" stroke="#93c5fd" stroke-width="14"/><path d="M500 255L580 135" stroke="#93c5fd" stroke-width="14"/></g>
+  <circle cx="410" cy="120" r="22" fill="#f472b6"/><circle cx="590" cy="120" r="22" fill="#f472b6"/><text x="380" y="78" class="t">variable tips bind epitope</text><text x="445" y="405" class="t">constant Fc stem</text>
+  <rect x="705" y="80" width="250" height="70" rx="14" fill="#dbeafe" stroke="#2563eb"/><text x="740" y="122" class="t">Neutralize an essential step</text>
+  <rect x="705" y="175" width="250" height="70" rx="14" fill="#dcfce7" stroke="#16a34a"/><text x="746" y="217" class="t">Opsonize for phagocytes</text>
+  <rect x="705" y="270" width="250" height="70" rx="14" fill="#fee2e2" stroke="#dc2626"/><text x="747" y="312" class="t">Recruit complement / NK</text>
+  <rect x="705" y="365" width="250" height="70" rx="14" fill="#cffafe" stroke="#0891b2"/><text x="748" y="407" class="t">Transport at a barrier</text>
+  <path d="M535 365C620 365 630 115 705 115" class="l"/><path d="M535 365C625 365 640 210 705 210" class="l"/><path d="M535 365C630 365 650 305 705 305" class="l"/><path d="M535 365C625 365 650 400 705 400" class="l"/>
+  <text x="350" y="480" class="h">Binding is necessary; epitope, geometry, kinetics, and Fc context determine function.</text>
+</svg>

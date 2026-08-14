@@ -30,6 +30,7 @@
   import RewardToast from '$lib/components/RewardToast.svelte';
   import StudyTimeTracker from '$lib/components/StudyTimeTracker.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+  import TutorPanel from '$lib/components/TutorPanel.svelte';
 
   import type { Language } from '$lib/types/course.js';
   import type { RunSnapshot, SubmitSnapshot, RunResult, SubmitResult } from '$lib/types/execution.js';
@@ -858,6 +859,19 @@
 {#key problemId}
   <StudyTimeTracker {problemId} />
 {/key}
+
+<!-- AI tutor drawer. Rendered outside the module-type branch so reading,
+     quiz, test, drill, and coding pages all get it; the editor buffer is
+     only offered as context on coding modules. -->
+<TutorPanel
+  trackSlug={track.slug}
+  problemSlug={problem.slug}
+  problemTitle={problem.title}
+  isCoding={!isReading && !isAssessment && !isDrill}
+  getCode={() => editorRef?.getValue()}
+  language={currentLanguage}
+  activeTab={activeTabId}
+/>
 
 {#if isReading}
   <ReadingView

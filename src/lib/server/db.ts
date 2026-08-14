@@ -107,6 +107,15 @@ export const dbReady: Promise<void> = (async () => {
   await dbRun(`CREATE INDEX IF NOT EXISTS auth_sessions_user_idx ON auth_sessions (user_id)`);
   await dbRun(`DELETE FROM auth_sessions WHERE expires_at <= ?`, [Date.now()]);
 
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS course_enrollments (
+      user_id    VARCHAR NOT NULL,
+      track_slug VARCHAR NOT NULL,
+      enrolled_at BIGINT NOT NULL,
+      PRIMARY KEY (user_id, track_slug)
+    )
+  `);
+
   await migrateTableToUserScoped('drafts', `
     CREATE TABLE IF NOT EXISTS drafts (
       user_id       VARCHAR NOT NULL,
@@ -275,5 +284,34 @@ export const dbReady: Promise<void> = (async () => {
   `, `
     INSERT INTO sandbox_preferences (user_id, track_slug, preferred_mode, resources_json, updated_at)
     SELECT 'local', track_slug, preferred_mode, resources_json, updated_at FROM __OLD__
+  `);
+
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS tutor_messages (
+      id         VARCHAR PRIMARY KEY,
+      user_id    VARCHAR NOT NULL,
+      problem_id VARCHAR NOT NULL,
+      role       VARCHAR NOT NULL,
+      content    TEXT    NOT NULL,
+      created_at BIGINT  NOT NULL
+    )
+  `);
+  await dbRun(`CREATE INDEX IF NOT EXISTS tutor_messages_thread_idx ON tutor_messages (user_id, problem_id, created_at)`);
+
+  // Preserve existing learners' work by enrolling courses that already have
+  // progress. The conflict clause keeps this idempotent on later startups.
+  await dbRun(`
+    INSERT INTO course_enrollments (user_id, track_slug, enrolled_at)
+    SELECT user_id, split_part(problem_id, '/', 1), MIN(activity_at)
+    FROM (
+      SELECT user_id, problem_id, timestamp AS activity_at FROM submissions
+      UNION ALL SELECT user_id, problem_id, completed_at FROM reading_completions
+      UNION ALL SELECT user_id, problem_id, completed_at FROM quiz_attempts
+      UNION ALL SELECT user_id, problem_id, completed_at FROM drill_attempts
+      UNION ALL SELECT user_id, problem_id, started_at FROM study_sessions
+    ) activity
+    WHERE problem_id LIKE '%/%'
+    GROUP BY user_id, split_part(problem_id, '/', 1)
+    ON CONFLICT (user_id, track_slug) DO NOTHING
   `);
 })();

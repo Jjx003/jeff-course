@@ -1,0 +1,8 @@
+title: "B Cells, Antibodies, and Repertoire Diversity"
+slug: "b-cells-and-antibodies"
+description: "Explain how B cells generate, select, and deploy diverse antibodies without rewriting antigen specificity after activation."
+order: 3
+difficulty: intermediate
+estimatedMinutes: 70
+tags: [b-cells, antibodies, vdj-recombination, germinal-centers]
+type: reading

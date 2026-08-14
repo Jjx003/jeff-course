@@ -1,0 +1,6 @@
+Interface contacts (distance <= 5.0 A): 6
+Confidence-supported contacts: 4
+Uncertainty-dependent contacts: 2
+Supported contact pairs: YH31-EA101, YH31-KA102, WH32-EA101, WH32-KA102
+Candidate antigen hotspots: EA101 (2), KA102 (2)
+Interpretation: prioritize E101 and K102 for controlled mutation; structure alone does not prove escape.

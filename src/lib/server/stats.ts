@@ -508,6 +508,8 @@ export async function getStatsSummary(userId: string): Promise<StatsSummary> {
   await dbReady;
   const facts = await loadActivityFacts(userId);
   const tracks = await loadAllTracks();
+  const { getEnrolledTrackSlugs } = await import('./enrollments.js');
+  const enrolledSlugs = await getEnrolledTrackSlugs(userId);
 
   // Build the set of known problem IDs so we can filter activity to events
   // that actually correspond to current course content (orphan-safe).
@@ -555,7 +557,10 @@ export async function getStatsSummary(userId: string): Promise<StatsSummary> {
   }
   const firstActivityAt = allTimestamps.length === 0 ? null : Math.min(...allTimestamps);
 
-  const trackProgress = computeTrackProgress(tracks, facts);
+  const trackProgress = computeTrackProgress(
+    tracks.filter((track) => enrolledSlugs.has(track.slug)),
+    facts
+  );
 
   // Only count completions that map to an actual course module. This makes
   // the dashboard robust against orphaned rows left behind by content

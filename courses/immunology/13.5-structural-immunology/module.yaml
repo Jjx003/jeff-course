@@ -1,0 +1,8 @@
+title: "Structural Immunology: From Predicted Fold to Immune Mechanism"
+slug: "structural-immunology"
+description: "Connect AlphaFold-style structure prediction and protein design to antibodies, peptide-MHC, TCRs, immune escape, and experiments that test structural hypotheses."
+order: 13.5
+difficulty: advanced
+estimatedMinutes: 55
+tags: [structural-immunology, alphafold, antibodies, antigen-presentation, protein-design]
+type: reading

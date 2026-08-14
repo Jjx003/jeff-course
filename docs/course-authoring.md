@@ -189,20 +189,66 @@ items:
 Drills use generated numeric prompts and record accuracy, speed, best streak,
 and personal bests.
 
-## Agent Workflow
+## Generate, Review, Validate, Preview, Share
 
-For a substantial course, start with the spine:
+Treat generation as the first draft, not the publication decision.
 
-- Audience and prerequisites
-- Learning goals
-- Module list and module types
-- Shared vocabulary and notation
-- Coding exercise contracts
-- Figure and diagram needs
-- Quiz, test, and drill checkpoints
+1. **Generate:** define the spine first: audience, outcomes, prerequisites,
+   scope limits, module sequence and types, shared vocabulary, figures, coding
+   contracts, assessments, device/runtime needs, and known high-risk claims.
+   Then create the folders. For multi-agent work, give writers disjoint module
+   ranges and keep one lead responsible for cross-course coherence.
+2. **Review:** perform separate passes for factual accuracy and freshness,
+   pedagogy and progression, assessment keys/formulas and answer leakage,
+   accessibility, local assets/links, and the trust surfaces described below.
+   Agent output must receive human review; an agent must not approve its own
+   draft as publication-ready.
+3. **Validate:** run `npm run course:validate` (or `npm.cmd run
+   course:validate` on Windows when needed), then the relevant project checks.
+   Fix every error and either fix or explicitly adjudicate each warning.
+   Validation checks structure; it does not prove accuracy, safety, or quality.
+4. **Preview:** use the course in the app as a learner. Check the course preview,
+   every module type used, next/previous navigation, completion behavior,
+   formulas and randomized edge cases, links and images, narrow layouts, and
+   missing-runtime fallbacks. Run coding starter and solution paths in every
+   declared language when deterministic execution is claimed.
+5. **Share:** publish the complete track folder and matching static assets, or a
+   pinned git-backed course pack. Include audience/scope, prerequisites, review
+   date, generated-content involvement, known limitations, runtime needs, and
+   the trust disclosure. Preserve stable track and module slugs across updates
+   because changing them can disconnect existing progress.
 
-Then generate module folders. Review for factual accuracy, runnable starter code,
-clean progression, and answer leakage in tests.
+Use the rubric and release criteria in
+[Philosophy and Experience Plan](experience-plan.md) for substantial or shared
+courses.
+
+### Publication Checklist
+
+- [ ] Audience, outcomes, prerequisites, scope, difficulty, and expected effort
+  are explicit and mutually consistent.
+- [ ] Every outcome maps to instruction plus observable practice or assessment;
+  every scored item maps back to an outcome.
+- [ ] Terminology, notation, examples, and difficulty progress coherently across
+  module boundaries.
+- [ ] Consequential facts, citations, assessment keys, parametric formulas,
+  generated ranges, tolerances, and explanations were independently checked.
+- [ ] Tests do not leak answers before results; hints and solutions preserve the
+  intended amount of learner effort.
+- [ ] Coding starters and reference solutions run in every declared language;
+  deterministic expected outputs are stable, otherwise grading is intentionally
+  left pending.
+- [ ] Images are included, paths resolve from a clean checkout, alt text is
+  meaningful, headings are structured, and content works with keyboard input
+  and at a narrow browser width.
+- [ ] External links/resources, raw or rendered Markdown behavior, Mermaid,
+  quiz/drill expressions, dependencies, and executable code were reviewed.
+- [ ] `npm run course:validate` passes and all warnings are resolved or recorded.
+- [ ] Course preview, enrollment/start, all used module types, navigation,
+  completion states, and missing-tool behavior were exercised in the app.
+- [ ] Pack/folder includes provenance, review date, generated-content disclosure,
+  runtime requirements, known limitations, and a maintainer or issue path.
+- [ ] Stable slugs are preserved, and the shared artifact contains no learner
+  progress, drafts, secrets, caches, or personal data.
 
 ## Sharing A Course
 
@@ -261,9 +307,29 @@ The default manifest is `data/course-packs.yaml`; cloned repos live under
 packs by hand.
 
 Validation checks track/module metadata, required files, duplicate slugs, and
-dependency-bearing coding modules. Treat packs with `requirements.txt` or coding
-exercises as trusted code, because running those exercises can install and
-execute dependencies on the local machine.
+some coding/dependency conditions. It is a structural check, not a security or
+factual review.
+
+### Trust Warning
+
+Install and enable only course packs you trust after reviewing the full pack,
+not just its coding folders. Authored content has several behavior surfaces:
+
+- Markdown is rendered into the course page and may include raw HTML, links,
+  images or other externally loaded resources, and Mermaid diagrams.
+- Parametric questions in `quiz.yaml` and prompt/formula fields in `drill.yaml`
+  are evaluated as JavaScript expressions in the learner's browser.
+- Starter code, reference code, and learner-edited code can execute through the
+  configured baremetal or Docker runtime. `requirements.txt` can cause third-
+  party packages and their installation code to run.
+- Expected outputs, answer keys, thresholds, explanations, and runtime hints can
+  change grading, completion, resource use, and what the learner is told.
+
+Review changes again before `npm run course:update`, especially when following a
+moving branch. Docker can reduce host exposure but is not a guarantee that
+untrusted content is safe. Structural validation does not sandbox Markdown or
+browser expressions and does not establish that answers or explanations are
+correct.
 
 ### Course Pack Metadata
 

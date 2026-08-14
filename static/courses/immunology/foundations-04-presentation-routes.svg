@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 540" role="img" aria-labelledby="title desc">
+  <title id="title">MHC class I, class II, and cross-presentation routes</title>
+  <desc id="desc">Cytosolic protein is degraded and loaded onto MHC class I for CD8 recognition. Endocytosed protein is degraded and loaded onto MHC class II for CD4 recognition. Dendritic cells can divert captured material into class I cross-presentation.</desc>
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#475569"/></marker><style>.h{font:700 20px system-ui;fill:#0f172a}.t{font:15px system-ui;fill:#1e293b}.s{font:13px system-ui;fill:#475569}.l{stroke:#475569;stroke-width:3;fill:none;marker-end:url(#a)}</style></defs>
+  <rect width="1000" height="540" rx="24" fill="#f8fafc"/>
+  <rect x="25" y="60" width="300" height="430" rx="20" fill="#eff6ff" stroke="#2563eb"/><text x="94" y="98" class="h">MHC I: internal report</text>
+  <circle cx="95" cy="165" r="38" fill="#fecaca" stroke="#dc2626"/><text x="62" y="170" class="s">viral protein</text>
+  <rect x="205" y="130" width="85" height="70" rx="12" fill="#dbeafe" stroke="#1d4ed8"/><text x="216" y="160" class="s">protein</text><text x="210" y="180" class="s">degradation</text>
+  <path d="M133 165H205" class="l"/><path d="M245 200V275" class="l"/>
+  <rect x="185" y="275" width="115" height="65" rx="12" fill="#e0e7ff" stroke="#4f46e5"/><text x="200" y="303" class="s">peptide loading</text><text x="211" y="323" class="s">onto MHC I</text>
+  <path d="M185 310H110V390" class="l"/><path d="M75 390h70v22H75z" fill="#93c5fd" stroke="#1d4ed8"/><circle cx="110" cy="440" r="30" fill="#c4b5fd" stroke="#7c3aed"/><text x="90" y="445" class="s">CD8</text><text x="55" y="475" class="s">kill altered cell</text>
+  <rect x="350" y="60" width="300" height="430" rx="20" fill="#f0fdf4" stroke="#16a34a"/><text x="400" y="98" class="h">MHC II: captured report</text>
+  <path d="M390 145q45-45 90 0q-45 45-90 0" fill="#fde68a" stroke="#d97706"/><text x="386" y="205" class="s">endocytosed protein</text>
+  <path d="M480 145H545V245" class="l"/><circle cx="545" cy="280" r="58" fill="#dcfce7" stroke="#16a34a"/><text x="510" y="275" class="s">acidified</text><text x="503" y="296" class="s">compartment</text>
+  <path d="M545 338V390" class="l"/><path d="M510 390h70v22h-70z" fill="#86efac" stroke="#15803d"/><circle cx="545" cy="440" r="30" fill="#fdba74" stroke="#ea580c"/><text x="525" y="445" class="s">CD4</text><text x="476" y="475" class="s">help and organize</text>
+  <rect x="675" y="60" width="300" height="430" rx="20" fill="#fff7ed" stroke="#ea580c"/><text x="721" y="98" class="h">Cross-presentation</text>
+  <path d="M710 150q45-45 90 0q-45 45-90 0" fill="#fde68a" stroke="#d97706"/><text x="700" y="205" class="s">captured infected-cell material</text>
+  <circle cx="825" cy="270" r="75" fill="#ffedd5" stroke="#ea580c"/><text x="777" y="260" class="s">specialized</text><text x="778" y="282" class="s">dendritic cell</text><text x="774" y="304" class="s">routes to MHC I</text>
+  <path d="M800 150L815 195" class="l"/><path d="M825 345V390" class="l"/><path d="M790 390h70v22h-70z" fill="#93c5fd" stroke="#1d4ed8"/><circle cx="825" cy="440" r="30" fill="#c4b5fd" stroke="#7c3aed"/><text x="805" y="445" class="s">CD8</text><text x="760" y="475" class="s">prime a naive clone</text>
+</svg>

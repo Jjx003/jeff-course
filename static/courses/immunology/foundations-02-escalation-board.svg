@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" role="img" aria-labelledby="title desc">
+  <title id="title">Innate immune escalation board</title>
+  <desc id="desc">Surface, endosomal, and cytosolic sensors feed inflammatory or antiviral programs, while complement and altered-self recognition activate extracellular and cellular effectors under inhibitory control.</desc>
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#475569"/></marker><style>.h{font:700 20px system-ui;fill:#0f172a}.t{font:15px system-ui;fill:#1e293b}.s{font:13px system-ui;fill:#475569}.l{stroke:#475569;stroke-width:3;fill:none;marker-end:url(#a)}</style></defs>
+  <rect width="1000" height="520" rx="24" fill="#f8fafc"/>
+  <text x="40" y="45" class="h">EVIDENCE</text><text x="365" y="45" class="h">INTEGRATION + AMPLIFICATION</text><text x="780" y="45" class="h">OUTPUT</text>
+  <g><rect x="35" y="75" width="240" height="78" rx="14" fill="#fee2e2" stroke="#dc2626"/><text x="55" y="107" class="t">Surface microbial pattern</text><text x="55" y="132" class="s">surface TLR / lectin</text>
+  <rect x="35" y="175" width="240" height="78" rx="14" fill="#ffedd5" stroke="#ea580c"/><text x="55" y="207" class="t">Nucleic acid after uptake</text><text x="55" y="232" class="s">endosomal TLR</text>
+  <rect x="35" y="275" width="240" height="78" rx="14" fill="#fef3c7" stroke="#d97706"/><text x="55" y="307" class="t">Cytosolic RNA or DNA</text><text x="55" y="332" class="s">RIG-I-like / cGAS-STING</text>
+  <rect x="35" y="375" width="240" height="78" rx="14" fill="#ede9fe" stroke="#7c3aed"/><text x="55" y="407" class="t">Damage or altered self</text><text x="55" y="432" class="s">inflammasome / NK receptors</text></g>
+  <rect x="365" y="100" width="290" height="120" rx="20" fill="#e0f2fe" stroke="#0284c7"/><text x="407" y="140" class="h">Transcriptional programs</text><text x="405" y="173" class="t">TNF, IL-1, chemokines</text><text x="405" y="198" class="t">type I interferon</text>
+  <rect x="365" y="285" width="290" height="120" rx="20" fill="#dcfce7" stroke="#16a34a"/><text x="408" y="325" class="h">Surface/cell decisions</text><text x="405" y="358" class="t">C3 amplification, opsonization</text><text x="405" y="383" class="t">NK killing, pyroptosis</text>
+  <g class="l"><path d="M275 110H365"/><path d="M275 214L365 175"/><path d="M275 314L365 190"/><path d="M275 414L365 345"/></g>
+  <g><rect x="755" y="80" width="210" height="90" rx="16" fill="#dbeafe" stroke="#2563eb"/><text x="790" y="117" class="h">Recruit + contain</text><text x="785" y="145" class="s">endothelium, phagocytes</text>
+  <rect x="755" y="215" width="210" height="90" rx="16" fill="#cffafe" stroke="#0891b2"/><text x="800" y="252" class="h">Antiviral state</text><text x="791" y="280" class="s">neighboring-cell defense</text>
+  <rect x="755" y="350" width="210" height="90" rx="16" fill="#fae8ff" stroke="#c026d3"/><text x="795" y="387" class="h">Destroy target</text><text x="788" y="415" class="s">opsonize, kill, or lyse</text></g>
+  <g class="l"><path d="M655 140L755 125"/><path d="M655 180L755 250"/><path d="M655 345L755 395"/></g>
+  <path d="M680 470H340" stroke="#be123c" stroke-width="3" stroke-dasharray="8 7" marker-end="url(#a)"/><text x="385" y="496" class="t">host regulators and resolution lower gain</text>
+</svg>

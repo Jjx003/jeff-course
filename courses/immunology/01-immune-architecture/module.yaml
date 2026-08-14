@@ -1,0 +1,8 @@
+title: "Immune System Architecture"
+slug: "immune-system-architecture"
+description: "Map immune cells, organs, trafficking routes, and the logic connecting innate recognition to clonal selection."
+order: 1
+difficulty: beginner
+estimatedMinutes: 55
+tags: [foundations, immune-cells, lymphoid-organs, trafficking]
+type: reading

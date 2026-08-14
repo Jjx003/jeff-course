@@ -81,8 +81,32 @@ Each course can mix several module types:
 | Test | Exam-style assessments that reveal answers at the end |
 | Drill | Timed generated practice for speed and fluency |
 
+Any module type can be discussed with the built-in [AI tutor](#ai-tutor).
+
 See [Course Authoring](docs/course-authoring.md) for the file format and sharing
 workflow.
+
+## AI Tutor
+
+Every module page has a collapsed "Tutor" drawer on the right edge. It is a chat
+with a coding/teaching model about the page you are on: the server hands the
+model that module's problem statement, theory, and tips, plus your current
+editor buffer if you choose to share it. Conversations are saved per learner and
+per module, so a thread is still there when you come back.
+
+The tutor is off unless you configure it. Copy `.env.example` to `.env` and set
+an [OpenRouter](https://openrouter.ai/keys) key:
+
+```bash
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=openai/gpt-4o-mini
+```
+
+The key is only ever read by the server process. Reference solutions and quiz
+answer keys are withheld from the model by default, so it hints instead of
+handing over answers; set `TUTOR_ALLOW_SOLUTIONS=1` if you want it to see them.
+Because `OPENROUTER_BASE_URL` accepts any OpenAI-compatible endpoint, you can
+point the tutor at a model running on your own machine instead.
 
 ## Course Packs
 
@@ -107,7 +131,11 @@ On first launch, Jeff Course asks for the first learner profile. Anyone on the
 trusted local network can add profiles from `/auth/users` or switch from the
 profile picker. Each profile gets separate drafts,
 completions, quiz/drill attempts, study time, achievements, run history, and
-sandbox preferences while sharing the same course folders.
+sandbox preferences while sharing the same course folders. Profiles enroll in
+courses individually, so the main course screen stays focused on active study;
+unenrolled courses remain available in the discovery catalog. Pausing a course
+removes it from the active list without deleting progress, and resuming restores
+the learner's existing work.
 
 This is meant for trusted local-network sharing, such as a family computer or a
 private home server. Profiles are not protected by passwords. It is not a public identity system; do not expose an
@@ -157,8 +185,15 @@ npm run course:validate           # Validate built-in courses and enabled packs
 
 ## Environment Variables
 
+Set these in the shell or in a git-ignored `.env` file at the repo root; see
+`.env.example`.
+
 | Variable | Purpose |
 |---|---|
+| `OPENROUTER_API_KEY` | Enables the AI tutor. Unset means the tutor is disabled. |
+| `OPENROUTER_MODEL` | Model the tutor uses. Defaults to `openai/gpt-4o-mini`. |
+| `OPENROUTER_BASE_URL` | OpenAI-compatible endpoint for the tutor. Defaults to `https://openrouter.ai/api/v1`. |
+| `TUTOR_ALLOW_SOLUTIONS=1` | Let the tutor read solutions and quiz answer keys. Off by default. |
 | `COURSES_DIR` | Override the course content directory. Defaults to `<repo>/courses`. |
 | `COURSE_PACKS_MANIFEST` | Override the course-pack manifest path. Defaults to `<repo>/data/course-packs.yaml`. |
 | `COURSE_PACKS_DIR` | Override the course-pack checkout directory. Defaults to `<repo>/data/course-packs/repos`. |

@@ -19,6 +19,11 @@ export default defineConfig({
 
   // Allow the dev server to serve files from the courses directory.
   server: {
+    // Bind IPv4 loopback. Tailscale Serve proxies to 127.0.0.1, but Vite's
+    // default "localhost" resolves to IPv6 (::1) first on Windows, causing 502s.
+    host: '127.0.0.1',
+    // Permit access via Tailscale MagicDNS hostnames (e.g. machine.tailnet.ts.net).
+    allowedHosts: ['.ts.net'],
     fs: {
       allow: ['..']
     }

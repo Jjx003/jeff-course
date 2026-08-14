@@ -1,0 +1,121 @@
+questions:
+  - id: node_trafficking_perturbation
+    type: multiple_choice
+    stem: "A fluorescent skin antigen reaches the draining lymph node normally, but dendritic cells cannot upregulate CCR7. Antigen-specific naive T cells still enter the node. Which early event should fall most directly?"
+    options:
+      - "Stable encounters between tissue-derived antigen-bearing dendritic cells and rare naive T cells"
+      - "Entry of soluble antigen into afferent lymph"
+      - "V(D)J recombination in mature peripheral T cells"
+      - "Filtration of the same antigen from blood by the spleen"
+    correct: 0
+    explanation: "CCR7 guides activated tissue dendritic cells toward lymphatic vessels and the T-cell zone. The perturbation leaves antigen drainage and naive-cell recirculation intact but removes a major route by which processed tissue antigen reaches rare cognate T cells."
+  - id: organ_source_inference
+    type: multiple_choice
+    stem: "Equal doses of an encapsulated bacterium are introduced either intravenously or into a footpad. Splenectomy selectively weakens the response to the intravenous dose. What is the best explanation?"
+    options:
+      - "The spleen organizes responses to blood-borne antigen, whereas the footpad drains to regional lymph nodes"
+      - "The spleen is the only organ in which B cells can bind antigen"
+      - "Footpad antigen bypasses antigen presentation and directly activates T cells"
+      - "Splenectomy prevents lymph from leaving peripheral tissues"
+    correct: 0
+    explanation: "Route determines the sampling compartment. Blood-borne antigen is concentrated in the spleen; tissue antigen and migratory dendritic cells are sampled in draining lymph nodes."
+  - id: innate_compartment_control
+    type: multiple_choice
+    stem: "A DNA-sensing reporter activates after membrane damage releases mitochondrial DNA into cytosol. The same amount of DNA delivered to the nucleus does not activate it. Which control best tests whether location, rather than DNA sequence, drives the response?"
+    options:
+      - "Deliver the same purified DNA sequence separately to cytosol and nucleus while matching dose"
+      - "Compare cytosolic microbial DNA with nuclear host DNA of unrelated sequence"
+      - "Increase the cytosolic DNA dose but omit a nuclear condition"
+      - "Measure antibody secretion instead of reporter activation"
+    correct: 0
+    explanation: "Holding sequence and dose constant while changing compartment isolates localization as the causal variable. Comparing unrelated DNA confounds sequence with location."
+  - id: complement_pattern
+    type: multiple_choice
+    stem: "Serum lyses antibody-coated bacteria and activates complement on a microbial surface, but fails when activation is initiated with mannose-rich particles. C3 and terminal components are normal. Which defect best fits?"
+    options:
+      - "A lectin-pathway recognition or initiation component"
+      - "C3 itself"
+      - "A terminal membrane-attack-complex component"
+      - "The alternative pathway's ability to amplify C3 deposition"
+    correct: 0
+    explanation: "Preserved classical and alternative activation shows that convergence at C3 and the terminal pathway still work. Selective failure on mannose-rich particles localizes the defect upstream in lectin-pathway initiation."
+  - id: switching_sequence_data
+    type: multiple_choice
+    stem: "Two B-cell clones have identical assembled V(D)J sequences. One secretes IgM and the other IgG, and both bind the same epitope with similar affinity. Which event most directly explains the difference?"
+    options:
+      - "Recombination to a different heavy-chain constant-region locus"
+      - "A new V(D)J rearrangement that recreated the same specificity"
+      - "Somatic hypermutation confined to the light-chain variable region"
+      - "Replacement of immunoglobulin with an MHC molecule"
+    correct: 0
+    explanation: "Class-switch recombination changes the heavy-chain constant region while preserving the assembled variable region. That changes effector function without requiring a new specificity."
+  - id: affinity_tree_interpretation
+    type: multiple_choice
+    stem: "In a germinal-center lineage, clone A differs from the ancestor by 2 variable-region mutations and binds antigen weakly; clone B has 8 mutations and binds strongly; clone C has 11 mutations and binds weakly. What is justified?"
+    options:
+      - "Mutation creates variants, but selection enriches functional combinations rather than simply maximizing mutation count"
+      - "Every additional mutation necessarily increases affinity"
+      - "Clone C must have undergone class switching while clone B did not"
+      - "The ancestor could not have arisen by V(D)J recombination"
+    correct: 0
+    explanation: "Somatic hypermutation supplies variation; affinity-based selection acts on phenotypes. Mutation count alone neither proves improved affinity nor identifies isotype."
+  - id: mhc_i_rescue
+    type: multiple_choice
+    stem: "Virus-infected cells lose surface MHC I. CD8 killing decreases, while NK killing increases. Re-expressing an MHC I allele that delivers an NK inhibitory signal but cannot present the viral peptide should produce which pattern?"
+    options:
+      - "NK killing decreases, but viral-peptide-specific CD8 killing remains poor"
+      - "Both NK and CD8 killing return because any MHC I molecule is sufficient"
+      - "CD8 killing returns, but NK killing is unchanged"
+      - "Both increase because MHC I is an activating ligand for both cell types"
+    correct: 0
+    explanation: "The rescue restores inhibitory self recognition for NK cells but not the specific peptide-MHC ligand required by the antiviral CD8 TCR."
+  - id: cross_presentation_experiment
+    type: multiple_choice
+    stem: "Dendritic cells engulf irradiated tumor cells that cannot infect or fuse with them. The dendritic cells then activate tumor-peptide-specific naive CD8 T cells. Which observation is essential to the interpretation of cross-presentation?"
+    options:
+      - "The activating peptide is displayed by dendritic-cell MHC I"
+      - "The tumor cells expressed MHC II before irradiation"
+      - "Free antibody bound the CD8 T-cell receptor"
+      - "The thymus contained the tumor at the time of priming"
+    correct: 0
+    explanation: "Cross-presentation means exogenous antigen acquired by the dendritic cell enters an MHC I presentation route. Demonstrating dendritic-cell MHC I restriction rules out direct presentation by the donor tumor."
+  - id: costimulation_timing
+    type: multiple_choice
+    stem: "Naive T cells receive strong peptide-MHC stimulation from resting antigen-presenting cells with little costimulation. They later respond poorly even when rechallenged with activated dendritic cells. Which interpretation best fits?"
+    options:
+      - "Antigen recognition without the proper activation context can induce anergy or another tolerant state"
+      - "Strong TCR binding permanently substitutes for costimulation"
+      - "The first exposure converted every naive T cell directly into a plasma cell"
+      - "Peptide-MHC recognition is irrelevant to the later response"
+    correct: 0
+    explanation: "Naive T-cell fate depends on integrated antigen, costimulatory, inhibitory, and cytokine signals. Signal 1 in a noninflammatory context can make later activation harder rather than easier."
+  - id: contraction_memory_curve
+    type: multiple_choice
+    stem: "Antigen-specific CD8 cells are 100 per million before infection, 80,000 at day 8, 4,000 at day 30, and 3,500 at day 180. Which statement best interprets the curve?"
+    options:
+      - "A large effector expansion was followed by contraction to a stable memory population above baseline"
+      - "The fall after day 8 proves antigen-specific immunity was erased"
+      - "The day-180 cells must all be continuously secreting antibody"
+      - "Memory can be inferred only if cell number remains at the effector peak"
+    correct: 0
+    explanation: "Most expanded effectors die during contraction, while a smaller population persists. Persistence above baseline is consistent with memory, although phenotype and recall function would strengthen the claim."
+  - id: tissue_residency_test
+    type: multiple_choice
+    stem: "After skin infection, matched blood and skin samples show few antigen-specific T cells in blood and many in skin. Which follow-up most directly distinguishes stable tissue residence from repeated replenishment by blood?"
+    options:
+      - "Track exchange with the circulation over time, for example by labeling circulating cells or using a paired-compartment migration design"
+      - "Measure the same skin sample twice on one day"
+      - "Count total serum antibody"
+      - "Sequence only the pathogen genome"
+    correct: 0
+    explanation: "A snapshot establishes compartment enrichment, not residence. A design that measures exchange or replacement over time tests the defining kinetic claim."
+  - id: affinity_avidity_transfer
+    type: multiple_choice
+    stem: "A monovalent Fab fragment and its parent pentameric IgM use the same binding site. The Fab dissociates rapidly from a repetitive viral surface, whereas IgM remains bound. What changed most directly?"
+    options:
+      - "Overall avidity increased because multiple simultaneous contacts reduce effective dissociation"
+      - "The equilibrium affinity of each binding site necessarily increased"
+      - "The IgM acquired a different V(D)J sequence upon binding"
+      - "The viral surface began presenting peptide on MHC II"
+    correct: 0
+    explanation: "The binding-site chemistry can be unchanged while multivalency and antigen geometry stabilize the whole complex. That is an avidity effect, not evidence that intrinsic per-site affinity changed."

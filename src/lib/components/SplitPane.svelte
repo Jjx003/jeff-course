@@ -54,6 +54,15 @@
     dragging = false;
     if (browser) localStorage.setItem(STORAGE_KEY, String(leftPct));
   }
+
+  function onDividerKeyDown(e: KeyboardEvent) {
+    const step = e.shiftKey ? 10 : 2;
+    if (e.key === 'ArrowLeft') leftPct = clamp(leftPct - step);
+    else if (e.key === 'ArrowRight') leftPct = clamp(leftPct + step);
+    else return;
+    e.preventDefault();
+    if (browser) localStorage.setItem(STORAGE_KEY, String(leftPct));
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -72,12 +81,18 @@
   </div>
 
   <!-- Drag divider -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div
     class="split-divider"
     role="separator"
+    tabindex="0"
     aria-label="Resize panes"
     aria-orientation="vertical"
+    aria-valuemin={MIN_PCT}
+    aria-valuemax={MAX_PCT}
+    aria-valuenow={Math.round(leftPct)}
     onmousedown={onDividerMouseDown}
+    onkeydown={onDividerKeyDown}
   >
     <div class="grip">
       <span></span><span></span><span></span><span></span>
@@ -125,5 +140,12 @@
     border-radius: 50%;
     background: currentColor;
     opacity: 0.35;
+  }
+
+  @media (max-width: 800px) {
+    .split-container { flex-direction: column; }
+    .pane { width: 100% !important; height: 50%; }
+    .split-divider { width: 100%; height: 5px; cursor: row-resize; }
+    .grip { flex-direction: row; }
   }
 </style>

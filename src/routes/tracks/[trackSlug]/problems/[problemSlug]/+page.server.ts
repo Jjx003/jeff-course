@@ -1,9 +1,13 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { localCourseRepository } from '$lib/services/local/courseRepository.local';
 import { isReadingCompleted, isProblemCompleted, getQuizProgress, getDrillProgress } from '$lib/server/stats';
+import { isEnrolled } from '$lib/server/enrollments';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
+  if (!(await isEnrolled(locals.user!.id, params.trackSlug))) {
+    redirect(303, `/tracks/${params.trackSlug}`);
+  }
   const [track, problem] = await Promise.all([
     localCourseRepository.getTrack(params.trackSlug),
     localCourseRepository.getProblem(params.trackSlug, params.problemSlug)

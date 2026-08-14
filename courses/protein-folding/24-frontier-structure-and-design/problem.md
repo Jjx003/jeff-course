@@ -211,3 +211,16 @@ protein folding and design from amino-acid chemistry to the 2026
 frontier of multimodal models, open AF3-class predictors, and validated
 lead-optimisation pipelines. The conceptual ladder you've built is
 exactly what you need to read this year's papers as they appear.
+
+## Cross-course application: structural immunology
+
+The immunology course's [Structural Immunology module](/tracks/immunology/problems/structural-immunology)
+uses this toolkit on antibody-antigen, peptide-MHC, TCR-peptide-MHC, and
+engineered-receptor problems. Its central transfer question is where model
+confidence ends: a predicted fold or interface can prioritize a mutation, but
+expression, binding kinetics, cellular function, tissue context, and rescue are
+separate evidence steps.
+
+Take one complex or designed binder from this course into that module. State
+which structural metric you trust, which immune claim it cannot establish, and
+the smallest assay chain that could close the gap.

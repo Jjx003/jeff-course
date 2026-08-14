@@ -20,6 +20,11 @@ Optional for coding modules:
 
 Reading, quiz, test, and drill modules work without Python, C++, or Docker.
 
+Optional for the AI tutor:
+
+- An [OpenRouter](https://openrouter.ai/keys) API key, or any OpenAI-compatible
+  endpoint you can reach from the machine running the server.
+
 ## Standard Local Setup
 
 ```bash
@@ -139,6 +144,50 @@ Jeff Course has passwordless profile switching for trusted LAN sharing. It has
 no public-account system, identity verification, rate limiting, or hardened
 multi-tenant security. Do not expose it directly to the public internet unless you put it
 behind your own access controls.
+
+## AI Tutor
+
+The tutor drawer on module pages is disabled until a key is configured. Copy
+`.env.example` to `.env` at the repo root and fill in:
+
+```bash
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=openai/gpt-4o-mini
+```
+
+Shell variables work too, and take precedence over `.env`:
+
+```bash
+OPENROUTER_API_KEY=sk-or-v1-... npm run dev
+```
+
+```powershell
+$env:OPENROUTER_API_KEY = "sk-or-v1-..."
+npm run dev
+```
+
+Notes:
+
+- The key is only read by the server process. It is never sent to the browser,
+  and the client only learns whether the tutor is enabled and which model is in
+  use.
+- Every learner profile on a shared instance uses the same key, so the machine's
+  owner is paying for all of it. There is no per-profile spend limit.
+- The tutor calls out to a third-party API, which is the one part of the app that
+  is not local-first. Everything else keeps working with it disabled.
+- `OPENROUTER_BASE_URL` accepts any OpenAI-compatible endpoint. To keep the
+  tutor local, point it at something like `http://127.0.0.1:11434/v1` (Ollama)
+  and set `OPENROUTER_API_KEY` to any non-empty placeholder.
+- Conversations are stored in the `tutor_messages` table in the local DuckDB
+  file. Clearing a thread in the UI deletes those rows.
+
+To develop against the tutor without spending tokens, run the bundled mock
+endpoint in a second terminal:
+
+```bash
+node tools/tutor-mock-openrouter.mjs 8799
+OPENROUTER_API_KEY=test OPENROUTER_BASE_URL=http://127.0.0.1:8799/v1 npm run dev
+```
 
 ## Docker Sandbox
 
