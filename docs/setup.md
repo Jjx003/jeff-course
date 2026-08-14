@@ -177,9 +177,15 @@ Notes:
   is not local-first. Everything else keeps working with it disabled.
 - `OPENROUTER_BASE_URL` accepts any OpenAI-compatible endpoint. To keep the
   tutor local, point it at something like `http://127.0.0.1:11434/v1` (Ollama)
-  and set `OPENROUTER_API_KEY` to any non-empty placeholder.
+  and set `OPENROUTER_API_KEY` to any non-empty placeholder. The model must
+  support tool calling, or the tutor cannot read your code and will answer from
+  the task statement alone.
 - Conversations are stored in the `tutor_messages` table in the local DuckDB
   file. Clearing a thread in the UI deletes those rows.
+- The tutor answers by looking things up: module theory and tips, the code in
+  your editor, your last run's output, and the grader's last verdict. Those
+  lookups happen on the server against your own saved work, and the panel lists
+  which ones ran. Nothing is read unless you ask a question.
 
 To develop against the tutor without spending tokens, run the bundled mock
 endpoint in a second terminal:
@@ -188,6 +194,10 @@ endpoint in a second terminal:
 node tools/tutor-mock-openrouter.mjs 8799
 OPENROUTER_API_KEY=test OPENROUTER_BASE_URL=http://127.0.0.1:8799/v1 npm run dev
 ```
+
+The mock answers the first step of each turn with streamed tool calls and the
+next with prose, so it exercises the whole agent loop. Pass `--no-tools` to get
+plain replies instead.
 
 ## Docker Sandbox
 

@@ -4,9 +4,11 @@
  *
  * SERVER-SIDE ONLY.
  *
- * The module's markdown is read from disk here rather than posted by the
- * browser: it keeps request bodies small, and it means the client can't talk
- * the tutor into a different context than the page it is actually on.
+ * The prompt is deliberately small: module metadata, the task statement, and
+ * an inventory of what can be fetched. Theory, tips, the learner's code, run
+ * output, and grader verdicts are all pulled on demand through tools, so a
+ * long theory page no longer crowds out the conversation and the editor
+ * buffer is not re-uploaded on every turn.
  *
  * Solution walkthroughs, reference solution code, and quiz answer keys are
  * withheld unless TUTOR_ALLOW_SOLUTIONS=1. The tutor is meant to unblock a
@@ -18,7 +20,7 @@ import type { Problem, Track } from '$lib/types/course.js';
 import type { TutorAsk } from '$lib/types/tutor.js';
 import { readTutorSettings } from './config.js';
 
-/** Per-section cap so a long theory page can't crowd out the conversation. */
+/** Per-section cap so a long problem statement can't dominate the prompt. */
 const SECTION_CHAR_LIMIT = 6000;
 const CODE_CHAR_LIMIT = 8000;
 
@@ -68,10 +70,25 @@ How to respond:
 - If something falls outside this module's material or you are unsure, say so
   plainly instead of guessing.`;
 
+const TOOL_INSTRUCTIONS = `
+
+How to use your tools:
+- You can read this module's theory and tips, the learner's current editor
+  buffer, their last run's output, and the grader's last verdict. Only the
+  task statement is given to you upfront.
+- Look before you answer. If they ask about their code, read it first rather
+  than guessing at what they wrote. If they mention an error, read the last
+  run. Do not ask them to paste something you can fetch yourself.
+- Do not narrate your tool use ("let me check..."). The learner already sees
+  which tools ran. Just answer once you know.
+- Call several tools at once when you need several things.
+- If a tool reports that the learner has not written or run anything yet, say
+  so plainly and help them make a start.`;
+
 const WITHHOLD_SOLUTIONS = `
 - The reference solution and assessment answer key are deliberately not
-  included in your context. Do not pretend to quote them; reason from the
-  module material instead.`;
+  available to you, through tools or otherwise. Do not pretend to quote them;
+  reason from the module material instead.`;
 
 const ALLOW_SOLUTIONS = `
 - The reference solution is included below. Still default to hints; reveal it
@@ -94,35 +111,38 @@ export async function buildTutorContext(
 
   const { allowSolutions } = readTutorSettings();
 
-  let prompt = BASE_INSTRUCTIONS + (allowSolutions ? ALLOW_SOLUTIONS : WITHHOLD_SOLUTIONS);
+  let prompt =
+    BASE_INSTRUCTIONS + (allowSolutions ? ALLOW_SOLUTIONS : WITHHOLD_SOLUTIONS) + TOOL_INSTRUCTIONS;
 
   prompt += `\n\n# Current module\n\nCourse: ${track.title} — ${track.description}
 Module: ${problem.title} (${problem.type}, ${problem.difficulty})
 Summary: ${problem.description}`;
 
-  prompt += section('Problem statement', problem.tabs.problem);
-  prompt += section('Theory', problem.tabs.theory);
-  prompt += section('Tips', problem.tabs.tips);
+  if (problem.type === 'coding') {
+    const languages = (problem.languages ?? []).join(', ') || 'none';
+    prompt += `\nLanguages offered: ${languages}. The learner currently has ${
+      ask.language ?? problem.defaultLanguage ?? 'unknown'
+    } open.`;
+  }
+
+  prompt += section('Task statement', problem.tabs.problem);
   prompt += describeQuiz(problem);
+
+  // Advertise what is fetchable so the model doesn't claim it lacks context.
+  const available: string[] = [];
+  if (problem.tabs.theory?.trim()) available.push('theory');
+  if (problem.tabs.tips?.trim()) available.push('tips');
+  if (available.length > 0) {
+    prompt += `\n\nFetchable sections for this module: ${available.join(
+      ', '
+    )}. Read them with read_module_section rather than guessing at their contents.`;
+  }
 
   if (allowSolutions) {
     prompt += section('Reference solution walkthrough', problem.tabs.solution);
     for (const lang of problem.languages ?? []) {
       const code = problem.solutionCode?.[lang];
       if (code) prompt += section(`Reference solution (${lang})`, '```\n' + code + '\n```', CODE_CHAR_LIMIT);
-    }
-  }
-
-  if (ask.code?.trim()) {
-    const language = ask.language ?? problem.defaultLanguage ?? '';
-    prompt += section(
-      "Learner's current editor buffer",
-      '```' + language + '\n' + ask.code.trim() + '\n```',
-      CODE_CHAR_LIMIT
-    );
-    const starter = problem.starterCode?.[(ask.language ?? problem.defaultLanguage) as 'python' | 'cpp'];
-    if (starter?.trim() && starter.trim() === ask.code.trim()) {
-      prompt += '\n\nNote: the buffer is still the unmodified starter code.';
     }
   }
 

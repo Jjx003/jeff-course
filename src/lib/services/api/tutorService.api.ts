@@ -1,9 +1,10 @@
 /**
  * API-backed TutorService — talks to /api/tutor/*.
  *
- * The streaming turn is a POST (it carries the message and editor buffer),
- * so we read the SSE body off the fetch response instead of using
- * EventSource.
+ * The streaming turn is a POST (it carries a body), so we read the SSE body
+ * off the fetch response instead of using EventSource. The stream carries
+ * tool activity as well as text, so the panel can show what the tutor looked
+ * at while it was looking.
  *
  * CLIENT-SIDE ONLY.
  */
@@ -105,6 +106,12 @@ class ApiTutorService implements TutorService {
         if (event === 'delta') {
           const parsed = JSON.parse(data) as { text: string };
           onChunk({ kind: 'delta', text: parsed.text });
+        } else if (event === 'tool-start') {
+          const parsed = JSON.parse(data) as { id: string; name: string; label: string };
+          onChunk({ kind: 'tool-start', id: parsed.id, name: parsed.name, label: parsed.label });
+        } else if (event === 'tool-end') {
+          const parsed = JSON.parse(data) as { id: string; ok: boolean; durationMs: number };
+          onChunk({ kind: 'tool-end', id: parsed.id, ok: parsed.ok, durationMs: parsed.durationMs });
         } else if (event === 'done') {
           const parsed = JSON.parse(data) as { message: TutorMessage };
           onChunk({ kind: 'done', message: parsed.message });

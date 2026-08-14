@@ -4,25 +4,31 @@
    *
    * Works for every module type. The conversation is scoped to one module
    * and persisted per learner, so closing the drawer or reloading the page
-   * keeps the thread. The module's own material is assembled server-side;
-   * this component only sends the learner's message plus optional page
-   * context (editor buffer, active tab).
+   * keeps the thread.
+   *
+   * The panel sends only the learner's message plus which language/tab they
+   * have open. The tutor reads the module material, the editor buffer, run
+   * output, and grader verdicts server-side through tools, and the tool
+   * activity is streamed back so the learner can see what it looked at.
    *
    * Collapsed by default so it never competes with the lesson for attention.
    */
   import { onMount, tick } from 'svelte';
   import { browser } from '$app/environment';
   import MarkdownRenderer from './MarkdownRenderer.svelte';
-  import type { TutorConfig, TutorMessage } from '$lib/types/tutor.js';
+  import type { TutorConfig, TutorMessage, TutorToolStep } from '$lib/types/tutor.js';
 
   interface Props {
     trackSlug: string;
     problemSlug: string;
     problemTitle: string;
-    /** Shown as a hint chip set; coding modules also get the code toggle. */
+    /** Coding modules get code-aware suggestions and a richer scope note. */
     isCoding?: boolean;
-    /** Returns the current editor buffer, for coding modules. */
-    getCode?: () => string | undefined;
+    /**
+     * Flush any pending editor autosave before the tutor reads the draft.
+     * Without this a question asked mid-keystroke sees stale code.
+     */
+    flushDraft?: () => Promise<void> | void;
     language?: string;
     activeTab?: string;
   }
@@ -32,14 +38,16 @@
     problemSlug,
     problemTitle,
     isCoding = false,
-    getCode,
+    flushDraft,
     language,
     activeTab
   }: Props = $props();
 
   const WIDTH_KEY = 'tutor-panel-width';
-  const MIN_WIDTH = 300;
-  const MAX_WIDTH = 720;
+  const MIN_WIDTH = 320;
+  const MAX_WIDTH = 760;
+  /** How far off the bottom counts as "the learner scrolled up to read". */
+  const STICK_THRESHOLD = 80;
 
   let services: typeof import('$lib/services/index.js') | null = null;
   let open = $state(false);
@@ -49,14 +57,28 @@
   let streaming = $state(false);
   let errorMessage = $state<string | null>(null);
   let loadingThread = $state(false);
-  let includeCode = $state(true);
-  let width = $state(400);
+  let width = $state(420);
   let resizing = $state(false);
   let scrollBox = $state<HTMLDivElement | undefined>(undefined);
   let textarea = $state<HTMLTextAreaElement | undefined>(undefined);
   let abortController: AbortController | null = null;
   /** Thread the panel currently holds, so module navigation can reset it. */
   let loadedThread = $state('');
+  /**
+   * A step as the panel renders it. `pending` is view-only state: the
+   * persisted shape has no notion of "still running".
+   */
+  type RenderStep = TutorToolStep & { pending: boolean };
+
+  /** Tool steps for the reply being streamed right now. */
+  let liveSteps = $state<RenderStep[]>([]);
+  /** Set while a tool is running but the model has produced no prose yet. */
+  let activeToolLabel = $state<string | null>(null);
+  /** Last question asked, so a failed turn can be retried. */
+  let lastQuestion = $state('');
+  let copiedId = $state<string | null>(null);
+  /** False once the learner scrolls up, so streaming doesn't yank them back. */
+  let stickToBottom = $state(true);
 
   const SUGGESTIONS = [
     'Explain this in simpler terms',
@@ -64,10 +86,11 @@
     'Why does this matter?',
     'Quiz me on this'
   ];
-  const CODE_SUGGESTION = "What's wrong with my code?";
+  const CODING_SUGGESTIONS = ["What's wrong with my code?", 'Why did my last run fail?'];
 
-  let suggestions = $derived(isCoding ? [CODE_SUGGESTION, ...SUGGESTIONS] : SUGGESTIONS);
+  let suggestions = $derived(isCoding ? [...CODING_SUGGESTIONS, ...SUGGESTIONS] : SUGGESTIONS);
   let thread = $derived(`${trackSlug}/${problemSlug}`);
+  let canSend = $derived(Boolean(input.trim()) && !streaming && Boolean(config?.enabled));
 
   onMount(async () => {
     const saved = localStorage.getItem(WIDTH_KEY);
@@ -82,7 +105,7 @@
   });
 
   function clampWidth(value: number): number {
-    if (Number.isNaN(value)) return 400;
+    if (Number.isNaN(value)) return 420;
     return Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, value));
   }
 
@@ -93,6 +116,8 @@
     loadedThread = current;
     stopStream();
     messages = [];
+    liveSteps = [];
+    activeToolLabel = null;
     errorMessage = null;
     if (open) void loadThread();
   });
@@ -106,6 +131,7 @@
       messages = [];
     } finally {
       loadingThread = false;
+      stickToBottom = true;
       await scrollToBottom();
     }
   }
@@ -124,18 +150,63 @@
     scrollBox?.scrollTo({ top: scrollBox.scrollHeight });
   }
 
+  /** Coalesces the many scroll requests a stream produces into one per frame. */
+  let scrollQueued = false;
+  function scrollSoon() {
+    if (scrollQueued || !browser) return;
+    scrollQueued = true;
+    requestAnimationFrame(() => {
+      scrollQueued = false;
+      if (scrollBox) scrollBox.scrollTop = scrollBox.scrollHeight;
+    });
+  }
+
+  function onScroll() {
+    if (!scrollBox) return;
+    const distance = scrollBox.scrollHeight - scrollBox.scrollTop - scrollBox.clientHeight;
+    stickToBottom = distance <= STICK_THRESHOLD;
+  }
+
+  /** Only follow the stream while the learner is already at the bottom. */
+  function followStream() {
+    if (stickToBottom) scrollSoon();
+  }
+
   function stopStream() {
     abortController?.abort();
     abortController = null;
     streaming = false;
+    activeToolLabel = null;
+  }
+
+  function autoGrow() {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
   }
 
   async function send(text?: string) {
     const question = (text ?? input).trim();
     if (!question || streaming || !services || !config?.enabled) return;
 
+    // The editor autosaves on a debounce; make sure the tutor's tools see
+    // what is on screen rather than what was there a second ago.
+    if (isCoding && flushDraft) {
+      try {
+        await flushDraft();
+      } catch {
+        /* a failed flush just means slightly stale code */
+      }
+    }
+
     input = '';
+    await tick();
+    autoGrow();
     errorMessage = null;
+    lastQuestion = question;
+    liveSteps = [];
+    activeToolLabel = null;
+
     const now = Date.now();
     messages = [
       ...messages,
@@ -144,21 +215,46 @@
     ];
     const replyIndex = messages.length - 1;
     streaming = true;
+    stickToBottom = true;
     await scrollToBottom();
 
     abortController = new AbortController();
-    const code = isCoding && includeCode ? getCode?.() : undefined;
 
     await services.tutorService.ask(
       trackSlug,
       problemSlug,
-      { message: question, code, language, activeTab },
+      { message: question, language, activeTab },
       (chunk) => {
         if (chunk.kind === 'delta') {
           messages[replyIndex].content += chunk.text;
-          void scrollToBottom();
+          activeToolLabel = null;
+          followStream();
+        } else if (chunk.kind === 'tool-start') {
+          liveSteps = [
+            ...liveSteps,
+            {
+              id: chunk.id,
+              name: chunk.name,
+              label: chunk.label,
+              ok: false,
+              durationMs: 0,
+              pending: true
+            }
+          ];
+          activeToolLabel = chunk.label;
+          followStream();
+        } else if (chunk.kind === 'tool-end') {
+          liveSteps = liveSteps.map((step) =>
+            step.id === chunk.id
+              ? { ...step, ok: chunk.ok, durationMs: chunk.durationMs, pending: false }
+              : step
+          );
+          if (liveSteps.every((step) => !step.pending)) activeToolLabel = null;
         } else if (chunk.kind === 'done') {
-          messages[replyIndex] = chunk.message;
+          // Keep the local id as the key. Swapping in the server's UUID would
+          // change the {#each} key, tearing down the message and re-rendering
+          // its markdown from scratch — a visible flash right at the end.
+          messages[replyIndex] = { ...chunk.message, id: messages[replyIndex].id };
         } else if (chunk.kind === 'error') {
           errorMessage = chunk.message;
           if (!messages[replyIndex].content) messages = messages.slice(0, replyIndex);
@@ -169,14 +265,36 @@
 
     abortController = null;
     streaming = false;
-    await scrollToBottom();
+    activeToolLabel = null;
+    if (stickToBottom) await scrollToBottom();
+  }
+
+  async function retry() {
+    if (!lastQuestion || streaming) return;
+    errorMessage = null;
+    await send(lastQuestion);
+  }
+
+  async function copyMessage(message: TutorMessage) {
+    if (!browser) return;
+    try {
+      await navigator.clipboard.writeText(message.content);
+      copiedId = message.id;
+      setTimeout(() => {
+        if (copiedId === message.id) copiedId = null;
+      }, 1400);
+    } catch {
+      /* clipboard can be blocked; silently skip */
+    }
   }
 
   async function clearThread() {
     if (!services || streaming) return;
     await services.tutorService.clearConversation(trackSlug, problemSlug);
     messages = [];
+    liveSteps = [];
     errorMessage = null;
+    lastQuestion = '';
   }
 
   function onKeydown(event: KeyboardEvent) {
@@ -217,6 +335,20 @@
       open = false;
     }
   }
+
+  /**
+   * Steps to show under a message: the saved ones once the turn is persisted,
+   * the live ones while it is still streaming. Saved steps are checked first
+   * so the list doesn't blink empty in the gap between the `done` chunk and
+   * `streaming` going false.
+   */
+  function stepsFor(message: TutorMessage, index: number): RenderStep[] {
+    if (message.steps?.length) {
+      return message.steps.map((step) => ({ ...step, pending: false }));
+    }
+    const isStreamingReply = streaming && index === messages.length - 1;
+    return isStreamingReply ? liveSteps : [];
+  }
 </script>
 
 <svelte:window onkeydown={onWindowKeydown} />
@@ -255,9 +387,20 @@
       </div>
     </header>
 
-    <p class="tutor-scope">{problemTitle}</p>
+    <div class="tutor-scope">
+      <span class="tutor-scope-title">{problemTitle}</span>
+      {#if config?.enabled}
+        <span class="tutor-scope-note">
+          {#if isCoding}
+            Can read this module, your code, runs, and submissions
+          {:else}
+            Can read this module's material
+          {/if}
+        </span>
+      {/if}
+    </div>
 
-    <div class="tutor-scroll" bind:this={scrollBox}>
+    <div class="tutor-scroll" bind:this={scrollBox} onscroll={onScroll}>
       {#if config && !config.enabled}
         <div class="tutor-setup">
           <p class="tutor-setup-title">Tutor not configured</p>
@@ -273,31 +416,79 @@ OPENROUTER_MODEL={config.model}</pre>
         <p class="tutor-hint">Loading conversation…</p>
       {:else if messages.length === 0}
         <div class="tutor-empty">
+          <p class="tutor-empty-lead">Ask about anything on this page.</p>
           <p>
-            Ask about anything on this page. The tutor already has this module's problem
-            statement, theory, and tips — it will nudge you toward the answer rather than
-            hand it over.
+            {#if isCoding}
+              The tutor can pull up this module's theory and tips, read the code in your
+              editor, and check why your last run or submission failed — you don't need to
+              paste anything.
+            {:else}
+              The tutor can pull up this module's theory and tips as it needs them.
+            {/if}
+            It will nudge you toward the answer rather than hand it over.
           </p>
         </div>
       {/if}
 
-      {#each messages as message (message.id)}
+      {#each messages as message, i (message.id)}
+        {@const steps = stepsFor(message, i)}
         <div class="tutor-message" class:tutor-message-user={message.role === 'user'}>
-          <span class="tutor-role">{message.role === 'user' ? 'You' : 'Tutor'}</span>
+          <div class="tutor-message-head">
+            <span class="tutor-role">{message.role === 'user' ? 'You' : 'Tutor'}</span>
+            {#if message.role === 'assistant' && message.content && !(streaming && i === messages.length - 1)}
+              <button
+                class="tutor-copy"
+                onclick={() => void copyMessage(message)}
+                title="Copy this reply"
+              >{copiedId === message.id ? 'Copied' : 'Copy'}</button>
+            {/if}
+          </div>
+
+          {#if steps.length > 0}
+            <ul class="tutor-steps">
+              {#each steps as step (step.id)}
+                <li class="tutor-step" class:tutor-step-failed={!step.pending && !step.ok}>
+                  <span class="tutor-step-mark">
+                    {#if step.pending}⋯{:else if step.ok}✓{:else}!{/if}
+                  </span>
+                  <span class="tutor-step-label">{step.label}</span>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+
           {#if message.role === 'user'}
             <p class="tutor-user-text">{message.content}</p>
           {:else if message.content}
             <div class="tutor-markdown">
-              <MarkdownRenderer content={message.content} variant="compact" headingPrefix="tutor" />
+              <MarkdownRenderer
+                content={message.content}
+                variant="compact"
+                headingPrefix="tutor"
+                streaming={streaming && i === messages.length - 1}
+              />
             </div>
-          {:else}
+          {:else if activeToolLabel}
+            <span class="tutor-working">{activeToolLabel}…</span>
+          {:else if streaming && i === messages.length - 1}
             <span class="tutor-typing" aria-label="Tutor is thinking">●●●</span>
+          {:else}
+            <!-- Not streaming and still empty: the turn ended without a reply.
+                 Never leave the thinking dots up, or it looks like a hang. -->
+            <span class="tutor-working">No answer came back. Try asking again.</span>
           {/if}
         </div>
       {/each}
 
       {#if errorMessage}
-        <p class="tutor-error">{errorMessage}</p>
+        <div class="tutor-error">
+          <p>{errorMessage}</p>
+          {#if lastQuestion}
+            <button class="tutor-retry" onclick={() => void retry()} disabled={streaming}>
+              Try again
+            </button>
+          {/if}
+        </div>
       {/if}
     </div>
 
@@ -311,24 +502,22 @@ OPENROUTER_MODEL={config.model}</pre>
       {/if}
 
       <div class="tutor-composer">
-        {#if isCoding}
-          <label class="tutor-code-toggle">
-            <input type="checkbox" bind:checked={includeCode} />
-            Share my current code
-          </label>
-        {/if}
         <textarea
           bind:this={textarea}
           bind:value={input}
           onkeydown={onKeydown}
-          placeholder="Ask about this module…  (Enter to send)"
-          rows="3"
+          oninput={autoGrow}
+          placeholder="Ask about this module…  (Enter to send, Shift+Enter for a new line)"
+          rows="2"
         ></textarea>
         <div class="tutor-composer-actions">
+          <span class="tutor-composer-hint">
+            {#if streaming}Working…{:else}Ctrl+I toggles this panel{/if}
+          </span>
           {#if streaming}
             <button class="tutor-send tutor-stop" onclick={stopStream}>Stop</button>
           {:else}
-            <button class="tutor-send" onclick={() => void send()} disabled={!input.trim()}>
+            <button class="tutor-send" onclick={() => void send()} disabled={!canSend}>
               Send
             </button>
           {/if}
@@ -376,7 +565,7 @@ OPENROUTER_MODEL={config.model}</pre>
     z-index: 70;
     display: flex;
     flex-direction: column;
-    min-width: 300px;
+    min-width: 320px;
     max-width: 100vw;
     background: #0f1117;
     border-left: 1px solid #1e293b;
@@ -453,14 +642,23 @@ OPENROUTER_MODEL={config.model}</pre>
   }
 
   .tutor-scope {
-    padding: 0.4rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.4rem 0.75rem 0.45rem;
     border-bottom: 1px solid #1e293b;
-    color: #64748b;
-    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+  .tutor-scope-title {
+    color: #94a3b8;
+    font-size: 0.72rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    flex-shrink: 0;
+  }
+  .tutor-scope-note {
+    color: #4b5b70;
+    font-size: 0.65rem;
   }
 
   .tutor-scroll {
@@ -480,6 +678,11 @@ OPENROUTER_MODEL={config.model}</pre>
     color: #94a3b8;
     font-size: 0.78rem;
     line-height: 1.6;
+  }
+  .tutor-empty-lead {
+    color: #cbd5e1;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
   }
   .tutor-setup {
     border: 1px solid #334155;
@@ -512,6 +715,13 @@ OPENROUTER_MODEL={config.model}</pre>
     flex-direction: column;
     gap: 0.25rem;
   }
+  .tutor-message-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 1rem;
+  }
   .tutor-role {
     font-size: 0.62rem;
     font-weight: 700;
@@ -521,6 +731,26 @@ OPENROUTER_MODEL={config.model}</pre>
   }
   .tutor-message-user .tutor-role {
     color: #60a5fa;
+  }
+  .tutor-copy {
+    border: none;
+    background: transparent;
+    color: #475569;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0 0.15rem;
+    opacity: 0;
+    transition: opacity 0.12s, color 0.12s;
+  }
+  .tutor-message:hover .tutor-copy,
+  .tutor-copy:focus-visible {
+    opacity: 1;
+  }
+  .tutor-copy:hover {
+    color: #94a3b8;
   }
   .tutor-user-text {
     white-space: pre-wrap;
@@ -538,6 +768,44 @@ OPENROUTER_MODEL={config.model}</pre>
   }
   .tutor-markdown :global(pre) {
     font-size: 0.72rem;
+  }
+
+  .tutor-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin: 0 0 0.15rem;
+    padding: 0.35rem 0.5rem;
+    list-style: none;
+    border-left: 2px solid #24344d;
+    background: #121722;
+    border-radius: 0 4px 4px 0;
+  }
+  .tutor-step {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    color: #64748b;
+    font-size: 0.68rem;
+    line-height: 1.5;
+  }
+  .tutor-step-mark {
+    color: #3f8f5f;
+    font-size: 0.62rem;
+    width: 0.7rem;
+    flex-shrink: 0;
+  }
+  .tutor-step-failed .tutor-step-mark {
+    color: #b45309;
+  }
+  .tutor-step-failed .tutor-step-label {
+    color: #a16207;
+  }
+
+  .tutor-working {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-style: italic;
   }
   .tutor-typing {
     color: #475569;
@@ -558,6 +826,27 @@ OPENROUTER_MODEL={config.model}</pre>
     color: #fca5a5;
     font-size: 0.75rem;
     line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+  .tutor-retry {
+    padding: 0.2rem 0.6rem;
+    border: 1px solid #991b1b;
+    border-radius: 4px;
+    background: transparent;
+    color: #fca5a5;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tutor-retry:hover:not(:disabled) {
+    background: #451414;
+  }
+  .tutor-retry:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   .tutor-suggestions {
@@ -592,17 +881,11 @@ OPENROUTER_MODEL={config.model}</pre>
     flex-direction: column;
     gap: 0.45rem;
   }
-  .tutor-code-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    color: #94a3b8;
-    font-size: 0.7rem;
-    cursor: pointer;
-  }
   .tutor-composer textarea {
     width: 100%;
-    resize: vertical;
+    resize: none;
+    overflow-y: auto;
+    max-height: 200px;
     background: #0d1117;
     border: 1px solid #334155;
     border-radius: 6px;
@@ -618,7 +901,13 @@ OPENROUTER_MODEL={config.model}</pre>
   }
   .tutor-composer-actions {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .tutor-composer-hint {
+    color: #3f4b5e;
+    font-size: 0.65rem;
   }
   .tutor-send {
     padding: 0.3rem 0.9rem;

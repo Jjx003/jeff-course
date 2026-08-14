@@ -528,6 +528,18 @@
     await services.draftStorage.saveDraft(problemId, currentLanguage, code);
   }
 
+  /**
+   * Persist the editor buffer right now, bypassing the autosave debounce.
+   *
+   * The tutor reads the learner's code from the `drafts` table rather than
+   * receiving it in the request, so a question asked mid-keystroke would
+   * otherwise be answered against code that is up to a debounce interval old.
+   */
+  async function flushDraftForTutor() {
+    if (!services || !editorRef) return;
+    await services.draftStorage.saveDraft(problemId, currentLanguage, editorRef.getValue());
+  }
+
   // ── Run ───────────────────────────────────────────────────────────────
   //
   // Switched from the legacy single-shot /api/execute call to the new
@@ -861,14 +873,15 @@
 {/key}
 
 <!-- AI tutor drawer. Rendered outside the module-type branch so reading,
-     quiz, test, drill, and coding pages all get it; the editor buffer is
-     only offered as context on coding modules. -->
+     quiz, test, drill, and coding pages all get it. The tutor reads the
+     editor buffer server-side from the drafts table, so the page only has
+     to flush the pending autosave before a question is asked. -->
 <TutorPanel
   trackSlug={track.slug}
   problemSlug={problem.slug}
   problemTitle={problem.title}
   isCoding={!isReading && !isAssessment && !isDrill}
-  getCode={() => editorRef?.getValue()}
+  flushDraft={flushDraftForTutor}
   language={currentLanguage}
   activeTab={activeTabId}
 />

@@ -89,10 +89,15 @@ workflow.
 ## AI Tutor
 
 Every module page has a collapsed "Tutor" drawer on the right edge. It is a chat
-with a coding/teaching model about the page you are on: the server hands the
-model that module's problem statement, theory, and tips, plus your current
-editor buffer if you choose to share it. Conversations are saved per learner and
-per module, so a thread is still there when you come back.
+with a coding/teaching model about the page you are on.
+
+Rather than being handed a wall of context up front, the tutor looks things up
+as it needs them. It can pull up the module's theory and tips, read the code
+currently in your editor, and check the output of your last run or the grader's
+verdict on your last submission — so on a coding module you can just ask "why
+is this failing?" without pasting anything. The panel shows you which of these
+it looked at while answering. Conversations are saved per learner and per
+module, so a thread is still there when you come back.
 
 The tutor is off unless you configure it. Copy `.env.example` to `.env` and set
 an [OpenRouter](https://openrouter.ai/keys) key:

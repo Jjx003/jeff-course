@@ -54,7 +54,7 @@ content volume as success without outcome evidence.
 | Markdown | unified, remark, rehype, KaTeX, Mermaid |
 | Course parsing | `js-yaml` + Node `fs`, server-side only |
 | Persistence | DuckDB native addon, server-side singleton |
-| AI tutor | OpenRouter chat completions over `fetch`, streamed to the client as SSE |
+| AI tutor | OpenRouter chat completions over `fetch`, with a hand-rolled tool-calling loop, streamed to the client as SSE |
 | Execution | Session-based sandbox pipeline using `uv`, `g++`, and optional Docker |
 | Deployment | `@sveltejs/adapter-node` |
 | Build tool | Vite 6 |
@@ -181,7 +181,7 @@ jeff-course/
     lib/markdown/            Markdown, math, proof callout rendering
     lib/reading/             gradual reading splitting
     lib/server/              DuckDB, stats, grading, sandbox
-    lib/server/tutor/        OpenRouter client, prompt context, conversations
+    lib/server/tutor/        OpenRouter client, agent loop, tools, context, conversations
     lib/services/            service interfaces and client implementations
     lib/components/          Svelte UI components
     routes/                  pages and API routes
@@ -311,7 +311,7 @@ Current services:
 | Stats | API service backed by server aggregate helpers |
 | Sessions | API service with SSE output and DuckDB session records |
 | Execution | Local client service that calls the session/execute APIs |
-| AI tutor | API service with SSE reply streaming and DuckDB conversation records |
+| AI tutor | API service streaming reply text and tool activity over SSE, with DuckDB conversation records |
 
 ## Persistence
 
@@ -399,33 +399,64 @@ fallback when available on the host.
 
 `TutorPanel.svelte` is a collapsed drawer rendered once per module page,
 outside the module-type branch, so reading, coding, quiz, test, and drill pages
-all get it. Only coding modules offer the editor buffer as context.
+all get it.
+
+The tutor is agentic: instead of stuffing the module material and the editor
+buffer into every request, the system prompt is small and the model pulls what
+it needs through tools. There is no LLM SDK. OpenRouter is OpenAI-compatible,
+so tool calling is a `tools` array in the request plus `tool_calls` deltas in
+the stream, and the loop is a plain `for` loop in `agent.ts`.
 
 ```text
 TutorPanel
   -> tutorService
     -> POST /api/tutor/[trackSlug]/[problemSlug]/message
-      -> buildTutorContext()   reads module markdown from disk
-      -> streamChatCompletion() OpenRouter, SSE in and SSE out
-      -> tutor_messages        learner turn + completed reply
+      -> buildTutorContext()   metadata + task statement only
+      -> runAgent()            loop, max 4 steps
+           -> streamChatCompletion()  one step; text or tool calls
+           -> tools.ts                executes calls against disk + DuckDB
+      -> tutor_messages        learner turn + reply + tool steps
 ```
+
+Tools (`src/lib/server/tutor/tools.ts`):
+
+| Tool | Reads |
+|---|---|
+| `read_learner_code` | the `drafts` row for this learner/module/language, line-numbered |
+| `read_module_section` | `problem` / `theory` / `tips` markdown |
+| `read_last_run` | latest `runs` row: stdout, stderr, status |
+| `read_submission_result` | latest `submissions` row: verdict, score, failing diffs |
+
+The last three are withheld on non-coding modules. The final loop step is sent
+without tools, which forces a prose answer instead of an endless tool chain.
 
 Rules to preserve:
 
 - The API key stays server-side. `/api/tutor/config` exposes only `enabled` and
   the model slug.
-- Grounding context is assembled on the server from `trackSlug`/`problemSlug`.
-  The client sends the message plus optional page context (editor buffer,
-  language, active tab), never the course material itself.
-- `solution.md`, `solution/` code, and quiz answer keys are excluded from the
-  prompt unless `TUTOR_ALLOW_SOLUTIONS=1`. The system prompt tells the model to
-  hint first and escalate only when the learner stays stuck.
+- Tools resolve the learner and module from the session and the route, never
+  from the request body. The client sends only the message, the open language,
+  and the active tab. It cannot point the tutor at another learner's work.
+- The editor buffer is read from the `drafts` table, not uploaded per message.
+  The page passes a `flushDraft` callback so the pending autosave debounce is
+  committed before a question is answered; without it the tutor reads code up
+  to one debounce interval stale.
+- `solution.md`, `solution/` code, and quiz answer keys are excluded unless
+  `TUTOR_ALLOW_SOLUTIONS=1`, and no tool exposes them. The system prompt tells
+  the model to hint first and escalate only when the learner stays stuck.
 - Threads are scoped to `(user_id, problem_id)` and persist across reloads.
-  Aborted replies are saved with whatever text arrived.
+  Aborted replies are saved with whatever text and tool steps arrived.
+- Tool activity streams to the client as `tool-start` / `tool-end` SSE events
+  and is persisted in `tutor_messages.steps` as JSON, so reopening a thread
+  still shows what the tutor looked at.
+- A tool that throws must not kill the reply; the failure is passed back to the
+  model as text and shown in the UI as a failed step.
 - The tutor is optional. With no key configured, the drawer explains the setup
   and every other feature is unaffected. Do not make it a hard dependency.
 - `tools/tutor-mock-openrouter.mjs` is a local stand-in endpoint for testing
-  the pipeline without a key.
+  the pipeline without a key. It emits streamed tool calls on the first step of
+  a turn and prose on the next, so it exercises the agent loop; pass
+  `--no-tools` for prose only.
 
 ## Routes
 

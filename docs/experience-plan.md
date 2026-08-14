@@ -243,6 +243,11 @@ local machine:
   not presented as authoritative.
 - Conversations stay in the local DuckDB file and are scoped per learner and per
   module. The learner can clear a thread.
+- The tutor reads the learner's work — editor drafts, run output, grader
+  verdicts — through server-side tools rather than the browser uploading it.
+  That reach is legible rather than silent: the panel lists what it read while
+  answering, and every lookup is scoped to the signed-in learner and the module
+  in the URL. A learner who never opens the drawer is never read from.
 - Open question: on a shared instance, one key funds every profile's usage with
   no per-profile ceiling. Revisit if shared instances become common.
 

@@ -1,16 +1,20 @@
 /**
  * POST /api/tutor/[trackSlug]/[problemSlug]/message
  *
- * Sends one learner turn to the configured OpenRouter model and streams the
- * reply back as Server-Sent Events:
+ * Runs one learner turn through the tutor's agent loop and streams the reply
+ * back as Server-Sent Events:
  *
- *   event: delta   data: {"text":"..."}
- *   event: done    data: {"message":{...}}
- *   event: error   data: {"message":"..."}
+ *   event: delta       data: {"text":"..."}
+ *   event: tool-start  data: {"id":"...","name":"...","label":"..."}
+ *   event: tool-end    data: {"id":"...","ok":true,"durationMs":12}
+ *   event: done        data: {"message":{...}}
+ *   event: error       data: {"message":"..."}
  *
- * This is a POST rather than a GET because the turn carries a body (the
- * message plus the current editor buffer), so the client consumes it with
- * `fetch` + a stream reader instead of `EventSource`.
+ * This is a POST rather than a GET because the turn carries a body, so the
+ * client consumes it with `fetch` + a stream reader instead of `EventSource`.
+ *
+ * The body no longer carries the editor buffer: the tutor reads it from the
+ * `drafts` table through a tool when it actually needs it.
  *
  * Both the learner turn and the completed reply are persisted, so the thread
  * survives a reload. A reply that is aborted mid-stream is saved with
@@ -20,15 +24,17 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { isEnrolled } from '$lib/server/enrollments.js';
+import { runAgent } from '$lib/server/tutor/agent.js';
 import { buildTutorContext } from '$lib/server/tutor/context.js';
-import { isTutorEnabled } from '$lib/server/tutor/config.js';
+import { isTutorEnabled, readTutorSettings } from '$lib/server/tutor/config.js';
+import { toolsFor, type ToolContext } from '$lib/server/tutor/tools.js';
 import {
   HISTORY_TURN_LIMIT,
   appendMessage,
   getConversation
 } from '$lib/server/tutor/conversations.js';
-import { streamChatCompletion, type ChatMessage } from '$lib/server/tutor/openrouter.js';
-import type { TutorAsk } from '$lib/types/tutor.js';
+import type { ChatMessage } from '$lib/server/tutor/openrouter.js';
+import type { TutorAsk, TutorToolStep } from '$lib/types/tutor.js';
 
 const MESSAGE_CHAR_LIMIT = 8000;
 
@@ -64,11 +70,21 @@ export const POST: RequestHandler = async ({ locals, params, request }) => {
   const history = await getConversation(userId, problemId, HISTORY_TURN_LIMIT);
   await appendMessage(userId, problemId, 'user', question);
 
-  const chatMessages: ChatMessage[] = [
+  const seed: ChatMessage[] = [
     { role: 'system', content: context.systemPrompt },
     ...history.map((m) => ({ role: m.role, content: m.content }) as ChatMessage),
     { role: 'user', content: question }
   ];
+
+  const toolContext: ToolContext = {
+    userId,
+    problemId,
+    track: context.track,
+    problem: context.problem,
+    allowSolutions: readTutorSettings().allowSolutions,
+    language: ask.language
+  };
+  const tools = toolsFor(context.problem);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -89,16 +105,58 @@ export const POST: RequestHandler = async ({ locals, params, request }) => {
       request.signal.addEventListener('abort', () => abort.abort(), { once: true });
 
       let reply = '';
+      // Built up as events arrive so an aborted turn still persists the tool
+      // activity that had already happened, with real names and labels.
+      const steps: TutorToolStep[] = [];
       try {
-        for await (const delta of streamChatCompletion(chatMessages, { signal: abort.signal })) {
-          reply += delta;
-          send(sseFrame('delta', { text: delta }));
+        const run = runAgent(seed, tools, toolContext, { signal: abort.signal });
+        for (;;) {
+          const next = await run.next();
+          if (next.done) {
+            reply = next.value.text;
+            break;
+          }
+          const event = next.value;
+          if (event.kind === 'delta') {
+            reply += event.text;
+            send(sseFrame('delta', { text: event.text }));
+          } else if (event.kind === 'tool-start') {
+            steps.push({
+              id: event.id,
+              name: event.name,
+              label: event.label,
+              ok: false,
+              durationMs: 0
+            });
+            send(sseFrame('tool-start', { id: event.id, name: event.name, label: event.label }));
+          } else {
+            const pending = steps.find((s) => s.id === event.id);
+            if (pending) {
+              pending.ok = event.ok;
+              pending.durationMs = event.durationMs;
+            }
+            send(sseFrame('tool-end', { id: event.id, ok: event.ok, durationMs: event.durationMs }));
+          }
         }
-        const saved = await appendMessage(userId, problemId, 'assistant', reply);
+
+        // A turn that produced only tool calls and no prose is a failure, not
+        // a reply. Persisting it would leave a blank assistant bubble in the
+        // thread forever, so surface it as an error the learner can retry.
+        if (!reply.trim()) {
+          send(
+            sseFrame('error', {
+              message:
+                'The tutor looked things up but never wrote an answer. Try asking again, or rephrase the question.'
+            })
+          );
+          return;
+        }
+
+        const saved = await appendMessage(userId, problemId, 'assistant', reply, steps);
         send(sseFrame('done', { message: saved }));
       } catch (err) {
         if (reply.trim()) {
-          await appendMessage(userId, problemId, 'assistant', reply).catch(() => {});
+          await appendMessage(userId, problemId, 'assistant', reply, steps).catch(() => {});
         }
         const message = err instanceof Error ? err.message : String(err);
         // An abort is the learner navigating away, not a failure worth showing.

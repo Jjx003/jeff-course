@@ -20,14 +20,33 @@
     content: string;
     variant?: 'default' | 'reading' | 'study' | 'compact';
     headingPrefix?: string;
+    /**
+     * Set while `content` is growing token by token, as with a streamed AI
+     * reply. Re-renders are coalesced and the post-render DOM passes are
+     * deferred until the stream ends, which keeps the pipeline from running
+     * per character.
+     */
+    streaming?: boolean;
   }
 
-  let { content, variant = 'default', headingPrefix = 'md' }: Props = $props();
+  let { content, variant = 'default', headingPrefix = 'md', streaming = false }: Props = $props();
 
   let html = $state('');
-  let loading = $state(true);
+  /**
+   * The spinner is only for the very first render. Showing it on every
+   * re-render makes streamed content flash, because the rendered reply gets
+   * swapped out for a spinner between tokens.
+   */
+  let hasRendered = $state(false);
   let container = $state<HTMLDivElement>();
   let expandedImage = $state<{ src: string; alt: string } | null>(null);
+
+  /** Fastest re-render cadence while streaming. */
+  const STREAM_RENDER_MS = 90;
+  /** Bumped per render so a slow earlier pass can't overwrite a newer one. */
+  let renderToken = 0;
+  let renderStartedAt = 0;
+  let throttleTimer: ReturnType<typeof setTimeout> | null = null;
 
   function slugify(text: string): string {
     const slug = text
@@ -152,22 +171,33 @@
     if (event.key === 'Escape' && expandedImage) closeImage();
   }
 
-  async function render() {
-    if (!content.trim()) {
+  async function render(source: string, isStreaming: boolean) {
+    const token = ++renderToken;
+    renderStartedAt = Date.now();
+
+    if (!source.trim()) {
       html = '<p class="text-slate-500 italic">No content.</p>';
-      loading = false;
+      hasRendered = true;
       return;
     }
-    loading = true;
+
     try {
       const { renderMarkdown } = await import('$lib/markdown/renderMarkdown.js');
-      html = await renderMarkdown(content);
+      const next = await renderMarkdown(source);
+      // A newer render started while this one was awaiting; its output wins.
+      if (token !== renderToken) return;
+      html = next;
     } catch (err) {
+      if (token !== renderToken) return;
       console.error('[MarkdownRenderer] render error:', err);
-      html = `<pre class="text-red-400">${content}</pre>`;
+      html = `<pre class="text-red-400">${source}</pre>`;
     }
-    loading = false;
-    // After Svelte flushes the new HTML into the container, upgrade mermaid blocks.
+    hasRendered = true;
+
+    // Mermaid rendering and DOM decoration are pointless on a half-written
+    // document, and mermaid.render() on a truncated fence throws. Wait for the
+    // stream to finish; the effect re-runs with isStreaming false at the end.
+    if (isStreaming) return;
     queueMicrotask(() => {
       assignHeadingIds(container);
       upgradeMermaidBlocks(container);
@@ -176,9 +206,38 @@
   }
 
   $effect(() => {
-    const _ = content;
-    const __ = headingPrefix;
-    render();
+    const source = content;
+    // Tracked so a prefix change still triggers a re-render.
+    void headingPrefix;
+    const isStreaming = streaming;
+
+    if (!isStreaming) {
+      if (throttleTimer) {
+        clearTimeout(throttleTimer);
+        throttleTimer = null;
+      }
+      void render(source, false);
+      return;
+    }
+
+    const elapsed = Date.now() - renderStartedAt;
+    if (elapsed >= STREAM_RENDER_MS) {
+      void render(source, true);
+    } else if (!throttleTimer) {
+      // Trailing edge, so the newest content still lands if tokens stop.
+      // Deliberately not cleared on effect teardown: this effect re-runs on
+      // every token, and clearing would starve the timer forever.
+      throttleTimer = setTimeout(() => {
+        throttleTimer = null;
+        void render(content, streaming);
+      }, STREAM_RENDER_MS - elapsed);
+    }
+  });
+
+  $effect(() => {
+    return () => {
+      if (throttleTimer) clearTimeout(throttleTimer);
+    };
   });
 
   $effect(() => {
@@ -205,7 +264,7 @@
 
 <svelte:window onkeydown={handleWindowKeydown} />
 
-{#if loading}
+{#if !hasRendered}
   <div class="flex items-center gap-2 px-6 py-8 text-slate-500">
     <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-accent-400"></span>
     <span class="text-sm">Rendering…</span>

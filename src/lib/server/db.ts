@@ -297,6 +297,9 @@ export const dbReady: Promise<void> = (async () => {
     )
   `);
   await dbRun(`CREATE INDEX IF NOT EXISTS tutor_messages_thread_idx ON tutor_messages (user_id, problem_id, created_at)`);
+  // Tool activity for assistant turns, stored as a JSON array. Added after
+  // the table shipped, so existing local databases need the column grafted on.
+  await dbRun(`ALTER TABLE tutor_messages ADD COLUMN IF NOT EXISTS steps TEXT`);
 
   // Preserve existing learners' work by enrolling courses that already have
   // progress. The conflict clause keeps this idempotent on later startups.
