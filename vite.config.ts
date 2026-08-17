@@ -14,7 +14,9 @@ export default defineConfig({
 
   optimizeDeps: {
     // Pre-bundle monaco-editor so Vite doesn't re-process it on every page load.
-    include: ['monaco-editor']
+    // monaco-vim is listed too: it is only imported when the user turns vim mode
+    // on, and discovering it lazily forces a dev-server reload mid-edit.
+    include: ['monaco-editor', 'monaco-vim']
   },
 
   // Allow the dev server to serve files from the courses directory.

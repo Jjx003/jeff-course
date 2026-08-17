@@ -261,6 +261,14 @@
   function zoomIn()  { editorFontSize = Math.min(FONT_SIZE_MAX, editorFontSize + 1); }
   function zoomOut() { editorFontSize = Math.max(FONT_SIZE_MIN, editorFontSize - 1); }
 
+  // ── Vim keybindings ───────────────────────────────────────────────────
+  const VIM_KEY = 'editor-vim-mode';
+  let vimEnabled = $state(false);
+  function toggleVim() {
+    vimEnabled = !vimEnabled;
+    if (browser) localStorage.setItem(VIM_KEY, String(vimEnabled));
+  }
+
   // ── Output panel resize ───────────────────────────────────────────────
   const OUTPUT_MIN = 60;
   const OUTPUT_MAX = 700;
@@ -388,6 +396,9 @@
 
     // Reading and assessment modules have no editor, runner, or drafts — stop here.
     if (isReading || isAssessment || isDrill) return;
+
+    // Restore editor keybinding mode
+    vimEnabled = localStorage.getItem(VIM_KEY) === 'true';
 
     // Restore output panel size/state
     const savedH = localStorage.getItem('output-panel-height');
@@ -1221,6 +1232,15 @@
 
           {#if showAdvanced}
             <div class="advanced-panel">
+              <label class="advanced-field advanced-field-check">
+                <span>Vim keybindings</span>
+                <input
+                  type="checkbox"
+                  checked={vimEnabled}
+                  onchange={toggleVim}
+                  title="Use vim keybindings in the editor"
+                />
+              </label>
               <label class="advanced-field">
                 <span>Memory (MB)</span>
                 <input
@@ -1281,6 +1301,7 @@
               language={currentLanguage}
               initialValue={editorInitialValue}
               fontSize={editorFontSize}
+              vim={vimEnabled}
               onsave={handleDraftSave}
             />
           </div>
@@ -1508,6 +1529,22 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+  /* Checkbox fields read as a labelled switch, not a boxed text input. */
+  .advanced-field-check {
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.4rem;
+    cursor: pointer;
+  }
+  .advanced-field-check input[type='checkbox'] {
+    min-width: 0;
+    width: 0.9rem;
+    height: 0.9rem;
+    padding: 0;
+    accent-color: #22c55e;
+    cursor: pointer;
+  }
 
   /* ── Docker banner ── */
   .docker-banner {
@@ -1625,6 +1662,7 @@
     color: #64748b;
     font-variant-numeric: tabular-nums;
   }
+
 
   /* ── Submissions dropdown ── */
   .submissions-dropdown {

@@ -8,12 +8,16 @@
    * - Python and C++ syntax highlighting
    * - Dark theme (course-dark)
    * - Auto-saves draft on every change (debounced 800ms)
+   * - Optional vim keybindings (monaco-vim) with a status line
    * - Exposes `getValue()` for Run/Submit to read current code
    * - Exposes `setValue(code)` for language switching
    *
    * Monaco is loaded dynamically inside onMount (browser-only).
    * A no-op worker blob is provided so Monaco doesn't error on missing workers.
    * This is sufficient for syntax highlighting of Python/C++ via Monarch tokenizers.
+   *
+   * monaco-vim is also loaded dynamically, but only the first time vim mode is
+   * turned on — users who never enable it never pay for the chunk.
    */
 
   import { onMount, onDestroy } from 'svelte';
@@ -23,17 +27,25 @@
     language: Language;
     initialValue: string;
     fontSize?: number;
+    /** Enable vim keybindings. */
+    vim?: boolean;
     onsave?: (code: string) => void;
     onready?: () => void;
   }
 
-  let { language, initialValue, fontSize = 14, onsave, onready }: Props = $props();
+  let { language, initialValue, fontSize = 14, vim = false, onsave, onready }: Props = $props();
 
   let container: HTMLDivElement;
+  let vimStatusBar: HTMLDivElement;
   let editor: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
   let monacoLib: typeof import('monaco-editor') | null = null;
   let saveTimer: ReturnType<typeof setTimeout> | null = null;
   let mounted = $state(false);
+
+  /** Live monaco-vim binding; null whenever vim mode is off. */
+  let vimBinding: { dispose(): void } | null = null;
+  /** Guards against overlapping enable/disable while the chunk is loading. */
+  let vimPending = false;
 
   const MONACO_LANG: Record<Language, string> = {
     python: 'python',
@@ -115,13 +127,64 @@
     // Return synchronous cleanup
     return () => {
       saveTimer && clearTimeout(saveTimer);
+      vimBinding?.dispose();
+      vimBinding = null;
       editor?.dispose();
     };
   });
 
   onDestroy(() => {
     saveTimer && clearTimeout(saveTimer);
+    vimBinding?.dispose();
+    vimBinding = null;
     editor?.dispose();
+  });
+
+  /** Write the current buffer through the normal draft-save path, right now. */
+  function flushSave() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = null;
+    onsave?.(editor?.getValue() ?? '');
+  }
+
+  async function enableVim() {
+    if (!editor || vimBinding || vimPending) return;
+    vimPending = true;
+    try {
+      const { initVimMode, VimMode } = await import('monaco-vim');
+
+      // `:w` flushes the draft instead of erroring out — drafts already
+      // autosave, so this just makes the muscle memory harmless.
+      // `Vim` is present at runtime but missing from monaco-vim's type surface.
+      const vimApi = (VimMode as unknown as { Vim: { defineEx: (n: string, p: string, f: () => void) => void } }).Vim;
+      vimApi.defineEx('write', 'w', flushSave);
+
+      // The editor may have been torn down while the chunk was loading.
+      if (!editor) return;
+      vimBinding = initVimMode(editor, vimStatusBar);
+    } finally {
+      vimPending = false;
+    }
+  }
+
+  function disableVim() {
+    vimBinding?.dispose();
+    vimBinding = null;
+    if (vimStatusBar) {
+      vimStatusBar.textContent = '';
+      // monaco-vim writes an inline `display` on the status node, which would
+      // otherwise beat the .vim-status-hidden class and leave an empty bar.
+      vimStatusBar.style.removeProperty('display');
+    }
+    editor?.focus();
+  }
+
+  // Toggle vim mode when the prop changes (and once the editor exists).
+  $effect(() => {
+    const wantVim = vim;
+    if (!mounted) return;
+    if (wantVim) enableVim();
+    else disableVim();
   });
 
   // Sync language when prop changes
@@ -159,18 +222,61 @@
     </div>
   {/if}
   <div bind:this={container} class="editor-container" class:invisible={!mounted}></div>
+  <!-- Vim status line: kept mounted but collapsed so the node exists before initVimMode runs. -->
+  <div bind:this={vimStatusBar} class="vim-status" class:vim-status-hidden={!vim}></div>
 </div>
 
 <style>
   .editor-wrap {
     position: relative;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
   }
 
   .editor-container {
     width: 100%;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Vim status line — mirrors the editor chrome, sits under the buffer.
+     Block (not flex) on purpose: monaco-vim writes `display: block` inline on
+     this node, so an inline layout is the one that actually survives. */
+  .vim-status {
+    flex: 0 0 auto;
+    height: 1.5rem;
+    padding: 0 0.5rem;
+    background: #161a24;
+    border-top: 1px solid #1f2937;
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.72rem;
+    line-height: 1.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .vim-status-hidden {
+    display: none;
+  }
+
+  /* monaco-vim builds these nodes itself, so they need :global to be styled. */
+  .vim-status :global(span) {
+    color: inherit;
+    margin-right: 0.75rem;
+  }
+
+  /* The `:` / `/` command line. */
+  .vim-status :global(input) {
+    width: 60%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #e2e8f0;
+    font: inherit;
+    line-height: inherit;
   }
 
   .editor-placeholder {
