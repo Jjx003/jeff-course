@@ -33,6 +33,7 @@ import type {
 } from './types.js';
 import { defaultResourcesFor, isTerminal } from './types.js';
 import { runBaremetal, type RunOutcome } from './runtime/baremetal.js';
+import * as pool from './runtime/pool.js';
 
 // ── Boot-time housekeeping ────────────────────────────────────────────────
 
@@ -88,6 +89,36 @@ function resolveProblem(problemId: string): Problem | null {
   return loadProblem(trackSlug, problemSlug);
 }
 
+/**
+ * Raise the requested limits to the module's own floor.
+ *
+ * Resource preferences are saved per *track* but the demands are per
+ * *module*: a track's saved 60s (seeded by whichever exercise the learner
+ * opened first) would otherwise kill a module that needs to load model
+ * weights. The module hint can only raise limits, never lower them, so a
+ * learner who deliberately grants more memory or time keeps it — and Cancel
+ * is always available if a run turns out to be a mistake.
+ */
+function applyModuleFloors(
+  resources: ResourceLimits,
+  mode: SandboxMode,
+  problem: Problem | null
+): ResourceLimits {
+  const hint = problem?.runtime?.resources;
+  if (!hint) return resources;
+
+  const out = { ...resources };
+  if (typeof hint.timeoutMs === 'number' && hint.timeoutMs > out.timeoutMs) {
+    out.timeoutMs = hint.timeoutMs;
+  }
+  // memoryMb is only enforced by the container runtimes; on baremetal 0
+  // means "unlimited" and raising it would just be a misleading number.
+  if (mode !== 'baremetal' && typeof hint.memoryMb === 'number' && hint.memoryMb > out.memoryMb) {
+    out.memoryMb = hint.memoryMb;
+  }
+  return out;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────
 
 export interface StartSessionResult {
@@ -103,7 +134,10 @@ export async function startSession(
   req: StartSessionRequest
 ): Promise<StartSessionResult> {
   const mode: SandboxMode = req.mode ?? 'baremetal';
-  const resources = mergeResources(mode, req.resources);
+  // Resolved up front (rather than inside the job) so the module's runtime
+  // floors are reflected in the persisted row and in what the UI reads back.
+  const problem = resolveProblem(req.problemId);
+  const resources = applyModuleFloors(mergeResources(mode, req.resources), mode, problem);
   const id = randomUUID();
   const now = Date.now();
 
@@ -140,7 +174,6 @@ export async function startSession(
     await transition(id, 'starting');
     registry.publish(id, { kind: 'status', status: 'starting' });
 
-    const problem = resolveProblem(req.problemId);
     if (!problem) {
       registry.publish(id, { kind: 'stderr', data: `Problem not found: ${req.problemId}\n` });
       await markFinal(id, 'failed', null, `Problem not found: ${req.problemId}`, 0, 0, now);
@@ -332,6 +365,34 @@ export async function awaitCompletion(id: string): Promise<SessionRecord | null>
 }
 
 export { queueSnapshot };
+
+// ── Warm pool ─────────────────────────────────────────────────────────────
+
+export interface PrewarmResult {
+  /** True when a warm-up was scheduled (or a host is already ready). */
+  warming: boolean;
+  reason?: string;
+}
+
+/**
+ * Ask the pool to prepare a warm Python host for a module. Safe to call on
+ * every page open — it's idempotent per requirement set, and it no-ops for
+ * modules light enough that a cold start is already fast.
+ */
+export function prewarmForProblem(problemId: string): PrewarmResult {
+  const problem = resolveProblem(problemId);
+  if (!problem) return { warming: false, reason: 'unknown problem' };
+  if (problem.type !== 'coding') return { warming: false, reason: 'not a coding module' };
+  if (!problem.languages.includes('python')) return { warming: false, reason: 'not a python module' };
+
+  const spec = pool.specFor(problem.requirementsPath);
+  if (!pool.isPoolable(spec)) return { warming: false, reason: 'nothing worth preloading' };
+
+  pool.scheduleWarm(spec);
+  return { warming: true };
+}
+
+export { poolSnapshot } from './runtime/pool.js';
 
 // ── Internal status transitions ───────────────────────────────────────────
 

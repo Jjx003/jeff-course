@@ -64,6 +64,19 @@ uv --version
 g++ --version
 ```
 
+### Python dependencies and disk use
+
+Python modules that declare a `requirements.txt` get their own environment
+under `data/venvs/<hash>`, built once and reused by every module with identical
+requirements. A torch environment is roughly 4-5 GB on disk, so expect the
+first run of an ML module to download and install for a few minutes. Deleting
+`data/venvs/` is always safe — the next run rebuilds what it needs.
+
+The app also keeps one warm Python process per environment so the torch import
+happens before you press Run. Each warm process holds a few hundred MB of RAM.
+Set `SANDBOX_POOL=0` to turn that off, or `SANDBOX_POOL_MAX_HOSTS=1` to keep
+only one.
+
 ## macOS
 
 Install Node.js 20+ and Git. Homebrew is the easiest path for optional tools:

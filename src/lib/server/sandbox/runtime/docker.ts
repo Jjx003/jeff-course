@@ -13,8 +13,11 @@
  *   - The uv / pip / huggingface caches are bind-mounted to `data/cache/*`
  *     so the second run reuses downloaded wheels and model weights —
  *     this is the headline UX win for the protein-folding track.
- *   - `--network none` by default. Override to `bridge` only when the HF
- *     cache directory is empty (cold-start case) so models can download.
+ *   - `--network bridge` always. Container runs resolve their requirement
+ *     set with uv on every start and most ML modules pull weights from the
+ *     Hub, so cutting the network breaks the common case rather than the
+ *     rare one. (An earlier version of this comment claimed none-by-default;
+ *     the code never did that.)
  *   - Cancellation: `docker stop --time=2 <name>` then `docker kill -s KILL`
  *     if the container is still alive after the grace window.
  *
@@ -28,6 +31,12 @@ import path from 'node:path';
 import * as registry from '../registry.js';
 import type { LogChunk, ResourceLimits, SessionRecord } from '../types.js';
 import type { Problem } from '$lib/types/course.js';
+import {
+  PYPI_EXTRA_INDEX,
+  PYTORCH_CPU_INDEX,
+  PYTORCH_CUDA_INDEX,
+  requirementsUsesTorchIndex
+} from './pyenv.js';
 
 const IS_WINDOWS = process.platform === 'win32';
 
@@ -97,7 +106,7 @@ export interface DockerOutcome {
 const MAX_CAPTURE_BYTES = 1_048_576;
 
 export async function runDocker(opts: DockerRunOpts): Promise<DockerOutcome> {
-  const { record, code, requirementsPath, resources, problem } = opts;
+  const { record, code, requirementsPath, resources } = opts;
   const entry = registry.getEntry(record.id);
   if (!entry) {
     return baseFailure('Session record missing from registry');
@@ -111,9 +120,12 @@ export async function runDocker(opts: DockerRunOpts): Promise<DockerOutcome> {
   const { ensureImagePulled } = await import('../images.js');
 
   const isPython = record.language === 'python';
-  const usesTorchOrModels = !!requirementsPath || (problem.requirementsPath !== undefined);
+  // Only reach for the CUDA image when a GPU was actually requested. Picking
+  // it for any module with a requirements.txt meant CPU runs built and kept
+  // an nvidia/cuda base image to execute numpy.
+  const wantsGpu = resources.gpu === 'all' || typeof resources.gpu === 'object';
   const image = isPython
-    ? (resources.gpu === 'all' || (typeof resources.gpu === 'object') ? IMAGE_PYTHON_CUDA : (usesTorchOrModels ? IMAGE_PYTHON_CUDA : IMAGE_PYTHON_CPU))
+    ? (wantsGpu ? IMAGE_PYTHON_CUDA : IMAGE_PYTHON_CPU)
     : IMAGE_CPP;
 
   try {
@@ -155,7 +167,7 @@ export async function runDocker(opts: DockerRunOpts): Promise<DockerOutcome> {
     '-v', `${huggingface}:/root/.cache/huggingface`,
     '--tmpfs', '/tmp',
     image,
-    ...entrypointArgs(record.language, !!requirementsPath, fileName)
+    ...entrypointArgs(record.language, !!requirementsPath, fileName, torchIndexForContainer(requirementsPath, wantsGpu))
   ];
 
   registry.publish(record.id, { kind: 'stderr', data: `[sandbox] docker run ${containerName}\n` });
@@ -170,7 +182,24 @@ export async function runDocker(opts: DockerRunOpts): Promise<DockerOutcome> {
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-function entrypointArgs(language: SessionRecord['language'], hasRequirements: boolean, fileName: string): string[] {
+/**
+ * Which torch wheel index the container should resolve against.
+ *
+ * PyPI's default linux `torch` wheel is the CUDA build (~2.5 GB), which is
+ * pure waste inside a CPU container. Mirrors what the baremetal path does
+ * on the host — see runtime/pyenv.ts.
+ */
+function torchIndexForContainer(requirementsPath: string | undefined, wantsGpu: boolean): string | null {
+  if (!requirementsUsesTorchIndex(requirementsPath)) return null;
+  return wantsGpu ? PYTORCH_CUDA_INDEX : PYTORCH_CPU_INDEX;
+}
+
+function entrypointArgs(
+  language: SessionRecord['language'],
+  hasRequirements: boolean,
+  fileName: string,
+  torchIndex: string | null
+): string[] {
   if (language === 'cpp') {
     // Two-step inline: compile + run. We tolerate the compile output going
     // to stderr; user-program stdout is what we grade against.
@@ -181,9 +210,12 @@ function entrypointArgs(language: SessionRecord['language'], hasRequirements: bo
   }
   // python
   if (hasRequirements) {
+    const indexFlags = torchIndex
+      ? `--index-url ${torchIndex} --extra-index-url ${PYPI_EXTRA_INDEX} --index-strategy unsafe-best-match `
+      : '';
     return [
       'bash', '-lc',
-      `uv run --python 3.11 --with-requirements /workspace/requirements.txt python /workspace/${fileName}`
+      `uv run --python 3.11 ${indexFlags}--with-requirements /workspace/requirements.txt python /workspace/${fileName}`
     ];
   }
   return ['bash', '-lc', `uv run python /workspace/${fileName}`];

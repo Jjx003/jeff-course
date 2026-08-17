@@ -438,6 +438,16 @@
         memoryMb = pref.resources.memoryMb ?? memoryMb;
         cpus = pref.resources.cpus ?? cpus;
         timeoutMs = pref.resources.timeoutMs ?? timeoutMs;
+        // Preferences are per-track, demands are per-module: a saved 60s
+        // from a numpy exercise must not cap a module that loads model
+        // weights. The hint raises limits only — never lowers them.
+        const floor = problem.runtime?.resources;
+        if (typeof floor?.timeoutMs === 'number') {
+          timeoutMs = Math.max(timeoutMs, floor.timeoutMs);
+        }
+        if (pref.preferredMode !== 'baremetal' && typeof floor?.memoryMb === 'number') {
+          memoryMb = Math.max(memoryMb, floor.memoryMb);
+        }
         if (pref.preferredMode === 'docker-gpu') {
           const g = pref.resources.gpu;
           if (g === 'all') gpuDevice = 'all';
@@ -469,9 +479,22 @@
       preferenceLoaded = true;
     }
 
+    requestPrewarm();
+
     // Load saved draft for the default language
     await loadDraftIntoEditor(problem.defaultLanguage);
   });
+
+  /**
+   * Ask the server to warm a Python process for this module while the
+   * learner reads the problem statement. Only worth it for host runs — the
+   * pool is a baremetal optimization — and only for coding modules.
+   */
+  function requestPrewarm() {
+    if (!services || !browser) return;
+    if (problem.type !== 'coding' || runMode !== 'baremetal') return;
+    void services.sessionsService.prewarm(problemId);
+  }
 
   // ── Reset state when navigating between problems ──────────────────────
   // SvelteKit reuses this +page.svelte component across [problemSlug]
@@ -491,6 +514,8 @@
     showSubmissions = false;
 
     if (isReading || isAssessment || isDrill || !services) return;
+
+    requestPrewarm();
 
     const svc = services;
     const pid = problemId;

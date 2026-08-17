@@ -101,6 +101,59 @@ function normalizeRuntimeHint(raw: RuntimeHint | undefined): RuntimeHint | undef
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
+/**
+ * Timeout floors derived from a module's requirement set, in milliseconds.
+ *
+ * The baremetal default is 60s, which is fine for the numpy exercises and
+ * hopeless for anything that loads model weights: a single ESM-2 650M load
+ * blows past it before the learner's own code runs, and the session is
+ * killed with a bare "timed out". Only 7 of ~200 modules declare a
+ * `runtime:` block, so relying on authors to remember one is not a plan.
+ *
+ * These are floors applied when the author said nothing. An explicit
+ * `runtime.resources.timeoutMs` in module.yaml always wins.
+ */
+const MINUTES = 60_000;
+
+/**
+ * Tensor work with no downloads. These exercises run in seconds; the ceiling
+ * exists to stop an accidental infinite loop, not to fund a long job. (The
+ * seven modules that set `timeoutMs` by hand ask for 15 min and keep it —
+ * an explicit value always wins over this floor.)
+ */
+const TORCH_TIMEOUT_MS = 10 * MINUTES;
+
+/**
+ * Modules that pull weights from the Hub. Only the first run is slow, and a
+ * run killed mid-download resumes from the partial cache on retry — so this
+ * is a runaway guard, not a budget for the worst connection imaginable.
+ */
+const MODEL_HUB_TIMEOUT_MS = 15 * MINUTES;
+
+/**
+ * Fill in runtime defaults a module needs but didn't ask for. Reads
+ * requirements.txt because that, not the YAML, is where "this module loads a
+ * 3B-parameter model" is actually recorded.
+ */
+function withDerivedRuntimeDefaults(
+  runtime: RuntimeHint | undefined,
+  requirementsPath: string | undefined
+): RuntimeHint | undefined {
+  if (!requirementsPath) return runtime;
+  if (typeof runtime?.resources?.timeoutMs === 'number') return runtime;
+
+  const reqs = readFileOrEmpty(requirementsPath);
+  const usesTorch = /^\s*torch[>=<!,\s]/m.test(reqs);
+  const usesHub = /^\s*(transformers|accelerate)[>=<!,\s]/m.test(reqs);
+  if (!usesTorch && !usesHub) return runtime;
+
+  const timeoutMs = usesHub ? MODEL_HUB_TIMEOUT_MS : TORCH_TIMEOUT_MS;
+  return {
+    ...(runtime ?? {}),
+    resources: { ...(runtime?.resources ?? {}), timeoutMs }
+  };
+}
+
 // ── Module (problem) parsing ─────────────────────────────────────────────
 
 /**
@@ -186,6 +239,11 @@ export function parseFullProblem(
     ? requirementsTxtPath
     : undefined;
 
+  // Modules that load model weights need a timeout the 60s baremetal default
+  // can't give them. Derived here so both the run-mode picker and the server
+  // see the same number.
+  const runtime = withDerivedRuntimeDefaults(meta.runtime, requirementsPath);
+
   // Optional: expected_output/<lang>.txt for grading
   const expectedOutput: Partial<Record<Language, string>> = {};
   const languages: Language[] = ['python', 'cpp'];
@@ -215,6 +273,7 @@ export function parseFullProblem(
 
   return {
     ...meta,
+    ...(runtime ? { runtime } : {}),
     tabs,
     starterCode,
     prevSlug,

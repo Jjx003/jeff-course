@@ -172,9 +172,11 @@ jeff-course/
   data/
     jeff-course.duckdb       local progress DB
     cache/                   sandbox/Hugging Face caches
+    venvs/<req-hash>/        per-requirement-set Python environments
     course-packs.yaml        optional local course-pack manifest
     course-packs/repos/      default git checkout location for packs
   infra/docker/              local sandbox Dockerfiles
+  infra/python/run_host.py   warm Python host for the baremetal run pool
   tools/course-packs/        git-backed course pack manager CLI
   src/
     lib/content/             server-only course parser/loader
@@ -366,12 +368,39 @@ Session modes:
 
 | Mode | Behavior |
 |---|---|
-| `baremetal` | Spawns `uv` or `g++` directly on the host. Default. |
+| `baremetal` | Runs Python from a per-requirement-set venv, or `g++`, on the host. Default. |
 | `docker` | Runs in a short-lived local container with resource settings. |
 | `docker-gpu` | Docker mode with NVIDIA GPU passthrough. |
 
 `POST /api/execute` still exists as a legacy compatibility shim. New code should
 prefer the session service.
+
+### Python environments and the warm pool
+
+Baremetal Python does not use `uv run --with-requirements` on the hot path.
+That re-resolved the requirement set on every click, and its ephemeral
+environments fail on Windows when a real-time scanner holds a handle during
+cleanup (`failed to remove directory .../builds-v0/.tmpXXXX/...: os error 32`,
+reproducible on any torch module). Instead:
+
+- `runtime/venvs.ts` materializes one venv per requirement set under
+  `data/venvs/<hash-of-requirements>`, built with `uv venv` + `uv pip install`.
+  Editing a requirements.txt yields a new hash, so environments never go stale.
+- `runtime/pool.ts` keeps a warm `infra/python/run_host.py` process running out
+  of that venv with torch already imported. A Run hands it the script path over
+  stdin, which skips interpreter startup, the torch import, and CUDA init —
+  ~3-10s per run on ML modules.
+- One run per host. The host exits afterwards and a replacement warms in the
+  background, so every run still gets a fresh namespace: grading semantics are
+  unchanged and nothing leaks between users or runs.
+- `POST /api/sandbox/prewarm` is called when a coding module opens, so warming
+  happens while the learner reads the problem statement.
+- Warms never overlap a run (concurrent `uv` invocations contend on the cache).
+  Tunables: `SANDBOX_POOL=0` disables pooling, `SANDBOX_POOL_MAX_HOSTS`,
+  `SANDBOX_POOL_IDLE_MS`, `SANDBOX_POOL_WARM_TIMEOUT_MS`.
+
+If a venv cannot be built, the runtime falls back to the original `uv run`
+invocation, so a broken environment slows a run down rather than blocking it.
 
 Coding module grading:
 
@@ -392,8 +421,19 @@ runtime:
     gpu: all
 ```
 
-The UI respects saved per-track preferences first. A module hint is only a
-fallback when available on the host.
+The UI respects saved per-track preferences for the run *mode*. Resource
+limits resolve as `max(saved preference, module hint)`: preferences are saved
+per track but demands are per module, so a track-wide 60s must not cap a module
+that loads model weights. Both the picker and `startSession` apply the same
+rule, so the displayed number is the enforced one.
+
+Modules that declare no `runtime:` block get a timeout floor derived from
+requirements.txt (`courseParser.withDerivedRuntimeDefaults`): 10 min when they
+pin torch, 15 min when they pin transformers or accelerate, since the first run
+may fetch weights. These are runaway guards, not budgets — a run killed
+mid-download resumes from the partial HF cache on retry, and Cancel is always
+available. An explicit `timeoutMs` in module.yaml always wins. Without this,
+the 60s baremetal default killed every ESM module mid-load.
 
 ## AI Tutor
 
@@ -481,6 +521,7 @@ API routes include:
 - `/api/tutor/[trackSlug]/[problemSlug]/message` (POST, SSE reply stream)
 - `/api/sandbox/capabilities`
 - `/api/sandbox/preferences/[trackSlug]`
+- `/api/sandbox/prewarm`
 - `/api/execute`
 - `/api/drafts/...`
 - `/api/runs/...`

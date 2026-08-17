@@ -45,4 +45,11 @@ export interface SessionsService {
   capabilities(): Promise<SandboxCapabilities>;
   getPreference(trackSlug: string): Promise<TrackPreference | null>;
   setPreference(pref: TrackPreference): Promise<void>;
+
+  /**
+   * Hint that the learner has opened this module, so the server can warm a
+   * Python process before they press Run. Fire-and-forget: implementations
+   * must never throw and callers need not await the result.
+   */
+  prewarm(problemId: string): Promise<void>;
 }

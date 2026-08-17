@@ -1,25 +1,35 @@
 /**
- * Baremetal runtime — spawns `uv run python` / `g++` + binary directly on
- * the host, exactly like the legacy `executor.ts` did. The behavior is
- * preserved (tree-kill, abort signal, BOM-tolerant requirements parsing,
- * dynamic torch index resolution) but reshaped so:
+ * Baremetal runtime — runs user code directly on the host.
  *
- *   - stdout/stderr stream into the registry as they arrive (instead of
- *     being buffered until the process exits), enabling SSE live tail.
- *   - the wrapper returns a Promise<RunOutcome> that drives the session
- *     lifecycle in `sandbox/index.ts`.
+ * Two paths, same observable behaviour:
+ *
+ *   warm  — a pooled `run_host.py` process that already imported torch is
+ *           handed the script path over stdin. Skips interpreter startup,
+ *           uv resolution, the torch import and CUDA init. One run per host;
+ *           the namespace is still fresh, so grading semantics are unchanged.
+ *           See runtime/pool.ts for why it's one-shot.
+ *   direct — the original `uv run python <tmpfile>` spawn. Used whenever no
+ *           host is warm (first visit, cold cache, pooling disabled), and
+ *           it schedules a warm-up afterwards so the next Run is fast.
+ *
+ * Both stream stdout/stderr into the registry as they arrive so the SSE
+ * live tail works, and both resolve to a RunOutcome that drives the session
+ * lifecycle in `sandbox/index.ts`.
  *
  * SERVER-SIDE ONLY.
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { writeFileSync, unlinkSync, existsSync, readFileSync } from 'node:fs';
+import { writeFileSync, unlinkSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import * as registry from '../registry.js';
 import type { LogChunk, ResourceLimits, SessionRecord } from '../types.js';
+import * as pool from './pool.js';
+import { childEnv, requirementsUsesTorchIndex, resolveTorchIndex, uvRunArgs } from './pyenv.js';
+import { ensureVenv, venvSpecFor } from './venvs.js';
 
 const IS_WINDOWS = process.platform === 'win32';
 
@@ -42,55 +52,6 @@ function treeKill(child: ChildProcess): void {
     } catch {
       try { child.kill('SIGKILL'); } catch { /* ignore */ }
     }
-  }
-}
-
-// ── Torch index resolution (carry-over) ───────────────────────────────────
-
-const PYTORCH_CPU_INDEX = 'https://download.pytorch.org/whl/cpu';
-const PYTORCH_CUDA_INDEX = 'https://download.pytorch.org/whl/cu124';
-const PYPI_EXTRA_INDEX = 'https://pypi.org/simple';
-const TORCH_INDEX_URL = process.env.TORCH_INDEX_URL ?? null;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const g = globalThis as any;
-const torchIndexPromise: Promise<string> =
-  g.__sandboxTorchIdx ?? (g.__sandboxTorchIdx = detectCudaIndex());
-
-function detectCudaIndex(): Promise<string> {
-  if (TORCH_INDEX_URL) return Promise.resolve(TORCH_INDEX_URL);
-  return new Promise((resolve) => {
-    let settled = false;
-    const finish = (idx: string) => {
-      if (settled) return;
-      settled = true;
-      resolve(idx);
-    };
-    const proc = spawn('nvidia-smi', ['--query-gpu=name', '--format=csv,noheader'], {
-      stdio: ['ignore', 'pipe', 'ignore'],
-      windowsHide: true
-    });
-    const timer = setTimeout(() => {
-      try { proc.kill('SIGKILL'); } catch { /* ignore */ }
-      finish(PYTORCH_CPU_INDEX);
-    }, 2_000);
-    proc.on('close', (code) => {
-      clearTimeout(timer);
-      finish(code === 0 ? PYTORCH_CUDA_INDEX : PYTORCH_CPU_INDEX);
-    });
-    proc.on('error', () => {
-      clearTimeout(timer);
-      finish(PYTORCH_CPU_INDEX);
-    });
-  });
-}
-
-function requirementsUsesTorchIndex(reqPath: string): boolean {
-  try {
-    const content = readFileSync(reqPath, 'utf-8').replace(/^\uFEFF/, '');
-    return /^\s*torch[>=<!,\s]/m.test(content);
-  } catch {
-    return false;
   }
 }
 
@@ -156,6 +117,11 @@ export async function runBaremetal(opts: BaremetalRunOpts): Promise<RunOutcome> 
 
 // ── Internal language runners ─────────────────────────────────────────────
 
+/** Progress note on the session's stderr stream. Mirrors the docker runtime. */
+function note(id: string, message: string): void {
+  registry.publish(id, { kind: 'stderr', data: `[sandbox] ${message}\n` });
+}
+
 async function runPython(
   record: SessionRecord,
   code: string,
@@ -164,26 +130,54 @@ async function runPython(
 ): Promise<RunOutcome> {
   const tmpFile = path.join(tmpdir(), `jeff-${record.id}.py`);
   writeFileSync(tmpFile, code, 'utf-8');
+  const spec = pool.specFor(requirementsPath);
+
   try {
-    let args: string[];
-    if (requirementsPath) {
-      if (requirementsUsesTorchIndex(requirementsPath)) {
-        const torchIndex = await torchIndexPromise;
-        args = [
-          'run', '--python', '3.11',
-          '--index-url', torchIndex,
-          '--extra-index-url', PYPI_EXTRA_INDEX,
-          '--index-strategy', 'unsafe-best-match',
-          '--with-requirements', requirementsPath,
-          'python', tmpFile
-        ];
-      } else {
-        args = ['run', '--python', '3.11', '--with-requirements', requirementsPath, 'python', tmpFile];
+    const host = pool.isPoolable(spec) ? pool.acquire(spec) : null;
+
+    if (host) {
+      note(record.id, `warm process — ${spec.prewarm.join(', ')} already imported`);
+      try {
+        return await streamProcess(record, host.proc, resources.timeoutMs, () => {
+          host.dispatch(tmpFile);
+        });
+      } finally {
+        host.release();
+        pool.scheduleWarm(spec);
       }
-    } else {
-      args = ['run', 'python', tmpFile];
     }
-    return await spawnStreaming(record, 'uv', args, resources.timeoutMs);
+
+    // Prefer the module's persistent venv: no resolution on the hot path,
+    // and it sidesteps the ephemeral-environment install failures uv hits on
+    // Windows (see runtime/venvs.ts). Falls back to `uv run` if it can't be
+    // built, so a broken venv never blocks a run outright.
+    const venvPython = requirementsPath
+      ? await ensureVenv(venvSpecFor(requirementsPath), (msg) => note(record.id, msg))
+      : null;
+
+    let cmd: string;
+    let args: string[];
+    if (venvPython) {
+      cmd = venvPython;
+      args = [tmpFile];
+    } else {
+      if (requirementsPath) {
+        note(record.id, 'resolving python environment (first run for this module is slower)…');
+      }
+      const torchIndex = requirementsUsesTorchIndex(requirementsPath)
+        ? await resolveTorchIndex()
+        : undefined;
+      cmd = 'uv';
+      args = uvRunArgs({ script: tmpFile, requirementsPath, torchIndex });
+    }
+
+    try {
+      return await spawnStreaming(record, cmd, args, resources.timeoutMs);
+    } finally {
+      // Warm a host for next time. Deliberately after the run, never during:
+      // two concurrent uv invocations contend on the same cache.
+      pool.scheduleWarm(spec);
+    }
   } finally {
     tryUnlink(tmpFile);
   }
@@ -230,13 +224,22 @@ async function runCpp(
 
 // ── Core streaming spawn ──────────────────────────────────────────────────
 
+function failedOutcome(errorMessage: string, durationMs = 0): RunOutcome {
+  return {
+    exitCode: null,
+    timedOut: false,
+    durationMs,
+    stdoutBytes: 0,
+    stderrBytes: errorMessage.length,
+    capturedStdout: '',
+    capturedStderr: errorMessage,
+    errorMessage
+  };
+}
+
 /**
- * Spawn a child, stream its stdout/stderr into the registry, kill it when
- * the session's abort controller fires or the timeout elapses, and resolve
- * with the final byte counts and exit code.
- *
- * Importantly: this does NOT throw. Cancellation is signalled in the
- * returned outcome (exitCode=null, errorMessage describes why).
+ * Spawn a child and stream it. Thin wrapper around `streamProcess` for the
+ * direct path.
  */
 function spawnStreaming(
   record: SessionRecord,
@@ -244,24 +247,59 @@ function spawnStreaming(
   args: string[],
   timeoutMs: number
 ): Promise<RunOutcome> {
+  const entry = registry.getEntry(record.id);
+  if (!entry) {
+    return Promise.resolve(failedOutcome('Session record missing from registry'));
+  }
+  if (entry.abort.signal.aborted) {
+    return Promise.resolve(failedOutcome('Aborted before start'));
+  }
+
+  let proc: ChildProcess;
+  try {
+    proc = spawn(cmd, args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: !IS_WINDOWS,
+      windowsHide: true,
+      env: childEnv()
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    registry.publish(record.id, { kind: 'stderr', data: `Failed to spawn: ${msg}\n` });
+    return Promise.resolve(failedOutcome(msg));
+  }
+
+  return streamProcess(record, proc, timeoutMs);
+}
+
+/**
+ * Stream an already-running child's stdout/stderr into the registry, kill it
+ * when the session's abort controller fires or the timeout elapses, and
+ * resolve with the final byte counts and exit code.
+ *
+ * `onAttached` runs once the stream handlers are wired — the pool uses it to
+ * hand the script path to a warm host, so no output can be emitted before
+ * anyone is listening.
+ *
+ * Importantly: this does NOT throw. Cancellation is signalled in the
+ * returned outcome (exitCode=null, errorMessage describes why).
+ */
+function streamProcess(
+  record: SessionRecord,
+  proc: ChildProcess,
+  timeoutMs: number,
+  onAttached?: () => void
+): Promise<RunOutcome> {
   return new Promise((resolve) => {
     const entry = registry.getEntry(record.id);
     if (!entry) {
-      resolve({
-        exitCode: null, timedOut: false, durationMs: 0,
-        stdoutBytes: 0, stderrBytes: 0,
-        capturedStdout: '', capturedStderr: '',
-        errorMessage: 'Session record missing from registry'
-      });
+      try { proc.kill('SIGKILL'); } catch { /* ignore */ }
+      resolve(failedOutcome('Session record missing from registry'));
       return;
     }
     if (entry.abort.signal.aborted) {
-      resolve({
-        exitCode: null, timedOut: false, durationMs: 0,
-        stdoutBytes: 0, stderrBytes: 0,
-        capturedStdout: '', capturedStderr: '',
-        errorMessage: 'Aborted before start'
-      });
+      treeKill(proc);
+      resolve(failedOutcome('Aborted before start'));
       return;
     }
 
@@ -273,25 +311,6 @@ function spawnStreaming(
     let timedOut = false;
     let aborted = false;
     let killedByCaller = false;
-
-    let proc: ChildProcess;
-    try {
-      proc = spawn(cmd, args, {
-        stdio: ['ignore', 'pipe', 'pipe'],
-        detached: !IS_WINDOWS,
-        windowsHide: true
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      registry.publish(record.id, { kind: 'stderr', data: `Failed to spawn: ${msg}\n` });
-      resolve({
-        exitCode: null, timedOut: false, durationMs: Date.now() - start,
-        stdoutBytes: 0, stderrBytes: msg.length,
-        capturedStdout: '', capturedStderr: msg,
-        errorMessage: msg
-      });
-      return;
-    }
 
     entry.proc = proc;
     registry.patchRecord(record.id, { hostPid: proc.pid ?? null });
@@ -314,6 +333,10 @@ function spawnStreaming(
       const log: LogChunk = { kind: 'stderr', data };
       registry.publish(record.id, log);
     });
+    // A pooled host's streams were parked on acquire; the listeners above
+    // resume flow, but be explicit so this doesn't depend on stream internals.
+    proc.stdout?.resume();
+    proc.stderr?.resume();
 
     const timer = setTimeout(() => {
       timedOut = true;
@@ -349,6 +372,8 @@ function spawnStreaming(
 
     proc.on('close', (exitCode) => finish(killedByCaller ? null : exitCode));
     proc.on('error', (err) => finish(null, err.message));
+
+    onAttached?.();
   });
 }
 

@@ -114,6 +114,16 @@ class ApiSessionsService implements SessionsService {
     return jsonOrThrow<TrackPreference>(res);
   }
 
+  async prewarm(problemId: string): Promise<void> {
+    await fetch('/api/sandbox/prewarm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ problemId })
+    }).catch(() => {
+      // Best effort — a missed warm-up just means the next run is slower.
+    });
+  }
+
   async setPreference(pref: TrackPreference): Promise<void> {
     await fetch(`/api/sandbox/preferences/${encodeURIComponent(pref.trackSlug)}`, {
       method: 'PUT',
