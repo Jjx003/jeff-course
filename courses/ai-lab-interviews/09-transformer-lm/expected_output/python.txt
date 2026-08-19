@@ -1,0 +1,41 @@
+=== A whole language model ===
+vocab: 512  d_model: 64  layers: 4  heads: 8  kv heads: 4
+parameters: 213056
+12*L*d^2 estimate: 196608
+
+--- shapes ---
+input ids: (2, 32)
+logits: (2, 32, 512)
+logits shape is (B, S, V): True
+
+--- the initialization check ---
+initial loss: 6.2729
+ln(vocab): 6.2383
+within 0.25 of ln(vocab): True
+
+--- weight tying ---
+gradient shape matches the tensor: True
+both paths carry gradient: True
+tied gradient equals the sum of the two paths: True
+
+--- causality ---
+changing token 28 leaves earlier logits untouched: True
+
+--- can it memorize one sequence? ---
+  step   0: loss 6.2608
+  step 100: loss 0.0182
+  step 200: loss 0.0062
+  step 300: loss 0.0032
+final loss below 0.05: True
+loss fell by more than 10x: True
+
+--- the loss shift, tested on the memorized sequence ---
+loss with the correct shift: 0.0032
+loss with the labels rolled by one: 7.8116
+misaligned labels are much worse: True
+
+--- greedy generation reproduces it ---
+tokens reproduced from a 1-token prompt: 24 / 24
+reproduced exactly: True
+
+ALL CHECKS PASS: True

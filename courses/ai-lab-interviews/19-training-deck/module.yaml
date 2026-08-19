@@ -1,0 +1,8 @@
+title: "Deck: Training, Accounting, and Precision"
+slug: "training-deck"
+description: "Spaced-repetition deck for optimizers, schedules, memory arithmetic, FLOP counting, and numerical stability."
+order: 19
+difficulty: advanced
+estimatedMinutes: 25
+tags: [flashcards, training, accounting, precision]
+type: flashcards

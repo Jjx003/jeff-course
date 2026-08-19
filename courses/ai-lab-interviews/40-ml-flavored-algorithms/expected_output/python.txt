@@ -1,0 +1,47 @@
+=== General coding, ML flavored ===
+randomized trials per problem: 300
+
+--- 1. top-k logits (top-k sampling) ---
+logits: [3.1, -0.5, 9.9, 2.2, 9.9, 0.0, -7.3, 5.5]
+top 3 indices: [2, 4, 7]
+ties keep the lower index: True
+k = 0 returns empty: True
+k > n returns all, ordered: True
+matches a full sort on 600 random inputs, ties included: True
+(O(n log k) time and O(k) space, versus O(n log n) and O(n) - which
+ is what makes it usable on a 128k vocabulary every decode step)
+
+--- 2. merging overlapping spans ---
+spans: [(5, 9), (0, 3), (2, 6), (12, 14)]
+merged: [(0, 9), (12, 14)]
+empty input: True
+touching spans merge: True
+nested span absorbed: True
+coverage preserved and output disjoint on 300 random inputs: True
+
+--- 3. packing sequences into a token budget ---
+lengths: [512, 128, 900, 64, 400, 256, 100]   budget: 1024
+bins: [[2, 6], [0, 4, 3], [5, 1]]
+tokens used per bin: [1000, 976, 384]
+no bin exceeds the budget: True
+every sequence placed exactly once: True
+padding waste: 23.2%
+one sequence per bin would waste: 67.1%
+valid packing on 300 random inputs: True
+
+--- 4. binary search on the answer ---
+weights 140 GB, 1.3 GB of KV cache per sequence, 640 GB available
+largest batch that fits: 384
+it fits and one more does not: True
+finds the exact boundary on 300 random thresholds: True
+(the check is expensive and monotone, so O(log R) calls beats a scan)
+
+--- 5. rolling distinct tokens ---
+tokens: [1, 2, 2, 3, 1, 1, 4, 5, 5, 5]
+distinct per window of 4: [3, 3, 3, 3, 3, 3, 2]
+window longer than input returns empty: True
+matches the O(nw) reference on 300 random inputs: True
+(every token enters and leaves once, so it is O(n) despite two loops)
+
+checks run: 15   failed: 0
+ALL CHECKS PASS: True

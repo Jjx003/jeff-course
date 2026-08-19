@@ -1,0 +1,351 @@
+questions:
+  - id: t1
+    type: multiple_choice
+    stem: "Write the backward pass for $Z = XW + b$. Which set is correct?"
+    options:
+      - "$dX = dZ\\,W$, $dW = X\\,dZ$, $db = dZ$"
+      - "$dX = dZ\\,W^{\\top}$, $dW = X^{\\top}dZ$, $db = \\sum_i dZ_{i,:}$"
+      - "$dX = W^{\\top}dZ$, $dW = dZ\\,X^{\\top}$, $db = \\mathrm{mean}(dZ)$"
+      - "$dX = dZ\\,W^{\\top}$, $dW = dZ^{\\top}X$, $db = \\sum_i dZ_{i,:}$"
+    correct: 1
+    explanation: "Shapes force it: every gradient matches its tensor. $W$ and $b$ are shared across the batch so their gradients contract it away; $X$ is per-example so the batch dimension survives."
+  - id: t2
+    type: multiple_choice
+    stem: "Gradient of cross-entropy with respect to the logits?"
+    options:
+      - "$p$"
+      - "$p - \\mathrm{onehot}(t)$"
+      - "$\\mathrm{onehot}(t) - p$"
+      - "$-1/p_t$"
+    correct: 1
+    explanation: "The softmax Jacobian and the loss gradient compose to this. It is why the two ops are fused and why `F.cross_entropy` takes logits, not probabilities."
+  - id: t3
+    type: multiple_choice
+    stem: "Gradient checkpointing with the optimal segment count gives:"
+    options:
+      - "$O(\\log N)$ memory for 2x compute"
+      - "$O(\\sqrt{N})$ memory for about 1.33x total training compute"
+      - "$O(1)$ memory for 3x compute"
+      - "Half the memory for no extra compute"
+    correct: 1
+    explanation: "Memory is $O(K + N/K)$ and backward compute $O(N + N(K-1)/K)$. Minimizing over $K$ gives $K=\\sqrt N$."
+  - id: t4
+    type: multiple_choice
+    stem: "Why is SwiGLU's hidden dimension $\\tfrac{8}{3}d$?"
+    options:
+      - "It empirically performs best at that exact ratio"
+      - "Three matrices instead of two, so $3d \\cdot d_{ff} = 8d^2$ holds parameters equal to a $4d$ ReLU FFN"
+      - "It matches the attention block's parameter count"
+      - "It is the largest size satisfying kernel tiling constraints"
+    correct: 1
+    explanation: "Implementations round up to a multiple of 256, which is where Llama-2-7B's 11008 comes from."
+  - id: t5
+    type: multiple_choice
+    stem: "You omit the final norm before the output head in a pre-norm model. What happens?"
+    options:
+      - "Training diverges immediately"
+      - "The logits carry an arbitrary depth-dependent scale, so the model trains but is quietly worse"
+      - "Nothing — the final norm is optional"
+      - "The loss becomes NaN"
+    correct: 1
+    explanation: "The residual stream's magnitude grows with depth in a pre-norm model. Nothing crashes, which is why it is a favourite seeded bug."
+  - id: t6
+    type: multiple_choice
+    stem: "What makes RoPE's attention scores depend only on relative position?"
+    options:
+      - "The frequencies are periodic"
+      - "Rotation matrices are orthogonal, so $R_m^{\\top}R_n = R_{n-m}$ and the absolute rotations partially cancel in the dot product"
+      - "Positions are normalized before the rotation"
+      - "It is applied after the softmax"
+    correct: 1
+    explanation: "$(R_mq)^{\\top}(R_nk) = q^{\\top}R_{n-m}k$. Absolute position enters the computation; only the difference reaches the score."
+  - id: t7
+    type: multiple_choice
+    stem: "RoPE is applied to which tensors?"
+    options:
+      - "Q, K and V"
+      - "Q and K only"
+      - "V only"
+      - "The residual stream, before the projections"
+    correct: 1
+    explanation: "Position should determine which tokens you attend to, not what content is retrieved from them. Rotating V is a real bug people ship."
+  - id: t8
+    type: multiple_choice
+    stem: "A model has 48 layers and $d_{model} = 6144$. Roughly how many parameters, ignoring embeddings?"
+    options:
+      - "About 7B"
+      - "About 14B"
+      - "About 22B"
+      - "About 45B"
+    correct: 2
+    explanation: "$12Ld^2 = 12 \\times 48 \\times 6144^2 \\approx 2.2\\times10^{10}$."
+  - id: t9
+    type: multiple_choice
+    stem: "Training a 13B model on 3T tokens costs roughly how many FLOPs?"
+    options:
+      - "$2.3\\times10^{22}$"
+      - "$2.3\\times10^{23}$"
+      - "$2.3\\times10^{24}$"
+      - "$7.8\\times10^{25}$"
+    correct: 1
+    explanation: "$6ND = 6 \\times 1.3\\times10^{10} \\times 3\\times10^{12} = 2.34\\times10^{23}$."
+  - id: t10
+    type: multiple_choice
+    stem: "Mixed-precision bf16 training with Adam uses how many bytes per parameter?"
+    options:
+      - "8"
+      - "12"
+      - "16"
+      - "20"
+    correct: 2
+    explanation: "4 fp32 master + 2 bf16 working + 2 bf16 gradient + 4 + 4 for the fp32 moments. The same as pure fp32 — mixed precision buys throughput, not memory."
+  - id: t11
+    type: multiple_choice
+    stem: "Why did bf16 replace fp16 for large-scale training?"
+    options:
+      - "More mantissa bits, so better precision"
+      - "It keeps fp32's 8-bit exponent, so gradients never underflow and loss scaling becomes unnecessary"
+      - "It is faster on tensor cores"
+      - "It uses fewer bits"
+    correct: 1
+    explanation: "fp16 has better precision — 10 mantissa bits versus 7 — but only 5 exponent bits, so gradients underflow. bf16 trades precision for fp32's range."
+  - id: t12
+    type: multiple_choice
+    stem: "In the online softmax recurrence, what does the factor $e^{m_k - m_{k+1}}$ do?"
+    options:
+      - "Applies a temperature"
+      - "Rescales the accumulated sum from the old maximum to the new one, and equals 1 when the maximum is unchanged"
+      - "Normalizes the new element"
+      - "Corrects numerical drift"
+    correct: 1
+    explanation: "The running denominator is defined relative to the current maximum, so when the maximum moves, everything accumulated must be converted to the new reference point."
+  - id: t13
+    type: multiple_choice
+    stem: "Why does Adam need bias correction?"
+    options:
+      - "To prevent the learning rate decaying too fast"
+      - "Because $m$ and $v$ start at zero, so early estimates are biased low and updates come out far too large"
+      - "To keep $v$ positive"
+      - "To decouple weight decay"
+    correct: 1
+    explanation: "At $t=1$ with $\\beta_2 = 0.999$, $v_1 = 0.001g^2$ — about 1000x too small, so $\\sqrt v$ is 32x too small — but $m$ is only 10x too small, so the first step comes out about 3.2x too large."
+  - id: t14
+    type: multiple_choice
+    stem: "The practical difference between Adam-with-weight-decay and AdamW is:"
+    options:
+      - "AdamW applies decay before the gradient computation"
+      - "Adam's L2 term passes through the $\\sqrt v$ normalization, so parameters with large gradients get decayed less"
+      - "AdamW uses different default betas"
+      - "There is no practical difference"
+    correct: 1
+    explanation: "The coupling makes effective regularization depend on gradient magnitude. AdamW applies $-\\eta\\lambda\\theta$ directly to the parameter."
+  - id: t15
+    type: multiple_choice
+    stem: "Why is gradient clipping applied to the global norm rather than per tensor?"
+    options:
+      - "It is cheaper"
+      - "Scaling everything by one factor preserves the update's direction and only bounds its magnitude"
+      - "Per-tensor clipping is not implementable efficiently"
+      - "The global norm is more numerically stable"
+    correct: 1
+    explanation: "Per-tensor clipping uses different factors for different tensors, which rotates the update into a different direction."
+  - id: t16
+    type: multiple_choice
+    stem: "The main practical reason labs moved from cosine decay to warmup-stable-decay is:"
+    options:
+      - "It reaches a lower final loss"
+      - "Cosine requires fixing the total step count in advance; WSD lets you branch and anneal a checkpoint at any point"
+      - "It trains faster per step"
+      - "Cosine is unstable at scale"
+    correct: 1
+    explanation: "A flexibility argument, not a loss-curve one. It makes continued pretraining and data-mixture experiments dramatically cheaper."
+  - id: t17
+    type: multiple_choice
+    stem: "You have $10^{22}$ FLOPs and want compute-optimal. What model and data?"
+    options:
+      - "3B on 60B tokens"
+      - "9B on 180B tokens"
+      - "30B on 600B tokens"
+      - "90B on 1.8T tokens"
+    correct: 1
+    explanation: "$N = \\sqrt{C/120} \\approx 9.1\\times10^9$, with $D = 20N$."
+  - id: t18
+    type: multiple_choice
+    stem: "Why do deployed models train far past compute-optimal?"
+    options:
+      - "The Chinchilla ratio was found to be wrong"
+      - "Compute-optimal minimizes training cost; for a heavily served model, inference cost dominates over its lifetime"
+      - "More data always helps without limit"
+      - "Small models cannot reach good loss otherwise"
+    correct: 1
+    explanation: "Llama-3-8B saw 15T tokens, about 90x past Chinchilla, because a smaller model trained longer is far cheaper per served token."
+  - id: t19
+    type: multiple_choice
+    stem: "Which identity explains why ZeRO stage 2 shards gradients at no extra communication?"
+    options:
+      - "Ring all-reduce is bandwidth-optimal"
+      - "all-reduce = reduce-scatter + all-gather"
+      - "Broadcast is the inverse of reduce"
+      - "All-to-all decomposes into pairwise exchanges"
+    correct: 1
+    explanation: "Stage 2 replaces the gradient all-reduce with just its reduce-scatter half, so volume is unchanged while gradient memory drops by a factor of $P$."
+  - id: t20
+    type: multiple_choice
+    stem: "Why does tensor parallelism stay inside a node?"
+    options:
+      - "It requires shared memory"
+      - "Two all-reduces per layer on both passes, all on the critical path, against roughly 10x less inter-node bandwidth"
+      - "The kernels only support single-node execution"
+      - "It does not — TP is commonly used across nodes"
+    correct: 1
+    explanation: "NVLink is around 900 GB/s; inter-node interconnect is 50–100. An order of magnitude on the most communication-heavy axis."
+  - id: t21
+    type: multiple_choice
+    stem: "A pipeline with 8 stages and 24 microbatches idles what fraction of the time under the naive schedule?"
+    options:
+      - "About 12%"
+      - "About 23%"
+      - "About 33%"
+      - "About 8%"
+    correct: 1
+    explanation: "$(P-1)/(M+P-1) = 7/31 \\approx 23\\%$."
+  - id: t22
+    type: multiple_choice
+    stem: "Roughly what is the arithmetic intensity when decoding at batch 1, and what does it imply?"
+    options:
+      - "About 1 FLOP/byte — deeply memory-bound, so the GPU is nearly idle on compute"
+      - "About 300 FLOP/byte — right at the ridge point"
+      - "About 2000 FLOP/byte — compute-bound"
+      - "It depends on sequence length rather than batch size"
+    correct: 0
+    explanation: "Each token reads every weight and does about two FLOPs per weight, so intensity is roughly the batch size — against an H100 ridge point near 295."
+  - id: t23
+    type: multiple_choice
+    stem: "What problem does paged attention solve?"
+    options:
+      - "It makes the KV cache smaller"
+      - "Fragmentation — fixed-size blocks with a per-sequence block table remove the waste from reserving maximum-length buffers"
+      - "It speeds up attention computation"
+      - "It enables longer context windows"
+    correct: 1
+    explanation: "Not size — waste. And copy-on-write prefix sharing falls out of the block table for free."
+  - id: t24
+    type: multiple_choice
+    stem: "How does speculative decoding keep the output distribution exactly unchanged?"
+    options:
+      - "The draft model is trained to match the target"
+      - "Rejection sampling: accept with probability $\\min(1, p_{target}/p_{draft})$, and on rejection sample from the normalized residual"
+      - "It does not — it is an approximation"
+      - "The target model re-samples every token"
+    correct: 1
+    explanation: "The scheme provably yields the target distribution. Being exact rather than approximate is what distinguishes it from every other inference speedup."
+  - id: t25
+    type: multiple_choice
+    stem: "Why is top-p usually preferred over top-k?"
+    options:
+      - "It is cheaper to compute"
+      - "A fixed $k$ is too permissive when the model is confident and too restrictive when it is not; nucleus sampling adapts its cutoff"
+      - "It produces more diverse output at every temperature"
+      - "It avoids the need for a temperature parameter"
+    correct: 1
+    explanation: "At $p=0.9$, a confident distribution might keep one token and an uncertain one five. A fixed $k$ keeps $k$ from both."
+  - id: t26
+    type: multiple_choice
+    stem: "Why does DPO not need a reward model?"
+    options:
+      - "It trains a reward model implicitly as a separate head"
+      - "The KL-regularized objective has a closed-form optimum you can invert; substituting into the Bradley-Terry loss makes the partition function cancel"
+      - "It uses the SFT model's likelihood as the reward directly"
+      - "It does not optimize a reward at all"
+    correct: 1
+    explanation: "The language model is secretly its own reward model. Only reward differences appear, so $Z(x)$ drops out."
+  - id: t27
+    type: multiple_choice
+    stem: "What should the DPO loss be at step 0?"
+    options:
+      - "0"
+      - "$\\ln 2 \\approx 0.693$"
+      - "$\\ln V$"
+      - "It depends on the dataset"
+    correct: 1
+    explanation: "With the policy equal to the reference, both implicit rewards are zero, $\\sigma(0)=0.5$, and $-\\log 0.5 = 0.693$. The fastest possible sanity check on a DPO setup."
+  - id: t28
+    type: multiple_choice
+    stem: "What does GRPO remove relative to PPO, and what replaces it?"
+    options:
+      - "The reward model, replaced by preference pairs"
+      - "The value network, replaced by group-relative reward normalization over $G$ sampled responses"
+      - "The KL penalty, replaced by clipping"
+      - "The reference model, replaced by the SFT checkpoint"
+    correct: 1
+    explanation: "With binary verifiable rewards the group mean is the prompt's pass rate, so an advantage is how a response did relative to the problem's difficulty."
+  - id: t29
+    type: multiple_choice
+    stem: "In GRPO, what happens when every response in a group gets the same reward?"
+    options:
+      - "The advantage saturates at 1"
+      - "The advantage is zero, so the prompt contributes no gradient at all"
+      - "The KL penalty dominates"
+      - "The group is resampled"
+    correct: 1
+    explanation: "Which is why prompt difficulty curricula and pass-rate filtering matter — uniformly easy or uniformly hard prompts are wasted."
+  - id: t30
+    type: multiple_choice
+    stem: "When encoding with BPE, which applicable merge do you apply first?"
+    options:
+      - "The leftmost by position"
+      - "The earliest-learned, by merge rank"
+      - "The one producing the longest token"
+      - "The most frequent in the current text"
+    correct: 1
+    explanation: "BPE is defined by merge order. A greedy positional scan gives a different segmentation from the one training produced, silently mis-tokenizing everything."
+  - id: t31
+    type: multiple_choice
+    stem: "Which contamination-detection method gives the cleanest signal?"
+    options:
+      - "N-gram overlap against the training corpus"
+      - "Temporal holdouts — evaluating on data created after the training cutoff"
+      - "Comparing perplexity across model sizes"
+      - "Checking whether the benchmark is public"
+    correct: 1
+    explanation: "N-gram overlap is the standard baseline and the weakest — paraphrases pass straight through. Post-cutoff data cannot have been trained on."
+  - id: t32
+    type: multiple_choice
+    stem: "A disease affects 1% of people. A test has 99% sensitivity and 99% specificity. You test positive. Probability you have it?"
+    options:
+      - "99%"
+      - "50%"
+      - "9%"
+      - "1%"
+    correct: 1
+    explanation: "True positives $0.99\\times0.01$; false positives $0.01\\times0.99$. Equal, so a coin flip."
+  - id: t33
+    type: multiple_choice
+    stem: "Expected number of fixed points in a uniformly random permutation of $n$ elements?"
+    options:
+      - "1"
+      - "$\\ln n$"
+      - "$\\sqrt n$"
+      - "$n/2$"
+    correct: 0
+    explanation: "Each element is fixed with probability $1/n$ and there are $n$ of them. The indicators are dependent; linearity of expectation does not care."
+  - id: t34
+    type: multiple_choice
+    stem: "Which theorem underwrites the low-rank assumption behind LoRA?"
+    options:
+      - "The spectral theorem"
+      - "Eckart-Young — truncating the SVD to the top $k$ singular values gives the best rank-$k$ approximation"
+      - "The central limit theorem"
+      - "Jensen's inequality"
+    correct: 1
+    explanation: "If fine-tuning updates have low intrinsic rank, a rank-$r$ factorization captures them at $r(d_{in}+d_{out})$ parameters instead of $d_{in}d_{out}$."
+  - id: t35
+    type: multiple_choice
+    stem: "Your model's training loss is excellent but generated samples are incoherent. What do you check first?"
+    options:
+      - "The learning-rate schedule"
+      - "Whether the objective is the task you think it is — the label shift and the causal mask, both of which make loss look better when broken"
+      - "The initialization scheme"
+      - "Whether the batch size is too large"
+    correct: 1
+    explanation: "An unshifted loss turns next-token prediction into copy-the-input, which is trivially learnable. A leaky causal mask lets the model read the answer. Both drive loss *down*, which is why a falling loss is not evidence of correctness."

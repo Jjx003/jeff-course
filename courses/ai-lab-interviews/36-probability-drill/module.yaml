@@ -1,0 +1,8 @@
+title: "Drill: Probability"
+slug: "probability-drill"
+description: "Timed practice on expectations, variances, Bayes, and the standard first-step-analysis results."
+order: 36
+difficulty: advanced
+estimatedMinutes: 15
+tags: [drill, probability, math]
+type: drill

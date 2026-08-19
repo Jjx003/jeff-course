@@ -1,0 +1,8 @@
+title: "Scaling Laws"
+slug: "scaling-laws"
+description: "Kaplan, Chinchilla, and what changed when inference cost started to matter more than training cost."
+order: 21
+difficulty: advanced
+estimatedMinutes: 50
+tags: [scaling, chinchilla, compute, research]
+type: reading

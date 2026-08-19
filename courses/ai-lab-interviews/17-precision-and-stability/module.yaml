@@ -1,0 +1,8 @@
+title: "Precision and Numerical Stability"
+slug: "precision-and-stability"
+description: "fp32, bf16, fp16, fp8 — what each buys, why bf16 won, and the handful of numerical tricks every LLM implementation depends on."
+order: 17
+difficulty: advanced
+estimatedMinutes: 55
+tags: [precision, numerics, bf16, fp8, stability]
+type: reading

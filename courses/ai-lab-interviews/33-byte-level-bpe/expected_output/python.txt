@@ -1,0 +1,63 @@
+=== Byte-level BPE ===
+corpus: 1480 characters, 1480 bytes
+target vocabulary: 320 (64 merges)
+
+--- 1. pre-tokenization ---
+chunks: ['the', ' quick', ' brown', ' fox', "'s", ' 42', ' tokens', '!']
+leading spaces are part of the token: True
+contractions split off: True
+(without pre-tokenization, BPE would learn merges spanning word
+ boundaries and fill the vocabulary with near-duplicates)
+
+--- 2. training ---
+merges learned: 64
+vocabulary size: 320
+starts from all 256 byte values: True
+first 10 merges:
+  256: ' ' + 't' -> ' t'
+  257: 'h' + 'e' -> 'he'
+  258: 'e' + 'n' -> 'en'
+  259: ' ' + 'a' -> ' a'
+  260: 'e' + 'r' -> 'er'
+  261: 'i' + 'n' -> 'in'
+  262: ' t' + 'he' -> ' the'
+  263: 'r' + 'e' -> 're'
+  264: ' ' + 'm' -> ' m'
+  265: ' ' + 'l' -> ' l'
+
+--- 3. round-trip ---
+  'the quick brown fox' -> 4 tokens -> round-trips: True
+  'tokenization' -> 7 tokens -> round-trips: True
+  'a lazy dog sleeps' -> 11 tokens -> round-trips: True
+
+--- 4. nothing is out of vocabulary ---
+text never seen in training: Zebra! 987 \xe9\xe0\xfc \U0001f600 <|weird|>
+as UTF-8 that is 32 bytes
+encodes to 31 tokens and round-trips: True
+(byte-level means every byte sequence is representable - there is
+ no UNK token and there cannot be one)
+
+--- 5. merge order is the model ---
+  'quicker' with all 64 merges: 2 tokens
+  'quicker' with the first 32 merges: 4 tokens
+  'quicker' with no merges: 7 tokens
+no merges gives one token per byte: True
+more merges never increases the token count: True
+
+--- 6. compression against vocabulary size ---
+  vocab requested  256, reached  256: 1480 tokens, 1.00 bytes/token
+  vocab requested  300, reached  300:  880 tokens, 1.68 bytes/token
+  vocab requested  350, reached  350:  641 tokens, 2.31 bytes/token
+  vocab requested  400, reached  400:  520 tokens, 2.85 bytes/token
+  vocab requested  500, reached  440:  440 tokens, 3.36 bytes/token
+compression improves monotonically: True
+gains diminish: True
+
+--- 7. why models cannot count letters ---
+  'strawberry': 10 characters, 8 tokens
+  'tokenization': 12 characters, 7 tokens
+  'hello': 5 characters, 4 tokens
+(the model sees the token ids, not the characters - character-level
+ questions are a representation problem, not a reasoning one)
+
+ALL CHECKS PASS: True

@@ -1,0 +1,8 @@
+title: "The Modern Decoder-Only Transformer"
+slug: "modern-transformer"
+description: "Every component of a 2020s LM — pre-norm, RMSNorm, RoPE, GQA, SwiGLU, weight tying — and why each replaced what came before."
+order: 6
+difficulty: advanced
+estimatedMinutes: 70
+tags: [transformer, attention, architecture, rope, gqa]
+type: reading

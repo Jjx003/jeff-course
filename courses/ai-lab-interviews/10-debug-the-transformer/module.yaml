@@ -1,0 +1,17 @@
+title: "Debug the Transformer"
+slug: "debug-the-transformer"
+description: "Six seeded bugs in a working-looking transformer. None of them raises. Find and fix all six using a probe ladder that runs local to global."
+order: 10
+difficulty: advanced
+estimatedMinutes: 75
+tags: [transformer, debugging, ml-coding, torch]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

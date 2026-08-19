@@ -1,0 +1,8 @@
+title: "Checkpoint: The Transformer"
+slug: "transformer-checkpoint"
+description: "Twenty-one questions on attention, position, normalization, and the bugs that hide in each."
+order: 12
+difficulty: advanced
+estimatedMinutes: 25
+tags: [quiz, transformer, attention]
+type: quiz

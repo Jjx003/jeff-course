@@ -1,0 +1,126 @@
+title: "Post-Training and RL"
+instructions: >
+  Answer each method card with what it removed relative to the method before
+  it, and what that removal cost.
+newPerSession: 12
+maxPerSession: 28
+cards:
+  - id: rlhf-pipeline
+    front: "Walk through the RLHF pipeline in four stages."
+    back: "Pretrain on trillions of tokens. SFT on instruction/response pairs to learn the assistant format. Train a reward model on preference pairs under a Bradley-Terry loss. Optimize the policy with PPO against that reward plus a KL penalty to the SFT reference."
+    tags: [rlhf]
+  - id: ppo-four-models
+    front: "How many models does PPO hold in memory, and which?"
+    back: "Four: the policy, a value network (critic), the frozen reward model, and the frozen reference policy. Roughly 4x the memory of the policy alone, plus the sampling loop. That cost is the reason DPO and GRPO exist."
+    tags: [rlhf, ppo]
+  - id: sft-mask
+    front: "What must be masked in the SFT loss, and what happens if you forget?"
+    back: "The prompt tokens. Training on them teaches the model to generate instructions, which is not the job. Every serious implementation masks them."
+    tags: [sft]
+  - id: sft-ceiling
+    front: "What is SFT's fundamental ceiling?"
+    back: "It can only imitate. It pushes toward the demonstration distribution and treats every token of a good response as equally correct, with no mechanism to become better than the data."
+    tags: [sft]
+  - id: bradley-terry
+    front: "Write the reward-model training loss."
+    back: |
+      $$\mathcal{L}_{RM} = -\mathbb{E}\big[\log\sigma\big(r(x,y_w) - r(x,y_l)\big)\big]$$
+
+      The Bradley-Terry model. Note the reward is only identified up to a shift — only differences appear.
+    tags: [rlhf]
+  - id: kl-penalty-why
+    front: "Why is the KL penalty to the reference necessary in RLHF?"
+    back: "The reward model is an imperfect proxy trained on a narrow distribution. Unconstrained, the policy finds degenerate outputs that score highly and are useless. The KL keeps the policy where the reward model is still meaningful; beta is the dial between optimizing the proxy and staying in distribution."
+    tags: [rlhf]
+  - id: ppo-clip
+    front: "Write PPO's clipped objective and say what the clip achieves."
+    back: |
+      $$\mathcal{L}^{CLIP} = \mathbb{E}\big[\min(\rho_t A_t,\ \mathrm{clip}(\rho_t, 1-\epsilon, 1+\epsilon)A_t)\big]$$
+
+      It bounds how far one update moves the policy from the one that generated the rollouts, which makes multiple epochs over the same data safe. Asymmetric, though: on a negative-advantage sample whose ratio rose, the min picks the unclipped term and the penalty is unbounded — the gap Dual-Clip PPO closes.
+    tags: [ppo]
+  - id: dpo-key-insight
+    front: "State DPO's key insight in one sentence."
+    back: "The language model is secretly its own reward model: the KL-regularized objective has a closed-form optimal policy, so you can invert it, substitute into the Bradley-Terry loss, and train directly on preference pairs with a classification loss."
+    tags: [dpo]
+  - id: dpo-loss
+    front: "Write the DPO loss."
+    back: |
+      $$\mathcal{L}_{DPO} = -\mathbb{E}\left[\log\sigma\left(\beta\log\frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \beta\log\frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)}\right)\right]$$
+    tags: [dpo]
+  - id: dpo-partition
+    front: "Why does the partition function cancel in the DPO derivation?"
+    back: "$Z(x)$ is a per-prompt constant, and the Bradley-Terry loss depends only on reward *differences*. The same constant appears in both terms and subtracts away — which is also why the loss is invariant to shifting both log-probabilities."
+    tags: [dpo]
+  - id: dpo-init-loss
+    front: "What should the DPO loss be at step 0, and why is that useful?"
+    back: "Exactly $\\ln 2 = 0.6931$. With the policy equal to the reference, both implicit rewards are zero and the model is exactly indifferent. It is the fastest sanity check on a DPO setup — if it does not start there, the reference is wrong or the masks differ."
+    tags: [dpo, debugging]
+  - id: dpo-implicit-reward
+    front: "What is DPO's implicit reward?"
+    back: "$\\beta\\log(\\pi_\\theta/\\pi_{ref})$ — what you get by inverting the closed-form optimum of the KL-regularized objective."
+    tags: [dpo]
+  - id: dpo-costs
+    front: "Name three things DPO gives up."
+    back: "It is off-policy, so it can never discover anything better than what is in the dataset. Its gradients on the two log-probs are analytically equal and opposite and nothing anchors their absolute values — only the gap — so in practice both drift down while the loss improves. And it is sensitive to which model generated the preference pairs."
+    tags: [dpo]
+  - id: dpo-gradient
+    front: "What does DPO's gradient do to the chosen and rejected log-probabilities?"
+    back: "Pushes the chosen up and the rejected down with equal and opposite magnitude $\\beta\\sigma(-\\Delta)$. Because only the gap is constrained, nothing stops both from drifting down together through shared parameters and softmax normalization — which is the mechanism behind reports of DPO degrading a model invisibly."
+    tags: [dpo]
+  - id: dpo-variants
+    front: "Name three DPO variants and what each changes."
+    back: "IPO: a squared loss against a target margin, removing DPO's tendency to overfit a deterministic preference. KTO: learns from single thumbs-up/down labels rather than pairs. ORPO: folds preference learning into SFT so the reference model disappears entirely."
+    tags: [dpo]
+  - id: grpo-what-removed
+    front: "What does GRPO remove, and what replaces it?"
+    back: "The value network. For each prompt it samples a group of $G$ responses and uses the group's own reward statistics as the baseline: $A_i = (r_i - \\mathrm{mean})/\\mathrm{std}$."
+    tags: [grpo]
+  - id: grpo-binary-interpretation
+    front: "With binary verifiable rewards, what does the GRPO group mean represent?"
+    back: "The pass rate for that prompt. So a response's advantage is how it did relative to how hard the problem turned out to be — a well-behaved, self-normalizing signal."
+    tags: [grpo]
+  - id: grpo-uniform-group
+    front: "What happens in GRPO when every response in a group gets the same reward?"
+    back: "Zero advantage, zero gradient — the prompt contributes nothing. In practice a large fraction of prompts can land there, which is why prompt difficulty curricula and pass-rate filtering matter."
+    tags: [grpo]
+  - id: grpo-cost
+    front: "What does GRPO cost relative to PPO?"
+    back: "$G$ samples per prompt, typically 8–64, so generation cost multiplies. You trade a value network's memory and instability for a much larger rollout budget."
+    tags: [grpo]
+  - id: k3-kl
+    front: "Write the k3 KL estimator and say why not the naive one."
+    back: "$\\mathbb{E}[e^r - r - 1]$ with $r = \\log\\pi_{ref} - \\log\\pi_\\theta$. The naive $\\mathbb{E}[-r]$ is unbiased but high-variance and can come out negative on a finite sample, which would push the policy *away* from the reference. The k3 form is unbiased and provably non-negative."
+    tags: [grpo, rlhf]
+  - id: verifiable-rewards
+    front: "Why does verifiable-reward RL work so well for maths and code?"
+    back: "A checker replaces a learned reward model: does the answer match, do the tests pass. The signal is clean, binary, and nearly unhackable — so you can run large-scale RL without a reward model and without most of the hacking risk. It is what produced the recent step change in reasoning models."
+    tags: [rl, reasoning]
+  - id: rl-vs-sft
+    front: "What does RL add over SFT?"
+    back: "SFT can only imitate and treats every token of a good response as equally correct. RL optimizes a scalar objective, so it can learn a response is bad without being shown a better one, explore past the demonstration distribution, and give credit at the response level — which is the only way to supervise a chain of thought."
+    tags: [rl]
+  - id: reward-hacking-examples
+    front: "Give four concrete examples of reward hacking."
+    back: "Length inflation, because longer responses score higher. Sycophancy, because agreeing scores well. Format exploitation — over-rewarded bullet points, headers, hedging. In code RL, tests that pass trivially or special-case the inputs."
+    tags: [alignment]
+  - id: reward-hacking-detect
+    front: "How do you detect reward hacking?"
+    back: "Watch KL from the reference alongside the reward — reward climbing while KL grows fast is the signature. Hold out prompts the reward model never saw. And read samples: a surprising amount of hacking is obvious to a human in thirty seconds and invisible in every metric."
+    tags: [alignment]
+  - id: reward-hacking-mitigate
+    front: "Four mitigations for reward hacking."
+    back: "The KL penalty. Reward-model ensembles. Periodically retraining the reward model on fresh on-policy data. And preferring verifiable rewards wherever the domain allows one."
+    tags: [alignment]
+  - id: process-vs-outcome
+    front: "Process supervision versus outcome supervision?"
+    back: "Outcome rewards only the final answer; process rewards each reasoning step. Process gives denser signal and less reward hacking — a wrong path cannot be rescued by a lucky answer — at the cost of much more expensive labels."
+    tags: [rl, reasoning]
+  - id: inference-time-compute
+    front: "What is inference-time scaling, and how does it relate to training compute?"
+    back: "Spending more tokens at generation time — longer chains of thought, sampling and reranking, search — rather than making the model bigger. It trades serving cost for capability at fixed training cost, and it has its own scaling curves."
+    tags: [reasoning]
+  - id: constitutional-ai
+    front: "What is RLAIF / Constitutional AI?"
+    back: "Replace human preference labels with model-generated ones, using a written set of principles to critique and revise responses. It scales preference data far past what human annotation can supply; the risk is that the labeller's blind spots become the policy's."
+    tags: [alignment]

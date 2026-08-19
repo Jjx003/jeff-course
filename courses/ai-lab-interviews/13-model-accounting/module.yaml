@@ -1,0 +1,8 @@
+title: "Accounting: Parameters, FLOPs, and Memory"
+slug: "model-accounting"
+description: "The arithmetic you are expected to do out loud — parameter counts, training and inference FLOPs, activation memory, and what fits on a GPU."
+order: 13
+difficulty: advanced
+estimatedMinutes: 60
+tags: [accounting, flops, memory, systems]
+type: reading

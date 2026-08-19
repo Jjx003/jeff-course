@@ -1,0 +1,38 @@
+=== Causal multi-head attention ===
+batch: 2  seq: 16  d_model: 64  heads: 8  head_dim: 8
+softmax scale (1/sqrt(head_dim)): 0.35355
+
+--- shapes ---
+after split_heads: (2, 8, 16, 8)
+after merge_heads: (2, 16, 64)
+causal mask: (16, 16)  allowed entries: 136
+expected allowed entries S(S+1)/2: 136
+
+--- MHA vs torch fused kernel ---
+output shape: (2, 16, 64)
+matches fused kernel: True
+
+--- causality, tested behaviorally ---
+  perturb position  1: earlier outputs unchanged: True
+  perturb position  8: earlier outputs unchanged: True
+  perturb position 15: earlier outputs unchanged: True
+no information flows backward: True
+
+--- grouped-query attention ---
+query heads: 8  kv heads: 2  repeats per group: 4
+output shape: (2, 16, 64)
+matches fused kernel: True
+GQA with G == H reproduces MHA: True
+KV head order after expansion: [0, 0, 0, 0, 1, 1, 1, 1]
+groups are contiguous (repeat_interleave, not repeat): True
+K+V projection params, MHA: 8192
+K+V projection params, GQA: 2048
+reduction factor: 4x
+
+--- what the KV cache costs in production ---
+config: 32 layers, head_dim 128, 4096 tokens, bf16
+  MHA (32 kv heads)    2.15 GB per sequence
+  GQA (8 kv heads)     0.54 GB per sequence
+  MQA (1 kv head)      0.07 GB per sequence
+
+ALL CHECKS PASS: True

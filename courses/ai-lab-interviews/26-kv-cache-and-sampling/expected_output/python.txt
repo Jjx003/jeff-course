@@ -1,0 +1,56 @@
+=== KV-cached generation and sampling ===
+vocab 256  d_model 64  layers 4  heads 8  kv heads 2
+prompt 16 tokens, generating 48
+
+--- 1. cached generation is exact ---
+uncached output length: 64
+cached output length: 64
+token sequences are identical: True
+
+--- 2. the cache holds what it should ---
+layers cached: 4
+K shape after prefill: (1, 2, 16, 8)
+K has one entry per prompt token: True
+K is stored with 2 KV heads, not 8: True
+one more token grows the cache by one: True
+bytes per token for this model (bf16): 256
+same formula at 80 layers, 8 kv heads, head_dim 128: 327680 bytes/token
+
+--- 3. RoPE offset matters ---
+offset 0 gives different logits from offset 16: True
+(a cached decoder that forgets the offset places every generated
+ token at position 0 - it runs, and it is wrong)
+
+--- 4. temperature ---
+  T=0.5  top prob 0.8647  entropy 0.4579
+  T=1.0  top prob 0.6364  entropy 1.0000
+  T=2.0  top prob 0.4287  entropy 1.3943
+lower temperature concentrates mass: True
+T=0 is one-hot per row, not shared across the batch: True
+argmax is unchanged by temperature: True
+
+--- 5. top-k ---
+  k=1: tokens kept 1
+  k=3: tokens kept 3
+  k=5: tokens kept 5
+top-k keeps exactly k tokens: True
+top-k probabilities renormalize to 1: True
+
+--- 6. top-p adapts to the distribution ---
+  confident  distribution, top-p 0.9 keeps 1 tokens
+  uncertain  distribution, top-p 0.9 keeps 5 tokens
+nucleus is smaller when the model is confident: True
+(a fixed k cannot do this - it is the whole argument for top-p)
+top-p always keeps at least one token: True
+
+--- 7. sampling actually follows the filtered distribution ---
+empirical frequencies over 20000 draws vs expected:
+  token 0: empirical 0.6675  expected 0.6652
+  token 1: empirical 0.2436  expected 0.2447
+  token 2: empirical 0.0890  expected 0.0900
+  token 3: empirical 0.0000  expected 0.0000
+  token 4: empirical 0.0000  expected 0.0000
+masked tokens are never drawn: True
+frequencies match within 0.02: True
+
+ALL CHECKS PASS: True

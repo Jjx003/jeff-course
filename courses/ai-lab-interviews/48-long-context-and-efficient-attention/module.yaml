@@ -1,0 +1,10 @@
+title: "Long Context and Efficient Attention"
+slug: "long-context-and-efficient-attention"
+description: "MLA, sparse attention, hybrid stacks, and what actually breaks at a million tokens — the deep dive behind the one-paragraph version in module 06."
+order: 48
+difficulty: advanced
+estimatedMinutes: 45
+tags: [attention, long-context, mla, sparse-attention, kv-cache, deep-dive]
+type: reading
+section: "Appendix — Optional Deep Dives"
+optional: true

@@ -1,0 +1,42 @@
+=== AdamW, schedules, and clipping ===
+betas: (0.9, 0.95)  eps: 1e-08  weight_decay: 0.1  lr: 0.01
+dtype: torch.float64  steps: 25
+
+--- 1. AdamW matches torch.optim.AdamW ---
+loss trace matches over all 25 steps: True
+final parameters match: True
+loss 1.074472 -> 0.746320
+
+--- 2. decoupled decay is not L2 on the gradient ---
+Adam(weight_decay=) differs from AdamW: True
+
+--- 3. bias correction ---
+first update size with bias correction: 0.01000000
+equals the learning rate: True
+(m_hat / sqrt(v_hat) = g / |g| = 1 on step one, whatever the gradient is)
+without bias correction the first step would be: 0.00447214
+that is smaller than the corrected step: True
+
+--- 4. warmup + cosine schedule ---
+  step    0: lr 0.000000e+00
+  step    1: lr 1.000000e-04
+  step   50: lr 5.000000e-03
+  step  100: lr 1.000000e-02
+  step  300: lr 8.947200e-03
+  step  550: lr 5.500000e-03
+  step  999: lr 1.000027e-03
+  step 1200: lr 1.000000e-03
+lr is 0 at step 0: True
+lr peaks exactly at the end of warmup: True
+lr at the halfway point is ~55% of peak: True
+lr floors at 0.1 of peak: True
+schedule is monotone after warmup: True
+
+--- 5. global gradient clipping ---
+norm before clipping exceeds 1.0: True
+norm after clipping is 1.0: True
+direction is unchanged for every tensor: True
+(global clipping rescales; per-tensor clipping would rotate the update)
+a below-threshold gradient is left alone: True
+
+ALL CHECKS PASS: True

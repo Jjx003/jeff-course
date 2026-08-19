@@ -1,0 +1,148 @@
+title: "Inference Arithmetic"
+instructions: "Decimal units. Whole numbers; the unit is shown for you."
+roundSeconds: 150
+targetAccuracy: 0.85
+itemsPerRound: 20
+items:
+  - id: kv_per_token_kb
+    prompt_template: "KV cache per token: {{layers}} layers, {{kv}} KV heads, head_dim {{hd}}, bf16. How many kilobytes?"
+    params:
+      layers: { min: 16, max: 80, step: 16 }
+      kv: { min: 2, max: 16, step: 2 }
+      hd: { min: 64, max: 128, step: 64 }
+    correct_formula: "Math.round(2 * layers * kv * hd * 2 / 1000)"
+    answer_suffix: " KB"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "2 (K and V) * {{layers}} * {{kv}} * {{hd}} * 2 bytes."
+  - id: kv_batch_gb
+    prompt_template: "A model whose cache is {{kb}} KB per token, serving {{b}} sequences at {{ctx}}k context. How many GB of cache?"
+    params:
+      kb: { min: 64, max: 320, step: 64 }
+      b: { min: 16, max: 64, step: 8 }
+      ctx: { min: 8, max: 32, step: 4 }
+    correct_formula: "Math.round(kb * b * ctx / 1000)"
+    answer_suffix: " GB"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "{{kb}} KB * {{b}} sequences * {{ctx}}000 tokens = {{Math.round(kb*b*ctx/1000)}} GB. Cache scales with BOTH batch and context - that product is what fills a GPU."
+  - id: max_batch
+    prompt_template: "{{free}} GB of HBM free after weights. Cache is {{mb}} MB per sequence at your context length. How many concurrent sequences fit?"
+    params:
+      free: { min: 10, max: 60, step: 10 }
+      mb: { min: 200, max: 2000, step: 200 }
+    correct_formula: "Math.floor(free * 1000 / mb)"
+    answer_suffix: " sequences"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "{{free}}000 MB / {{mb}} MB. This is the number that actually caps serving throughput."
+  - id: decode_tokens_per_s
+    prompt_template: "A {{p}}B model in bf16 on one H100 (3.35 TB/s). Bandwidth-bound decode at batch 1: roughly how many tokens per second?"
+    params:
+      p: { min: 4, max: 70, step: 2 }
+    correct_formula: "Math.round(3350 / (p * 2))"
+    answer_suffix: " tok/s"
+    tolerance: 3
+    tolerancePercent: 1
+    explanation_template: "Weights are {{p}}*2 = {{p*2}} GB, read once per token. 3350 GB/s / {{p*2}} GB gives the ceiling. Real systems land well below it."
+  - id: decode_int8_speedup
+    prompt_template: "Quantizing weights from bf16 to INT{{bits}} for a bandwidth-bound decode. Roughly what percent of the original time per token?"
+    params:
+      bits: { min: 4, max: 8, step: 4 }
+    correct_formula: "Math.round(100 * (bits / 8) / 2)"
+    answer_suffix: "%"
+    tolerance: 3
+    tolerancePercent: 1
+    explanation_template: "Decode time is dominated by bytes read. {{bits}} bits is {{bits/8}} bytes versus 2, so time scales by {{bits/8}}/2. Weight-only quantization buys bandwidth, not FLOPs - which is exactly what a memory-bound workload needs."
+  - id: arithmetic_intensity
+    prompt_template: "Decoding at batch {{b}}. Arithmetic intensity is about the batch size, and the H100 ridge point is 295 FLOP/byte. What percent of peak compute are you reaching?"
+    params:
+      b: { min: 32, max: 256, step: 4 }
+    correct_formula: "Math.min(100, Math.round(100 * b / 295))"
+    answer_suffix: "%"
+    tolerance: 3
+    tolerancePercent: 1
+    explanation_template: "Each weight is read once and used for 2 FLOPs per sequence in the batch, so intensity is roughly the batch size. {{b}} / 295 = {{Math.min(100, Math.round(100*b/295))}}% of peak. This is why decode wants the largest batch the KV cache allows."
+  - id: prefill_flops
+    prompt_template: "Prefilling a {{tokens}}-token prompt into a {{p}}B model. How many teraFLOPs, using 2N per token?"
+    params:
+      tokens: { min: 512, max: 8192, step: 512 }
+      p: { min: 7, max: 70, step: 7 }
+    correct_formula: "Math.round(2 * p * 1e9 * tokens / 1e12)"
+    answer_suffix: " TFLOP"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "2 * {{p}}e9 * {{tokens}} FLOPs. Prefill is compute-bound because every weight read serves {{tokens}} tokens at once."
+  - id: ttft_ms
+    prompt_template: "Prefill costs {{tf}} TFLOP on a GPU achieving 400 TFLOP/s effective. What is the time to first token in milliseconds?"
+    params:
+      tf: { min: 10, max: 200, step: 10 }
+    correct_formula: "Math.round(tf / 400 * 1000)"
+    answer_suffix: " ms"
+    tolerance: 5
+    tolerancePercent: 1
+    explanation_template: "{{tf}} / 400 seconds = {{Math.round(tf/400*1000)}} ms. TTFT is dominated by prompt length, which is why chunked prefill exists."
+  - id: gpus_for_serving
+    prompt_template: "Serving a {{p}}B model in bf16 with {{cache}} GB of KV cache, on 80 GB GPUs at 90% usable. Minimum GPUs?"
+    params:
+      p: { min: 7, max: 70, step: 7 }
+      cache: { min: 20, max: 200, step: 20 }
+    correct_formula: "Math.ceil((p * 2 + cache) / 72)"
+    answer_suffix: " GPUs"
+    tolerance: 0
+    explanation_template: "({{p}}*2 + {{cache}}) GB over 72 GB usable, rounded up. Capacity is a floor - you also need activation and fragmentation headroom."
+  - id: spec_expected_tokens
+    prompt_template: "Speculative decoding with acceptance rate 0.{{a}} and draft length {{g}}. Expected accepted tokens per verification step, times 10?"
+    params:
+      a: { min: 5, max: 9, step: 1 }
+      g: { min: 1, max: 8, step: 1 }
+    correct_formula: "Math.round(10 * (1 - Math.pow(a/10, g+1)) / (1 - a/10))"
+    tolerance: 3
+    tolerancePercent: 1
+    explanation_template: "(1 - alpha^(gamma+1)) / (1 - alpha) with alpha = 0.{{a}}, gamma = {{g}}. One rejection ends the run, so the tail is geometric and returns diminish fast."
+  - id: spec_ceiling
+    prompt_template: "Speculative decoding with acceptance rate 0.{{a}} and an unlimited draft length. What is the maximum expected tokens per step, times 10?"
+    params:
+      a: { min: 5, max: 9, step: 1 }
+    correct_formula: "Math.round(10 / (1 - a/10))"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "As gamma goes to infinity the sum converges to 1/(1-alpha) = {{(10/(1-a/10)/10).toFixed(1)}}. Acceptance rate, not draft length, is the binding constraint."
+  - id: continuous_batching_gain
+    prompt_template: "Static batching wastes {{waste}}% of slots waiting on the longest request. If continuous batching recovers all of it, what is the throughput multiplier, times 10?"
+    params:
+      waste: { min: 30, max: 90, step: 10 }
+    correct_formula: "Math.round(10 * 100 / (100 - waste))"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "1 / (1 - {{waste}}/100) = {{(100/(100-waste)).toFixed(1)}}x. Reported real-world gains over naive static batching are often 10-20x, because the waste is worse than this model assumes."
+  - id: paged_waste
+    prompt_template: "A sequence reserves {{reserved}} tokens of cache but stops after {{used}}. What percent of its allocation is wasted?"
+    params:
+      reserved: { min: 1024, max: 8192, step: 1024 }
+      used: { min: 64, max: 512, step: 64 }
+    correct_formula: "Math.round(100 * (reserved - used) / reserved)"
+    answer_suffix: "%"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "({{reserved}} - {{used}}) / {{reserved}}. This is the fragmentation paged attention exists to remove - it does not make the cache smaller, it stops you reserving space you never use."
+  - id: prefix_sharing
+    prompt_template: "{{n}} requests share a {{sys}}-token system prompt. How many thousands of token-slots does caching it once save?"
+    params:
+      n: { min: 8, max: 128, step: 8 }
+      sys: { min: 500, max: 4000, step: 500 }
+    correct_formula: "Math.round((n - 1) * sys / 1000)"
+    answer_suffix: "k"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "(n - 1) * {{sys}} slots no longer duplicated. Prefix sharing is often the highest-leverage single change in a real serving stack."
+  - id: mha_vs_gqa_batch
+    prompt_template: "Switching from MHA with {{h}} heads to GQA with {{g}} KV heads, with cache-limited batching. By what factor does the achievable batch size grow?"
+    params:
+      h: { min: 16, max: 64, step: 16 }
+      g: { min: 2, max: 8, step: 2 }
+    correct_formula: "Math.round(h / g)"
+    answer_suffix: "x"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "Cache scales with KV heads, and batch is cache-limited, so batch scales inversely: {{h}}/{{g}} = {{Math.round(h/g)}}x. That is the entire argument for GQA."

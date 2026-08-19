@@ -1,0 +1,17 @@
+title: "AdamW From Scratch"
+slug: "adamw-from-scratch"
+description: "Write AdamW, a warmup-plus-cosine schedule, and global gradient clipping, and match torch's implementations to machine precision."
+order: 16
+difficulty: advanced
+estimatedMinutes: 55
+tags: [optimizers, adamw, training, ml-coding, torch]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 2048
+    cpus: 2
+    gpu: none
+    timeoutMs: 600000

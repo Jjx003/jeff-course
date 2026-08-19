@@ -1,0 +1,17 @@
+title: "DPO and GRPO Losses"
+slug: "dpo-and-grpo"
+description: "Implement both losses from their paper descriptions, then verify the properties that make each of them work."
+order: 30
+difficulty: advanced
+estimatedMinutes: 60
+tags: [dpo, grpo, rlhf, ml-coding, torch]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 2048
+    cpus: 2
+    gpu: none
+    timeoutMs: 600000

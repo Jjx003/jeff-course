@@ -1,0 +1,17 @@
+title: "A Whole Language Model"
+slug: "transformer-lm"
+description: "Assemble the full decoder-only LM — embeddings, blocks, tied head, shifted loss — and train it to memorize a sequence."
+order: 9
+difficulty: advanced
+estimatedMinutes: 80
+tags: [transformer, ml-coding, training, torch]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

@@ -1,0 +1,17 @@
+title: "ML-Flavored Algorithms"
+slug: "ml-flavored-algorithms"
+description: "Five standard patterns applied to things you would actually build in a lab — top-k sampling, span merging, sequence packing, capacity search, and rolling statistics."
+order: 40
+difficulty: intermediate
+estimatedMinutes: 55
+tags: [algorithms, heap, binary-search, sliding-window, ml-coding]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 2048
+    cpus: 2
+    gpu: none
+    timeoutMs: 600000

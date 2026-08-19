@@ -1,0 +1,123 @@
+title: "Math"
+instructions: >
+  Formula cards should arrive instantly. Technique cards should arrive as a
+  decision: what would you reach for, given that phrasing.
+newPerSession: 12
+maxPerSession: 27
+cards:
+  - id: technique-table
+    front: "A question mentions memorylessness or waiting. What do you reach for?"
+    back: "Geometric (discrete) or exponential (continuous). They are the *only* memoryless distributions on the positive integers and positive reals respectively, so the word is a direct pointer."
+    tags: [technique]
+  - id: technique-counting
+    front: "A question asks how many events occur in a fixed window. What distribution?"
+    back: "Poisson. If it is instead how many successes in $n$ trials, binomial. The grid: counting versus waiting, discrete versus continuous — binomial/Poisson and geometric/exponential."
+    tags: [technique]
+  - id: technique-expected-count
+    front: "A question asks for the expected number of something. What do you reach for first?"
+    back: "Linearity of expectation with indicator variables. It requires no independence, which is what makes it work on horrible dependent problems — expected fixed points of a random permutation is exactly 1 for every $n$, and the indicators are dependent."
+    tags: [technique]
+  - id: technique-first-step
+    front: "A question has a state that evolves and the future depends only on the present. What do you reach for?"
+    back: "First-step analysis: condition on the first step, write the recurrence, solve it with the boundary conditions."
+    tags: [technique]
+  - id: technique-bound
+    front: "A question asks for a bound and gives you only a mean. Only a mean and a variance?"
+    back: "Mean alone: Markov, $P(X \\ge a) \\le \\mathbb{E}[X]/a$. Mean and variance: Chebyshev, $P(|X-\\mu| \\ge k\\sigma) \\le 1/k^2$. Bounded independent variables: Chernoff/Hoeffding, exponentially tighter."
+    tags: [technique]
+  - id: bernoulli-stats
+    front: "Bernoulli($p$): mean, variance, and the trick in the derivation."
+    back: "$p$ and $p(1-p)$. The trick: for binary $X$, $X^2 = X$, so $\\mathbb{E}[X^2] = p$ and $\\mathrm{Var} = p - p^2$."
+    tags: [distributions]
+  - id: binomial-stats
+    front: "Binomial($n,p$): mean, variance, and how to derive them in two lines."
+    back: "$np$ and $np(1-p)$. Decompose into $n$ indicator Bernoullis: linearity gives the mean without independence, and independence gives the variance. Never derive from the PMF."
+    tags: [distributions]
+  - id: poisson-stats
+    front: "Poisson($\\lambda$): mean, variance, and where it comes from."
+    back: "Both equal $\\lambda$. It is the binomial limit: split the window into $n$ tiny slices with at most one event each, so the count is Binomial($n$, $p$) with $np = \\lambda$, then let $n \\to \\infty$."
+    tags: [distributions]
+  - id: poisson-fingerprint
+    front: "What is the fingerprint of a Poisson, and what does violating it mean?"
+    back: "Mean equals variance. Count data whose variance exceeds its mean is overdispersed and is not Poisson — usually because the rate itself varies, which points at a negative binomial."
+    tags: [distributions]
+  - id: geometric-stats
+    front: "Geometric($p$): mean, variance, and its defining property."
+    back: "$1/p$ and $(1-p)/p^2$. Memoryless: $P(X > m+n \\mid X > m) = P(X > n)$ — past failures tell you nothing. It is the only memoryless distribution on the positive integers."
+    tags: [distributions]
+  - id: exponential-stats
+    front: "Exponential($\\lambda$): density, mean, variance, and its relationship to Poisson."
+    back: "$f(x) = \\lambda e^{-\\lambda x}$, mean $1/\\lambda$, variance $1/\\lambda^2$. It is the waiting time between Poisson events, and the only memoryless distribution on the positive reals."
+    tags: [distributions]
+  - id: uniform-stats
+    front: "Uniform($a,b$): mean and variance."
+    back: "$(a+b)/2$ and $(b-a)^2/12$."
+    tags: [distributions]
+  - id: gaussian-facts
+    front: "Three facts about Gaussians worth having ready."
+    back: "A sum of independent Gaussians is Gaussian, with means and variances adding. Any affine transform of a Gaussian is Gaussian. And for jointly Gaussian variables, uncorrelated implies independent — which is not true in general."
+    tags: [distributions]
+  - id: uncorrelated-independent
+    front: "When does uncorrelated imply independent, and give a counterexample otherwise."
+    back: "For jointly Gaussian variables it does; in general it does not. Counterexample: $X$ and $X^2$ for $X$ symmetric **about zero** — the symmetry about zero is what kills the covariance, and it fails otherwise. Correlation measures linear dependence only. (Two binary variables are an exception the other way: zero covariance does imply independence there.)"
+    tags: [probability]
+  - id: coupon-collector-card
+    front: "Coupon collector: the answer and the decomposition."
+    back: "$nH_n \\approx n\\ln n$. Split into stages: going from $i-1$ to $i$ distinct coupons is geometric with $p = (n-i+1)/n$, so the expected additional draws are $n/(n-i+1)$, and linearity sums them."
+    tags: [probability]
+  - id: fixed-points-card
+    front: "Expected number of fixed points in a uniformly random permutation of $n$ elements?"
+    back: "Exactly 1, for every $n$. Each element is fixed with probability $1/n$ and there are $n$ of them. The indicators are dependent; linearity does not care."
+    tags: [probability]
+  - id: gamblers-ruin-card
+    front: "Fair gambler's ruin from $i$ toward $N$: set up and answer."
+    back: "$P_i = pP_{i+1} + qP_{i-1}$ with $P_0=0$, $P_N=1$. For $p = q = 1/2$ the solution is linear: $P_i = i/N$."
+    tags: [probability]
+  - id: hh-vs-ht
+    front: "Expected fair-coin flips until HH versus HT, and why they differ."
+    back: "6 and 4. A failed HT (another H) leaves you still one T from success; a failed HH (a T) sends you back to the start. Overlapping patterns take longer."
+    tags: [probability]
+  - id: base-rate
+    front: "1% prevalence, 99% sensitivity, 99% specificity. Probability of disease given a positive test?"
+    back: "50%. True positives $0.99 \\times 0.01$; false positives $0.01 \\times 0.99$. When the base rate is comparable to the false-positive rate, a positive result is close to a coin flip."
+    tags: [probability]
+  - id: jensen
+    front: "State Jensen's inequality and two consequences that come up."
+    back: "$\\mathbb{E}[f(X)] \\ge f(\\mathbb{E}[X])$ for convex $f$, reversed for concave. Consequences: $\\mathbb{E}[X^2] \\ge \\mathbb{E}[X]^2$, which is just non-negative variance; and $\\mathbb{E}[\\log X] \\le \\log\\mathbb{E}[X]$, the inequality behind the ELBO."
+    tags: [probability]
+  - id: variance-sum-vs-mean
+    front: "Variance of a sum of $n$ i.i.d. variables versus variance of their mean?"
+    back: "Sum: $n\\sigma^2$. Mean: $\\sigma^2/n$. Standard error shrinks as $1/\\sqrt{n}$, which is why halving it costs four times the data."
+    tags: [probability]
+  - id: eigen-symmetric
+    front: "What is special about the eigendecomposition of a symmetric matrix?"
+    back: "Eigenvalues are real and eigenvectors are orthogonal. That is why covariance matrices and Hessians are tractable. Also: trace is the sum of eigenvalues, determinant is their product."
+    tags: [linear-algebra]
+  - id: positive-definite
+    front: "What does positive definite mean, and why does it matter in optimization?"
+    back: "For a symmetric matrix: all eigenvalues positive, equivalently $x^\\top Ax > 0$ for all nonzero $x$. A positive-definite Hessian at a critical point means a local minimum; indefinite means a saddle. High-dimensional optimization works because saddles vastly outnumber minima and gradient methods escape them."
+    tags: [linear-algebra]
+  - id: svd-lora
+    front: "State the SVD and the theorem that connects it to LoRA."
+    back: "$A = U\\Sigma V^\\top$ for any matrix; singular values are the square roots of the eigenvalues of $A^\\top A$. Eckart-Young: truncating to the top $k$ gives the best rank-$k$ approximation. If fine-tuning updates have low intrinsic rank, a rank-$r$ factorization captures them at $r(d_{in}+d_{out})$ parameters."
+    tags: [linear-algebra]
+  - id: l1-sparsity
+    front: "Why does $\\ell_1$ regularization induce sparsity and $\\ell_2$ not?"
+    back: "The $\\ell_1$ constraint region has corners on the axes, and the optimum of a smooth objective over that region tends to land on one — which sets coordinates exactly to zero. The $\\ell_2$ ball is smooth, so it shrinks without zeroing."
+    tags: [linear-algebra]
+  - id: softmax-ce-gradient
+    front: "Give $\\partial L/\\partial z$ for $L = -\\log\\mathrm{softmax}(z)_t$, and the Jacobian it comes from."
+    back: |
+      $$\frac{\partial p_j}{\partial z_i} = \begin{cases} p_j(1-p_j) & i=j \\ -p_jp_i & i \neq j\end{cases}$$
+
+      $$\frac{\partial L}{\partial z} = p - \mathrm{onehot}(t)$$
+
+      One of the few derivations worth producing cold - it is why softmax and cross-entropy are fused into a single op.
+    tags: [calculus, backprop]
+  - id: newton-adam
+    front: "Write the second-order Taylor expansion and use it to explain what Adam is."
+    back: |
+      $$f(x+\Delta) \approx f(x) + \nabla f^{\top}\Delta + \tfrac12\Delta^{\top}H\Delta$$
+
+      Newton's method uses the curvature term and converges quadratically, but $H$ is $n \times n$ and unusable at scale. Adam preconditions with the inverse square root of a diagonal *empirical Fisher* estimate — one extra tensor per parameter, the cheapest point on the same axis as K-FAC and Shampoo. It is not an approximation to $H^{-1}$, and saying so invites a correction.
+    tags: [calculus]

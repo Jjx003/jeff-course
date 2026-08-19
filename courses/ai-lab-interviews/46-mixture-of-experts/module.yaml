@@ -1,0 +1,10 @@
+title: "Mixture-of-Experts"
+slug: "mixture-of-experts"
+description: "Routing, load balancing, and why every frontier model is now sparse — the architecture question the main track only mentions in passing."
+order: 46
+difficulty: advanced
+estimatedMinutes: 45
+tags: [moe, routing, architecture, parallelism, deep-dive]
+type: reading
+section: "Appendix — Optional Deep Dives"
+optional: true

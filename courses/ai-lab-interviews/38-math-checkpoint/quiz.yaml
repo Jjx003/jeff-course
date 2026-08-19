@@ -1,0 +1,136 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "A disease affects 1% of the population. A test has 99% sensitivity and 99% specificity. You test positive. What is the probability you have it?"
+    options:
+      - "99%"
+      - "98%"
+      - "50%"
+      - "1%"
+    correct: 2
+    explanation: "True positives are $0.99\\times0.01 = 0.0099$; false positives are $0.01\\times0.99 = 0.0099$. They are equal, so a positive result is a coin flip. When the base rate is comparable to the false-positive rate, intuition fails badly — which is why this is asked."
+  - id: q2
+    type: multiple_choice
+    stem: "Expected number of fair-coin flips until you first see HH?"
+    options:
+      - "4"
+      - "6"
+      - "8"
+      - "It depends on the starting flip"
+    correct: 1
+    explanation: "First-step analysis: $E = \\tfrac12(1+E_H) + \\tfrac12(1+E)$ and $E_H = \\tfrac12(1) + \\tfrac12(1+E)$, giving $E=6$. HT is 4, because a failed HT still leaves you one T from success."
+  - id: q3
+    type: multiple_choice
+    stem: "Expected number of fixed points in a uniformly random permutation of $n$ elements?"
+    options:
+      - "$1$"
+      - "$\\sqrt{n}$"
+      - "$\\ln n$"
+      - "$n/2$"
+    correct: 0
+    explanation: "Each element is fixed with probability $1/n$, and there are $n$ of them, so the expectation is exactly 1 for every $n$. The indicators are dependent — linearity of expectation does not require independence."
+  - id: q4
+    type: multiple_choice
+    stem: "You have a Poisson process at 3 events per hour. What is the variance of the count over 4 hours?"
+    options:
+      - "3"
+      - "12"
+      - "144"
+      - "$\\sqrt{12}$"
+    correct: 1
+    explanation: "$N(t)\\sim\\mathrm{Poisson}(\\lambda t) = \\mathrm{Poisson}(12)$, and for a Poisson the mean equals the variance."
+  - id: q5
+    type: multiple_choice
+    stem: "Which distribution is the only memoryless one on the positive integers?"
+    options:
+      - "Poisson"
+      - "Binomial"
+      - "Geometric"
+      - "Negative binomial"
+    correct: 2
+    explanation: "$P(X > m+n \\mid X > m) = P(X > n)$, and the geometric is the unique discrete distribution with that property. The exponential is its continuous counterpart. The word 'memoryless' in a question is a direct pointer to one of the two."
+  - id: q6
+    type: multiple_choice
+    stem: "Approximately how many draws to collect all $n$ coupon types?"
+    options:
+      - "$n$"
+      - "$n\\ln n$"
+      - "$n^2$"
+      - "$2^n$"
+    correct: 1
+    explanation: "$nH_n \\approx n\\ln n$. Decompose into stages: moving from $i-1$ to $i$ distinct coupons is geometric with $p=(n-i+1)/n$, and linearity sums the stage expectations."
+  - id: q7
+    type: true_false
+    stem: "Two uncorrelated random variables are independent."
+    correct: false
+    explanation: "Only for jointly Gaussian variables. Correlation captures linear dependence alone — for $X$ symmetric about zero, $X$ and $X^2$ are uncorrelated and plainly dependent (the symmetry about zero is what kills the covariance)."
+  - id: q8
+    type: multiple_choice
+    stem: "$X$ is non-negative with mean 5. What does Markov's inequality say about $P(X \\ge 20)$?"
+    options:
+      - "At most 0.25"
+      - "Exactly 0.25"
+      - "At most 0.05"
+      - "Nothing, without the variance"
+    correct: 0
+    explanation: "$P(X \\ge a) \\le \\mathbb{E}[X]/a = 5/20 = 0.25$. Markov needs only the mean, which is the hint when a question gives you nothing else. Chebyshev would need the variance too."
+  - id: q9
+    type: multiple_choice
+    stem: "In a fair random walk starting at 3 with absorbing barriers at 0 and 10, what is the probability of reaching 10 first?"
+    options:
+      - "0.3"
+      - "0.5"
+      - "0.7"
+      - "It depends on the step distribution"
+    correct: 0
+    explanation: "First-step analysis gives $P_i = \\tfrac12 P_{i+1} + \\tfrac12 P_{i-1}$, whose solution with $P_0=0$, $P_{10}=1$ is linear: $P_i = i/N = 0.3$."
+  - id: q10
+    type: multiple_choice
+    stem: "What is $\\partial L/\\partial z$ for $L = -\\log\\mathrm{softmax}(z)_t$?"
+    options:
+      - "$-\\mathrm{onehot}(t)$"
+      - "$p - \\mathrm{onehot}(t)$"
+      - "$p(1-p)$"
+      - "$\\mathrm{onehot}(t) - p$"
+    correct: 1
+    explanation: "The softmax Jacobian and the loss gradient compose into $p - \\mathrm{onehot}(t)$. It is why frameworks fuse the two ops and why `F.cross_entropy` takes logits."
+  - id: q11
+    type: multiple_choice
+    stem: "A Hessian at a critical point has both positive and negative eigenvalues. What is that point?"
+    options:
+      - "A local minimum"
+      - "A local maximum"
+      - "A saddle point"
+      - "A discontinuity"
+    correct: 2
+    explanation: "Curvature is positive along some directions and negative along others. In high dimensions saddles vastly outnumber local minima, and the fact that gradient methods escape them is a large part of why non-convex optimization works at all."
+  - id: q12
+    type: multiple_choice
+    stem: "Which theorem justifies the low-rank assumption behind LoRA?"
+    options:
+      - "The spectral theorem"
+      - "Eckart-Young: truncating the SVD to the top $k$ singular values gives the best rank-$k$ approximation"
+      - "The central limit theorem"
+      - "Cayley-Hamilton"
+    correct: 1
+    explanation: "If fine-tuning updates have low intrinsic rank, a rank-$r$ factorization captures them, and you train $r(d_{in}+d_{out})$ parameters instead of $d_{in}d_{out}$."
+  - id: q13
+    type: multiple_choice
+    stem: "You average $n$ i.i.d. samples with variance $\\sigma^2$. To halve the standard error, how much more data do you need?"
+    options:
+      - "Twice as much"
+      - "Four times as much"
+      - "$\\sqrt{2}$ times as much"
+      - "It cannot be halved by more data"
+    correct: 1
+    explanation: "The variance of the mean is $\\sigma^2/n$, so the standard error is $\\sigma/\\sqrt{n}$. Halving it needs $4n$. This is why sample-efficiency improvements matter more than they look."
+  - id: q14
+    type: multiple_choice
+    stem: "Why is Adam sometimes described as a very cheap second-order method?"
+    options:
+      - "It computes the full Hessian efficiently"
+      - "Its second moment acts as a diagonal preconditioner — the inverse square root of an empirical-Fisher estimate, costing one extra tensor per parameter"
+      - "It uses conjugate gradients internally"
+      - "It is not related to second-order methods at all"
+    correct: 1
+    explanation: "Newton's method needs $H^{-1}$, an $n\\times n$ object, unusable at scale. Dividing by $\\sqrt{v}$ — an EMA of squared gradients — preconditions with the inverse square root of a diagonal empirical Fisher, which plays a similar role at $O(n)$ cost. Shampoo and K-FAC are richer approximations along the same axis. Being precise that it is Fisher-based and square-rooted, not $H^{-1}$ itself, is what a sharp interviewer is listening for."

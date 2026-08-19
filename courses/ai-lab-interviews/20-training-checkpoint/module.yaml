@@ -1,0 +1,8 @@
+title: "Checkpoint: Training and Systems"
+slug: "training-checkpoint"
+description: "Eighteen questions on optimizers, schedules, memory arithmetic, and precision."
+order: 20
+difficulty: advanced
+estimatedMinutes: 25
+tags: [quiz, training, accounting, precision]
+type: quiz

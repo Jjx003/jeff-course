@@ -1,0 +1,236 @@
+title: "The Transformer"
+instructions: >
+  Say the answer out loud. For any card that asks for a number, say the number
+  and the arithmetic that produces it — that is what the interview wants.
+newPerSession: 12
+maxPerSession: 50
+cards:
+  - id: attention-formula
+    front: "Write scaled dot-product attention."
+    back: |
+      $$\mathrm{Attention}(Q,K,V) = \mathrm{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}} + M\right)V$$
+    tags: [attention]
+  - id: attention-shapes
+    front: "Trace the shapes through multi-head attention, from input $(B,S,d)$ to output."
+    back: |
+      $(B,S,d)$ → project → $(B,S,d)$ → split heads → $(B,H,S,d_h)$ → scores $(B,H,S,S)$ → probs @ V → $(B,H,S,d_h)$ → merge → $(B,S,d)$ → $W_O$ → $(B,S,d)$.
+
+      The $(B,H,S,S)$ tensor is the one FlashAttention refuses to materialize.
+    tags: [attention, shapes]
+  - id: sqrt-dk
+    front: "Why divide attention logits by $\\sqrt{d_k}$?"
+    back: "The dot product of two unit-variance vectors of length $d_k$ has variance $d_k$. Unscaled, logits grow with head dimension, softmax saturates, and the Jacobian entries $p_j(1-p_j)$ go to zero. The division restores unit variance regardless of head size."
+    tags: [attention]
+  - id: mask-before-softmax
+    front: "Why is the causal mask applied before the softmax rather than after?"
+    back: "Masking before lets softmax normalize over exactly the allowed keys, so every row sums to 1. Zeroing probabilities afterwards leaves early rows summing to far less than 1, shrinking the output by a position-dependent factor."
+    tags: [attention]
+  - id: mask-neg-inf
+    front: "Why use `-inf` in the mask rather than a large negative number like `-1e9`?"
+    back: "Softmax subtracts the row max before exponentiating, so `-inf` is unambiguous. A finite sentinel like `-1e9` does work in fp32 and bf16, but breaks in fp16 (max 65504) and can be pulled back into range by any bias added after the mask. The caveat: a fully-masked row yields `nan`."
+    tags: [attention, numerics]
+  - id: head-reshape
+    front: "Write the reshape from $(B,S,d)$ to $(B,H,S,d_h)$ and say why the order matters."
+    back: |
+      `x.view(B, S, H, dh).transpose(1, 2)`
+
+      The view splits the **feature** axis, where the projection laid the heads out. `view(B, H, S, dh)` has the same shape but slices the sequence axis, turning heads into token chunks — a silent, plausible-looking bug.
+    tags: [attention, shapes]
+  - id: contiguous
+    front: "Why does `merge_heads` need `.contiguous()`?"
+    back: "`transpose` only permutes strides; it returns a non-contiguous view. `view` requires contiguous memory and raises. `reshape` copies when it must, which is why it works without the explicit call."
+    tags: [pytorch, shapes]
+  - id: mha-mqa-gqa
+    front: "MHA, MQA, GQA — what does each do and what does each cost?"
+    back: |
+      MHA: $H$ KV heads, full cache. MQA: 1 KV head, cache divided by $H$, measurable quality loss and training instability at scale. GQA: $G$ groups (typically 4–8), cache scaled by $G/H$, essentially no quality loss.
+
+      Llama-2-70B: 64 query heads, 8 KV heads → 8x cache reduction.
+    tags: [attention, inference]
+  - id: mla
+    front: "What is Multi-head Latent Attention (MLA), and how does its cache compare to GQA's?"
+    back: "DeepSeek's alternative to GQA: compress each token's K and V into one low-rank latent (512 dims in DeepSeek-V3, plus a 64-dim decoupled RoPE key) and cache only that. At inference the up-projections are absorbed into $W_Q$ and $W_O$, so full K and V are never materialized. Per token per layer: 576 cached elements versus 2048 for GQA-8 at head dim 128 — and reported quality at or above MHA. The decoupled RoPE key exists because a rotation between latent and up-projection would break the absorption."
+    tags: [attention, inference]
+  - id: gqa-why-not-mqa
+    front: "If the KV cache is the problem, why not always use MQA?"
+    back: "Collapsing to one KV head loses representational diversity and destabilizes training at scale. GQA was introduced as the interpolation that keeps almost all the quality with almost all the savings."
+    tags: [attention]
+  - id: repeat-interleave
+    front: "Expanding KV heads for GQA — `repeat` or `repeat_interleave`?"
+    back: "`repeat_interleave`. With $H=8$, $G=2$: interleave gives head order `[0,0,0,0,1,1,1,1]`, repeat gives `[0,1,0,1,0,1,0,1]`. Both have the right shape; only interleave matches the contiguous grouping the weights were trained with."
+    tags: [attention, pytorch]
+  - id: kv-cache-bytes
+    front: "Write the KV cache size per token per layer."
+    back: |
+      $$2 \times G \times d_h \times \text{dtype bytes}$$
+
+      The 2 is K and V. For 32 layers, $d_h=128$, bf16, GQA with $G=8$: 4096 bytes per token per layer, so about 0.54 GB for a 4096-token sequence.
+    tags: [inference, memory]
+  - id: layer-params
+    front: "Parameters per transformer layer, in terms of $d$?"
+    back: "$12d^2$ — attention $4d^2$ for $W_Q,W_K,W_V,W_O$, plus FFN $8d^2$. Whole model: $N \\approx 12Ld^2 + Vd$."
+    tags: [accounting]
+  - id: llama7b-estimate
+    front: "Estimate Llama-2-7B's parameter count from $L=32$, $d=4096$, $V=32000$."
+    back: "$12 \\times 32 \\times 4096^2 = 6.44$B, plus $32000 \\times 4096 = 0.13$B embeddings ≈ 6.6B. Published: 6.74B. The gap is the untied output head (another $Vd$) plus the rounded SwiGLU hidden size 11008. Note 7B is full MHA — GQA starts at 34B."
+    tags: [accounting]
+  - id: prenorm-postnorm
+    front: "Pre-norm versus post-norm, and what pre-norm costs you."
+    back: |
+      Post-norm: `x = Norm(x + Sublayer(x))` — every residual is squeezed by a norm, so deep stacks need warmup gymnastics and still diverge.
+
+      Pre-norm: `x = x + Sublayer(Norm(x))` — a clean additive highway, stable at 100+ layers.
+
+      The cost: the residual stream's magnitude grows with depth, so a **final norm** before the head becomes mandatory.
+    tags: [architecture]
+  - id: residual-unnormalized
+    front: "In a pre-norm block, what exactly gets added in the residual?"
+    back: "The **unnormalized** `x`: `x + sublayer(norm(x))`, never `norm(x) + sublayer(norm(x))`. Normalizing what flows into the addition destroys the clean gradient path that is the entire point."
+    tags: [architecture]
+  - id: rmsnorm
+    front: "Write RMSNorm and say what it drops relative to LayerNorm."
+    back: |
+      $$\mathrm{RMSNorm}(x) = \frac{x}{\sqrt{\frac{1}{d}\sum_i x_i^2 + \epsilon}}\odot\gamma$$
+
+      Drops mean subtraction and the bias. Re-scaling is what stabilized training; re-centering was not earning its cost. Saves a reduction pass and $d$ parameters per norm.
+    tags: [architecture]
+  - id: rmsnorm-fp32
+    front: "What precision detail do all serious RMSNorm implementations share?"
+    back: "The statistic is computed in fp32 even in a bf16 model — summing $d$ squared bf16 values loses far too much with 8 mantissa bits. Cast back to the model dtype before multiplying by the weight, and use `rsqrt` rather than dividing by `sqrt`."
+    tags: [architecture, numerics]
+  - id: layernorm-vs-batchnorm
+    front: "Why LayerNorm rather than BatchNorm in transformers?"
+    back: "LayerNorm normalizes per token over the feature dimension, with no dependence on other examples. That makes it correct at any batch size and during autoregressive decoding, where BatchNorm's batch statistics are meaningless."
+    tags: [architecture]
+  - id: position-families
+    front: "Name the four families of positional encoding."
+    back: "Sinusoidal absolute (fixed, added). Learned absolute (a table, hard-capped at $S_{max}$). Relative bias (T5 buckets, ALiBi slopes — added to the scores). Rotary (RoPE — a rotation of Q and K)."
+    tags: [position]
+  - id: rope-mechanism
+    front: "How does RoPE work, in one sentence, and why is it relative?"
+    back: "Rotate Q and K in 2-D channel pairs by an angle proportional to position. Rotations are orthogonal, so $R_m^{\\top}R_n = R_{n-m}$ and the dot product depends only on $m-n$. Absolute position enters the computation; only relative position reaches the score."
+    tags: [position]
+  - id: rope-theta
+    front: "Write RoPE's frequency for channel pair $i$."
+    back: "$\\theta_i = \\mathrm{base}^{-2i/d_h}$ with base $10000$. Low-index pairs rotate fast (short wavelength, local structure); high-index pairs rotate slowly (long wavelength, global position)."
+    tags: [position]
+  - id: rope-not-v
+    front: "RoPE is applied to which tensors, and why not the others?"
+    back: "Q and K only, never V. Position should determine *which* tokens you attend to, not *what* is retrieved from them. Rotating V is a real bug people ship."
+    tags: [position]
+  - id: rope-conventions
+    front: "What are the two RoPE channel-pairing conventions, and why does it matter?"
+    back: "Interleaved pairs channels $(0,1),(2,3),\\dots$ — Meta's reference `llama/model.py`, via complex arithmetic. Split-half pairs $i$ with $i + d_h/2$ — HuggingFace and GPT-NeoX, which is why the HF conversion permutes Q and K. Both are valid rotations; mixing them between training and serving produces fluent-sounding garbage."
+    tags: [position]
+  - id: context-extension
+    front: "How do you extend a 4k-context model to 32k?"
+    back: "Position interpolation (divide positions by a factor), NTK-aware scaling (increase the RoPE base, stretching low frequencies more), or YaRN (both, per-frequency, plus an attention temperature correction). All need some continued pretraining. The real limit is that the model never saw genuinely long-range dependencies in training."
+    tags: [position, long-context]
+  - id: alibi
+    front: "What is ALiBi and what is its trade-off?"
+    back: "A fixed linear penalty $-m|i-j|$ added to attention scores, with a per-head slope $m$. No parameters, extrapolates remarkably well, costs nothing to compute — but bakes in a strong recency prior."
+    tags: [position]
+  - id: swiglu-ffn
+    front: "Write the SwiGLU FFN and its parameter count."
+    back: |
+      $$\mathrm{FFN}(x) = W_{down}\big(\mathrm{Swish}(W_{gate}x)\odot W_{up}x\big)$$
+
+      Three matrices at hidden size $\frac{8}{3}d$ gives $8d^2$ — deliberately identical to the $4d$ ReLU FFN it replaced.
+    tags: [architecture]
+  - id: llama-11008
+    front: "Where does Llama-2-7B's FFN hidden size of 11008 come from?"
+    back: "$\\frac{8}{3} \\times 4096 = 10922$, rounded up to a multiple of 256 for kernel efficiency. It looks arbitrary in a config file until you know the $8d/3$ rule."
+    tags: [architecture, accounting]
+  - id: ffn-role
+    front: "What does the FFN contribute, and what replaces it in an MoE?"
+    back: "Most of a transformer's parameters live there, and there is good evidence it is where most factual knowledge is stored. MoE swaps one FFN for $N$ experts plus a router, activating the top-$k$: parameters grow, per-token FLOPs do not."
+    tags: [architecture, moe]
+  - id: weight-tying
+    front: "What is weight tying, when does it matter, and what happens in the backward pass?"
+    back: "Share the embedding with the output projection, saving $Vd$ parameters — 38M of GPT-2 small's 124M, but under 2% of a 70B model, so it matters at small scale. The tied tensor receives the **sum** of the embedding-lookup and output-projection gradients."
+    tags: [architecture]
+  - id: final-norm
+    front: "Why is the final norm mandatory in a pre-norm model?"
+    back: "The residual stream's magnitude grows with depth, so without a final normalization the logits carry an arbitrary depth-dependent scale. It trains anyway, quietly worse — which is why it is the classic seeded bug."
+    tags: [architecture, debugging]
+  - id: init-lnv
+    front: "What should a language model's loss be at initialization, and what does each deviation mean?"
+    back: |
+      $\ln V$ — 10.37 at 32k vocab, 10.82 at 50257. Much higher: the output scale is wrong or the final norm is missing. Much lower: the model is seeing the answer (mask leak or a double shift). Exactly $\ln V$ and frozen: gradients are not reaching the parameters.
+    tags: [debugging, training]
+  - id: residual-init-scale
+    front: "Why scale the attention-output and FFN-down projections by $1/\\sqrt{2L}$ at init?"
+    back: "$2L$ sublayers each write into the residual stream, so without the correction its variance grows linearly with depth and deep models start badly scaled. Introduced by GPT-2 and kept essentially everywhere since."
+    tags: [training, architecture]
+  - id: label-shift
+    front: "Where does the next-token shift go, and what does doing it twice look like?"
+    back: |
+      Either inside the loss (`logits[:, :-1]` against `ids[:, 1:]`) or in the data loader — never both. `F.cross_entropy` does **not** shift for you. A double shift makes the model predict two tokens ahead: loss plateaus around 3–4 and generation is subtly wrong forever.
+    tags: [training, debugging]
+  - id: overfit-one-batch
+    front: "What is the second-fastest diagnostic for a new training setup?"
+    back: "Overfit one batch. Dropout off, weight decay off, train until the loss is essentially zero. A correct model memorizes a short sequence in a few hundred steps. If it cannot, the bug is in the model or optimizer, not the data — that eliminates half the search space in a minute of compute."
+    tags: [debugging, training]
+  - id: attention-quadratic
+    front: "Attention is quadratic in what, and is that actually the binding constraint?"
+    back: "Compute and score memory are $O(S^2)$; the KV cache is $O(S)$. At training time the quadratic term dominates. At inference with a cache, the linear term usually binds first. Say which one you mean."
+    tags: [attention, inference]
+  - id: flash-attention
+    front: "What does FlashAttention change, and what does it not change?"
+    back: "It never materializes the $(B,H,S,S)$ score tensor, tiling the computation with an online softmax recurrence and recomputing in the backward pass. The memory footprint drops from $O(S^2)$ to $O(S)$, and HBM traffic falls by a large constant factor (it stays quadratic in $S$). The FLOP count is unchanged and the output is exact, not approximate."
+    tags: [attention, kernels]
+  - id: online-softmax
+    front: "State the online softmax recurrence."
+    back: |
+      Maintain a running max $m_k$ and running denominator $d_k$. On seeing $x_{k+1}$:
+      $$m_{k+1} = \max(m_k, x_{k+1}), \quad d_{k+1} = d_k e^{m_k - m_{k+1}} + e^{x_{k+1} - m_{k+1}}$$
+      This fuses the max pass and the sum pass into one, which is what lets FlashAttention stream tiles.
+    tags: [kernels, numerics]
+  - id: cross-attention
+    front: "What changes when you turn self-attention into cross-attention?"
+    back: "Q comes from the decoder, K and V from the encoder, and there is no causal mask — the decoder may see the entire source sequence. The KV cache for cross-attention is computed once and never grows."
+    tags: [attention]
+  - id: padding-mask
+    front: "How do you combine a padding mask with a causal mask, and what breaks?"
+    back: "Logical AND of the two. The failure mode is a fully-masked row, which makes softmax return `nan` — it happens with left padding, where an early query has no allowed keys."
+    tags: [attention, debugging]
+  - id: encoder-decoder
+    front: "Why are modern LLMs decoder-only rather than encoder-decoder?"
+    back: "One stack instead of two, every token contributes a training signal, and the objective is uniform across pretraining and inference. Encoder-decoder still wins where the input is fixed and fully known — translation, some speech — but decoder-only scales more simply."
+    tags: [architecture]
+  - id: bidirectional
+    front: "What does a causal mask cost you compared to bidirectional attention?"
+    back: "Each token sees only its prefix, so representations are strictly weaker for understanding tasks — this is why BERT-style models beat same-size GPT models on classification. What you get back is that every position is a training example and generation is natural."
+    tags: [architecture]
+  - id: dropout-modern
+    front: "Where did dropout go in modern LLMs?"
+    back: "Largely gone from pretraining. With trillions of tokens and a single epoch, the model is not overfitting, so dropout only adds noise and cost. It reappears in fine-tuning on small datasets."
+    tags: [training]
+  - id: bias-terms
+    front: "Why do modern LLMs drop bias terms from their linear layers?"
+    back: "No measurable quality cost, slightly better stability, and marginally fewer parameters and memory reads. PaLM reported improved training stability at scale from removing them."
+    tags: [architecture]
+  - id: qk-norm
+    front: "What is QK-norm and what problem does it solve?"
+    back: "Normalize Q and K before the score matmul. It bounds attention logits, preventing the entropy collapse and loss spikes that show up when training very large models — increasingly standard at frontier scale."
+    tags: [architecture, training]
+  - id: attention-sink
+    front: "What is an attention sink?"
+    back: "Models learn to dump excess attention mass on the first few tokens, which act as a no-op destination. Practically important: naively evicting the earliest tokens from a KV cache destroys quality, so streaming approaches keep the first few tokens permanently."
+    tags: [attention, long-context]
+  - id: sliding-window
+    front: "What is sliding-window attention and what does it buy?"
+    back: "Each token attends to only the last $W$ tokens, making compute and cache linear rather than quadratic in context. Stacking $L$ layers gives an effective receptive field of $L \\times W$. Mistral popularized it; the cost is a hard local horizon per layer."
+    tags: [attention, long-context]
+  - id: moe-routing
+    front: "How does an MoE layer route, and what is the load-balancing problem?"
+    back: "A small router scores each token against $N$ experts and sends it to the top-$k$ (usually 1 or 2). Left alone, routing collapses onto a few experts, so an auxiliary load-balancing loss (or a loss-free bias adjustment) spreads tokens out. Capacity factors bound per-expert tokens, and overflow tokens get dropped."
+    tags: [moe]
+  - id: moe-tradeoff
+    front: "What does an MoE buy and what does it cost?"
+    back: "Buys: many more parameters at nearly constant per-token FLOPs, so more knowledge per unit of compute. Costs: all experts must be resident in memory, routing adds all-to-all communication, training is less stable, and small batches leave most experts idle."
+    tags: [moe]
+  - id: kv-quantization
+    front: "Why quantize the KV cache, and what is different about it versus weight quantization?"
+    back: "The cache dominates memory at long context and large batch, and decode is bandwidth-bound so halving its bytes nearly halves the read cost. Unlike weights, it cannot be quantized offline — it is produced at runtime, so the quantization must be cheap and per-token, and keys are typically more outlier-prone than values."
+    tags: [inference, quantization]

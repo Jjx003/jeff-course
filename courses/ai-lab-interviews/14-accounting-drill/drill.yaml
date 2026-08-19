@@ -1,0 +1,157 @@
+title: "Model Accounting"
+instructions: "Decimal units. Answer with the whole number; the unit is shown for you."
+roundSeconds: 150
+targetAccuracy: 0.85
+itemsPerRound: 20
+items:
+  - id: params_from_layers
+    prompt_template: "A model has {{layers}} layers and d_model {{d}}. Using 12Ld^2, how many billions of parameters (ignoring embeddings)?"
+    params:
+      layers: { min: 32, max: 80, step: 8 }
+      d: { min: 3072, max: 8192, step: 1024 }
+    correct_formula: "Math.round((12 * layers * d * d) / 1e9)"
+    answer_suffix: "B"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "12 * {{layers}} * {{d}}^2 = {{Math.round(12*layers*d*d/1e9)}}B. This is the single most useful formula in the whole course."
+  - id: embed_params
+    prompt_template: "Embedding table: vocabulary {{vocab}}k, d_model {{d}}, untied output head. How many millions of parameters total for both?"
+    params:
+      vocab: { min: 32, max: 256, step: 32 }
+      d: { min: 1024, max: 8192, step: 1024 }
+    correct_formula: "Math.round((2 * vocab * 1000 * d) / 1e6)"
+    answer_suffix: "M"
+    tolerance: 20
+    tolerancePercent: 1
+    explanation_template: "Two matrices of vocab by d_model: 2 * {{vocab}}000 * {{d}}."
+  - id: bf16_weights
+    prompt_template: "A {{p}}B-parameter model in bf16. How many GB for the weights?"
+    params:
+      p: { min: 1, max: 70, step: 1 }
+    correct_formula: "p * 2"
+    answer_suffix: " GB"
+    tolerance: 0
+    explanation_template: "2 bytes per parameter: {{p}} * 2 = {{p*2}} GB."
+  - id: int4_weights
+    prompt_template: "A {{p}}B-parameter model quantized to INT4. How many GB for the weights, ignoring quantization metadata?"
+    params:
+      p: { min: 4, max: 80, step: 4 }
+    correct_formula: "Math.round(p * 0.5)"
+    answer_suffix: " GB"
+    tolerance: 0
+    explanation_template: "0.5 bytes per parameter: {{p}} * 0.5. Real formats add a scale and zero point per group, costing a few percent more."
+  - id: adam_state
+    prompt_template: "Full fine-tuning a {{p}}B model with Adam and an fp32 master copy. How many GB of training state, before activations?"
+    params:
+      p: { min: 1, max: 13, step: 1 }
+    correct_formula: "p * 16"
+    answer_suffix: " GB"
+    tolerance: 0
+    explanation_template: "16 bytes per parameter: 4 master + 2 working + 2 grad + 4 + 4 moments. {{p}} * 16 = {{p*16}} GB. Note plain fp32 is also 16."
+  - id: adam8bit_state
+    prompt_template: "Same {{p}}B model, but with 8-bit Adam moments and bf16 gradients (no fp32 master). How many GB of training state?"
+    params:
+      p: { min: 1, max: 13, step: 1 }
+    correct_formula: "p * 6"
+    answer_suffix: " GB"
+    tolerance: 0
+    explanation_template: "2 weights + 2 grads + 1 + 1 moments = 6 bytes per parameter."
+  - id: train_flops
+    prompt_template: "Training a {{p}}B model on {{tokens}}00B tokens. How many times 10^21 FLOPs, using 6ND?"
+    params:
+      p: { min: 1, max: 9, step: 1 }
+      tokens: { min: 5, max: 30, step: 5 }
+    correct_formula: "Math.round(6 * p * 1e9 * tokens * 1e11 / 1e21)"
+    answer_suffix: " x10^21"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "6 * {{p}}e9 * {{tokens}}e11 = {{Math.round(6*p*tokens*1e20/1e21)}}e21 FLOPs."
+  - id: train_days
+    prompt_template: "A run needs {{c}} x 10^23 FLOPs on {{gpus}} H100s at 40% MFU (990 TFLOP/s peak). How many days?"
+    params:
+      c: { min: 1, max: 9, step: 1 }
+      gpus: { min: 256, max: 1024, step: 256 }
+    correct_formula: "Math.round(c * 1e23 / (gpus * 9.9e14 * 0.4) / 86400)"
+    answer_suffix: " days"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "Effective throughput = {{gpus}} * 9.9e14 * 0.4 FLOP/s. Divide {{c}}e23 by that, then by 86400."
+  - id: inference_flops
+    prompt_template: "Generating one token from a {{p}}B model. How many gigaFLOPs, using 2N?"
+    params:
+      p: { min: 1, max: 70, step: 1 }
+    correct_formula: "p * 2"
+    answer_suffix: " GFLOP"
+    tolerance: 0
+    explanation_template: "Forward pass only: 2 * {{p}}e9 = {{p*2}} GFLOP per token."
+  - id: kv_per_token
+    prompt_template: "KV cache per token: {{layers}} layers, {{kv}} KV heads, head_dim 128, bf16. How many kilobytes?"
+    params:
+      layers: { min: 16, max: 80, step: 16 }
+      kv: { min: 2, max: 16, step: 2 }
+    correct_formula: "Math.round(2 * layers * kv * 128 * 2 / 1000)"
+    answer_suffix: " KB"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "2 (K and V) * {{layers}} * {{kv}} * 128 * 2 bytes = {{Math.round(2*layers*kv*128*2/1000)}} KB per token."
+  - id: kv_sequence
+    prompt_template: "Same geometry — {{layers}} layers, {{kv}} KV heads, head_dim 128, bf16 — at {{ctx}}k context. How many GB for one sequence?"
+    params:
+      layers: { min: 48, max: 80, step: 16 }
+      kv: { min: 8, max: 16, step: 8 }
+      ctx: { min: 16, max: 64, step: 16 }
+    correct_formula: "Math.round(2 * layers * kv * 128 * 2 * ctx * 1024 / 1e9)"
+    answer_suffix: " GB"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "Per-token bytes times {{ctx}} * 1024 tokens. Long context is expensive per sequence before you even consider batching."
+  - id: gqa_saving
+    prompt_template: "Switching from MHA with {{h}} heads to GQA with {{g}} KV heads. By what factor does the KV cache shrink?"
+    params:
+      h: { min: 24, max: 96, step: 24 }
+      g: { min: 2, max: 8, step: 2 }
+    correct_formula: "Math.round(h / g)"
+    answer_suffix: "x"
+    tolerance: 0
+    explanation_template: "The cache scales with KV heads: {{h}} / {{g}} = {{Math.round(h/g)}}x."
+  - id: attention_flops_ratio
+    prompt_template: "At d_model {{d}} and sequence length {{s}}k, the attention term is roughly S/(12d) of the 6ND estimate. What percent is that?"
+    params:
+      d: { min: 2048, max: 8192, step: 2048 }
+      s: { min: 4, max: 128, step: 4 }
+    correct_formula: "Math.round(100 * (s * 1024) / (12 * d))"
+    answer_suffix: "%"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "{{s}}*1024 / (12 * {{d}}) = {{Math.round(100*(s*1024)/(12*d))}}%. Negligible at 4k, dominant at 128k — which is why 6ND comes with a caveat."
+  - id: logit_tensor
+    prompt_template: "Logits for batch {{b}}, sequence {{s}}k, vocabulary {{vocab}}k, fp32. How many GB?"
+    params:
+      b: { min: 2, max: 8, step: 2 }
+      s: { min: 4, max: 16, step: 4 }
+      vocab: { min: 128, max: 256, step: 64 }
+    correct_formula: "Math.round(b * s * 1024 * vocab * 1000 * 4 / 1e9)"
+    answer_suffix: " GB"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "{{b}} * {{s}}*1024 * {{vocab}}000 * 4 bytes. Often the single largest activation in a training step, which is why fused cross-entropy exists."
+  - id: lora_params
+    prompt_template: "LoRA rank {{r}} on all four attention projections of a {{layers}}-layer model with d_model {{d}}. How many millions of adapter parameters?"
+    params:
+      r: { min: 8, max: 64, step: 8 }
+      layers: { min: 32, max: 80, step: 16 }
+      d: { min: 2048, max: 8192, step: 2048 }
+    correct_formula: "Math.round(4 * layers * 2 * r * d / 1e6)"
+    answer_suffix: "M"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "Each adapter is r(d_in + d_out) = 2rd. Four projections, {{layers}} layers: 4 * {{layers}} * 2 * {{r}} * {{d}}."
+  - id: gpus_needed
+    prompt_template: "A {{p}}B model in bf16 plus {{cache}} GB of KV cache, on 80 GB GPUs at 90% usable. How many GPUs minimum?"
+    params:
+      p: { min: 7, max: 70, step: 7 }
+      cache: { min: 10, max: 100, step: 10 }
+    correct_formula: "Math.ceil((p * 2 + cache) / (80 * 0.9))"
+    answer_suffix: " GPUs"
+    tolerance: 0
+    explanation_template: "({{p}}*2 + {{cache}}) GB divided by 72 GB usable, rounded up. Capacity is a floor, not a target — you also need headroom for activations and fragmentation."

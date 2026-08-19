@@ -1,0 +1,175 @@
+title: "Rapid Fire"
+instructions: >
+  Answer out loud, in one breath, under thirty seconds. Grade Again for any
+  answer you had to construct while speaking. Do not lengthen these.
+newPerSession: 14
+maxPerSession: 42
+cards:
+  - id: rf-position-encodings
+    front: "What are the ways of encoding positional information?"
+    back: "Sinusoidal absolute, learned absolute, relative bias — T5 buckets or ALiBi slopes — and rotary. RoPE is the default: relative by construction, no parameters, applied to Q and K only."
+    tags: [rapid-fire, architecture]
+  - id: rf-5d-parallelism
+    front: "What is 5D parallelism?"
+    back: "Data, tensor, pipeline, context, expert. Data all-reduces gradients. Tensor splits matrices within a layer, two all-reduces per layer, so it stays inside a node. Pipeline splits layers with cheap point-to-point but a bubble. Context splits the sequence. Expert splits MoE experts with all-to-all."
+    tags: [rapid-fire, distributed]
+  - id: rf-ppo-grpo
+    front: "What is the difference between PPO and GRPO?"
+    back: "GRPO removes the value network. Instead of a learned critic for the baseline, it samples a group of responses per prompt and normalizes rewards within the group. Cheaper and more stable; costs G samples per prompt."
+    tags: [rapid-fire, rl]
+  - id: rf-why-gqa
+    front: "Why GQA?"
+    back: "Decoding is memory-bandwidth bound and the KV cache is what you read every step. Fewer KV heads means a proportionally smaller cache — typically 8x — which is what makes large serving batches fit. MQA goes further but loses quality."
+    tags: [rapid-fire, attention]
+  - id: rf-why-rmsnorm
+    front: "Why RMSNorm instead of LayerNorm?"
+    back: "Drops mean subtraction and the bias. Re-scaling is what stabilized training; re-centering was not earning its cost. Saves a reduction and d parameters per norm."
+    tags: [rapid-fire, architecture]
+  - id: rf-why-prenorm
+    front: "Why pre-norm?"
+    back: "It keeps the residual stream a clean additive path, so gradients reach early layers and 100-layer stacks train stably. The price is a growing residual magnitude, so a final norm before the head becomes mandatory."
+    tags: [rapid-fire, architecture]
+  - id: rf-sqrt-dk
+    front: "Why divide by sqrt(d_k)?"
+    back: "The dot product of two unit-variance vectors of length d_k has standard deviation sqrt(d_k). Unscaled, softmax saturates as head dimension grows and the gradient vanishes."
+    tags: [rapid-fire, attention]
+  - id: rf-flash-attention
+    front: "What does FlashAttention do?"
+    back: "Tiles attention with an online softmax recurrence so the S-by-S score matrix is never materialized. The memory footprint drops from O(S^2) to O(S), and HBM traffic falls by a large constant factor rather than becoming linear. FLOPs are unchanged and the output is exact."
+    tags: [rapid-fire, kernels]
+  - id: rf-bf16-fp16
+    front: "bf16 or fp16, and why?"
+    back: "bf16. Same 16 bits, but it keeps fp32's 8-bit exponent, so gradients never underflow and loss scaling is unnecessary. The cost is 7 mantissa bits instead of 10."
+    tags: [rapid-fire, precision]
+  - id: rf-6nd
+    front: "How many FLOPs to train a model?"
+    back: "About 6ND — two for the forward pass and four for the backward. It excludes attention, which is O(S^2) and matters at long context."
+    tags: [rapid-fire, accounting]
+  - id: rf-12d2
+    front: "How many parameters in a transformer?"
+    back: "Roughly 12 L d squared, plus V d for embeddings. Four d squared for attention, eight for the FFN, per layer."
+    tags: [rapid-fire, accounting]
+  - id: rf-adam-memory
+    front: "How much memory does Adam training need?"
+    back: "16 bytes per parameter — 4 master, 2 working, 2 gradient, 4 and 4 for the moments. Same as pure fp32; mixed precision buys throughput, not memory."
+    tags: [rapid-fire, accounting]
+  - id: rf-chinchilla
+    front: "What is the Chinchilla ratio?"
+    back: "About 20 tokens per parameter, for compute-optimal training. Deployed models train far past it because inference cost dominates over a model's lifetime."
+    tags: [rapid-fire, scaling]
+  - id: rf-decode-bound
+    front: "Why is decoding memory-bound?"
+    back: "Each token reads every weight and does about two FLOPs per weight, so arithmetic intensity is roughly the batch size. An H100's ridge point is near 295 FLOP per byte."
+    tags: [rapid-fire, inference]
+  - id: rf-continuous-batching
+    front: "What is continuous batching?"
+    back: "Scheduling at the iteration level rather than the request level: a finished sequence is evicted immediately and a queued one takes its slot next step. Usually 10 to 20x throughput over static batching."
+    tags: [rapid-fire, serving]
+  - id: rf-paged-attention
+    front: "What does paged attention solve?"
+    back: "Fragmentation, not size. Fixed-size cache blocks with a per-sequence block table remove the waste from reserving maximum-length buffers, and give copy-on-write prefix sharing for free."
+    tags: [rapid-fire, serving]
+  - id: rf-spec-decoding
+    front: "How does speculative decoding work?"
+    back: "A draft model proposes several tokens; the target verifies them all in one forward pass. Rejection sampling keeps the output distribution exactly unchanged. It works because verifying k tokens costs barely more than one in a memory-bound regime."
+    tags: [rapid-fire, inference]
+  - id: rf-topk-topp
+    front: "Top-k or top-p?"
+    back: "Top-p, usually. A fixed k is too permissive when the model is confident and too restrictive when it is not; nucleus sampling adapts its cutoff to each distribution."
+    tags: [rapid-fire, sampling]
+  - id: rf-dpo
+    front: "Why does DPO work without a reward model?"
+    back: "The KL-regularized objective has a closed-form optimum you can invert to express reward in terms of the policy. Substituting into the Bradley-Terry loss makes the partition function cancel."
+    tags: [rapid-fire, rl]
+  - id: rf-kl-penalty
+    front: "Why the KL penalty in RLHF?"
+    back: "The reward model is a proxy trained on a narrow distribution. Unconstrained, the policy finds degenerate outputs that score highly and are useless."
+    tags: [rapid-fire, rl]
+  - id: rf-moe
+    front: "What does an MoE buy and cost?"
+    back: "Many more parameters at nearly constant per-token FLOPs, since only the top-k experts activate. Costs: all experts resident in memory, all-to-all routing traffic, less stable training, and idle experts at small batch."
+    tags: [rapid-fire, moe]
+  - id: rf-ce-gradient
+    front: "Gradient of cross-entropy with respect to logits?"
+    back: "p minus one-hot. Which is why softmax and cross-entropy are fused and why the loss function takes logits."
+    tags: [rapid-fire, fundamentals]
+  - id: rf-checkpointing
+    front: "What is gradient checkpointing?"
+    back: "Recompute activations in the backward pass instead of storing them. With sqrt(N) segments, memory drops from O(N) to O(sqrt N) for about a third more compute."
+    tags: [rapid-fire, memory]
+  - id: rf-warmup
+    front: "Why warmup?"
+    back: "Adam's second-moment estimate is noisy early, so a full-size step can be enormous for some parameters. Warmup keeps steps small until the estimates settle."
+    tags: [rapid-fire, training]
+  - id: rf-adamw
+    front: "Adam or AdamW?"
+    back: "AdamW. Adam folds weight decay into the gradient, so it passes through the sqrt(v) normalization and parameters with large gradients get decayed less. AdamW applies it directly to the parameter."
+    tags: [rapid-fire, training]
+  - id: rf-grad-clip
+    front: "Why clip on the global gradient norm?"
+    back: "Scaling every gradient by the same factor preserves the update's direction and only bounds its magnitude. Per-tensor clipping rotates the update."
+    tags: [rapid-fire, training]
+  - id: rf-zero
+    front: "What do the ZeRO stages shard?"
+    back: "One: optimizer state — the fp32 master and both moments, 12 of the 16 bytes per parameter — essentially free. Two: gradients as well, at identical communication because all-reduce already decomposes into reduce-scatter plus all-gather. Three: parameters too, at about 50% more communication."
+    tags: [rapid-fire, distributed]
+  - id: rf-pipeline-bubble
+    front: "What is the pipeline bubble?"
+    back: "P minus one over M plus P minus one, for P stages and M microbatches. Shrink it with more microbatches, 1F1B scheduling, interleaved stages, or zero-bubble schedules."
+    tags: [rapid-fire, distributed]
+  - id: rf-tp-node
+    front: "Why does tensor parallelism stay inside a node?"
+    back: "Two all-reduces per layer on both passes, all on the critical path. NVLink is around 900 GB/s; inter-node is 50 to 100. An order of magnitude on the most communication-heavy axis."
+    tags: [rapid-fire, distributed]
+  - id: rf-long-context
+    front: "How do you extend a model's context window?"
+    back: "Position interpolation, NTK-aware base scaling, or YaRN, each with brief continued pretraining. The real limit is that the model never saw genuinely long-range dependencies during training."
+    tags: [rapid-fire, long-context]
+  - id: rf-attention-sink
+    front: "What is an attention sink?"
+    back: "Models dump excess attention mass on the first few tokens. Practically: naively evicting the earliest tokens from a KV cache destroys quality, so streaming schemes pin them."
+    tags: [rapid-fire, attention]
+  - id: rf-bpe
+    front: "How does BPE work?"
+    back: "Start from the 256 byte values, repeatedly merge the most frequent adjacent pair, record the merges. Encoding replays them in learned order. Byte-level means no out-of-vocabulary token is possible."
+    tags: [rapid-fire, tokenization]
+  - id: rf-char-counting
+    front: "Why can't models count letters in a word?"
+    back: "They never see letters. The word is two or three tokens, so the character information was discarded before the first layer. A representation limitation, not a reasoning one."
+    tags: [rapid-fire, tokenization]
+  - id: rf-vocab-size
+    front: "What does vocabulary size trade off?"
+    back: "Fewer tokens per document and more text per context, against more embedding parameters, a slower softmax, and rarer tokens with poorly-trained embeddings."
+    tags: [rapid-fire, tokenization]
+  - id: rf-contamination
+    front: "How do you detect benchmark contamination?"
+    back: "N-gram overlap as a baseline, though paraphrases pass through. Better: temporal holdouts on post-cutoff data, canary strings, and exchangeability tests — a contaminated model prefers the dataset's canonical example ordering to a shuffled one."
+    tags: [rapid-fire, evaluation]
+  - id: rf-dedup
+    front: "What is the highest-leverage step in a data pipeline?"
+    back: "Deduplication. Duplicated text causes memorization, wastes compute, and inflates eval scores. Removing near-duplicates improves models at fixed token count."
+    tags: [rapid-fire, data]
+  - id: rf-init-loss
+    front: "What should a language model's loss be at initialization?"
+    back: "ln V — about 10.4 for a 32k vocabulary. Much higher means the output scale is wrong; much lower means the model is seeing the answer."
+    tags: [rapid-fire, debugging]
+  - id: rf-overfit-batch
+    front: "First thing you do with a new training setup?"
+    back: "Check the initial loss is ln V, then overfit one batch to near-zero. Those two catch most structural bugs in a minute of compute."
+    tags: [rapid-fire, debugging]
+  - id: rf-loss-spike
+    front: "Your loss spikes at step 40k. What do you check?"
+    back: "The gradient-norm trace first — a spike before the loss spike means the update, no spike means the forward pass. Then the batch: corrupted data or extreme repetition."
+    tags: [rapid-fire, debugging]
+  - id: rf-mfu
+    front: "What MFU should a large training run get?"
+    back: "30 to 50%. Below 20% something is wrong, usually communication or a batch too small to saturate the device."
+    tags: [rapid-fire, systems]
+  - id: rf-swiglu
+    front: "Why is the SwiGLU hidden dimension 8d/3?"
+    back: "Three matrices instead of two, so 8d/3 keeps the parameter count equal to a 4d ReLU FFN. Rounded up to a multiple of 256 in practice."
+    tags: [rapid-fire, architecture]
+  - id: rf-weight-quant
+    front: "Why does weight-only quantization help serving so much?"
+    back: "Decode is bandwidth-bound, so halving the bytes read per token nearly halves the time per token. The matmul still runs in bf16 — it buys bandwidth, not FLOPs."
+    tags: [rapid-fire, quantization]

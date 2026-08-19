@@ -1,0 +1,8 @@
+title: "Deck: Post-Training and RL"
+slug: "post-training-deck"
+description: "Spaced-repetition deck for SFT, reward models, PPO, DPO, GRPO, and reward hacking."
+order: 31
+difficulty: advanced
+estimatedMinutes: 18
+tags: [flashcards, rlhf, dpo, grpo, alignment]
+type: flashcards

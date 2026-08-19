@@ -1,0 +1,171 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "Roughly how much memory does full fine-tuning a 13B model with AdamW and an fp32 master copy need, before activations?"
+    options:
+      - "26 GB"
+      - "52 GB"
+      - "104 GB"
+      - "208 GB"
+    correct: 3
+    explanation: "16 bytes per parameter — 4 fp32 master + 2 bf16 working + 2 bf16 gradient + 4 + 4 for the two fp32 moments. $13\\times10^9 \\times 16 = 208$ GB, before a single activation. Three 80 GB GPUs would not comfortably hold it, which is why LoRA and optimizer sharding exist."
+  - id: q2
+    type: multiple_choice
+    stem: "Mixed-precision bf16 training uses how much memory relative to pure fp32 training with Adam?"
+    options:
+      - "About half"
+      - "About the same — 16 bytes per parameter either way"
+      - "About a quarter"
+      - "Slightly more"
+    correct: 1
+    explanation: "fp32 master (4) + bf16 working (2) + bf16 grad (2) + two fp32 moments (8) = 16, exactly what pure fp32 costs (4+4+4+4). Mixed precision buys throughput and activation memory, not parameter-state memory."
+  - id: q3
+    type: multiple_choice
+    stem: "A 30B model trained on 2T tokens. Roughly how many FLOPs?"
+    options:
+      - "$3.6\\times10^{22}$"
+      - "$3.6\\times10^{23}$"
+      - "$3.6\\times10^{24}$"
+      - "$6.0\\times10^{25}$"
+    correct: 1
+    explanation: "$6ND = 6 \\times 3\\times10^{10} \\times 2\\times10^{12} = 3.6\\times10^{23}$."
+  - id: q4
+    type: multiple_choice
+    stem: "Why does Adam need bias correction?"
+    options:
+      - "To prevent the learning rate from decaying too quickly"
+      - "Because $m$ and $v$ initialize at zero, so early estimates are biased toward zero and the resulting updates are far too large"
+      - "To keep the second moment positive"
+      - "To decouple weight decay from the adaptive scaling"
+    correct: 1
+    explanation: "At $t=1$ with $\\beta_2 = 0.999$, $v_1 = 0.001g^2$ — about 1000x too small, making $\\sqrt{v}$ 32x too small — but $m$ is only 10x too small, so the first step is about 3.2x too large. Dividing by $1-\\beta^t$ corrects it, and the correction decays away."
+  - id: q5
+    type: multiple_choice
+    stem: "What is the size of Adam's very first update step?"
+    options:
+      - "Proportional to the gradient magnitude"
+      - "Exactly the learning rate, regardless of the gradient"
+      - "Zero, because the moments start at zero"
+      - "Proportional to $1/\\sqrt{\\epsilon}$"
+    correct: 1
+    explanation: "With bias correction, $\\hat m_1 = g$ and $\\hat v_1 = g^2$, so $\\hat m/\\sqrt{\\hat v} = g/|g| = 1$ and the step is exactly $\\eta$. It makes a clean unit test for a hand-written optimizer."
+  - id: q6
+    type: multiple_choice
+    stem: "The practical difference between Adam with weight_decay and AdamW is that:"
+    options:
+      - "AdamW applies decay before the gradient computation"
+      - "Adam's L2 term passes through the $\\sqrt{v}$ normalization, so parameters with large gradients get decayed less"
+      - "AdamW uses a different default $\\beta_2$"
+      - "There is no practical difference at typical decay values"
+    correct: 1
+    explanation: "The coupling makes effective regularization strength depend on gradient magnitude, which nobody wanted. AdamW applies $-\\eta\\lambda\\theta$ directly to the parameter, outside the adaptive scaling."
+  - id: q7
+    type: multiple_choice
+    stem: "Why is gradient clipping done on the global norm rather than per tensor?"
+    options:
+      - "It is cheaper to compute"
+      - "Scaling every gradient by the same factor preserves the update's direction and only bounds its magnitude"
+      - "Per-tensor clipping cannot be implemented efficiently on GPUs"
+      - "The global norm is more numerically stable"
+    correct: 1
+    explanation: "Per-tensor clipping scales different tensors by different factors, rotating the update into a different direction. Global clipping is a pure rescale."
+  - id: q8
+    type: multiple_choice
+    stem: "The main practical reason labs moved from cosine decay to warmup-stable-decay is:"
+    options:
+      - "WSD reaches a lower final loss"
+      - "Cosine requires committing to a total step count up front, while WSD lets you branch and anneal a checkpoint at any point"
+      - "WSD trains faster per step"
+      - "Cosine is numerically unstable at large scale"
+    correct: 1
+    explanation: "It is a flexibility argument, not a loss-curve argument. Being able to fork the stable phase and anneal into a finished model makes continued pretraining and data-mixture experiments dramatically cheaper."
+  - id: q9
+    type: true_false
+    stem: "For Adam, the standard advice is to scale the learning rate linearly with batch size."
+    correct: false
+    explanation: "Linear scaling is the SGD rule. Square-root scaling is the better rule of thumb for Adam, because the second moment already normalizes gradient magnitude."
+  - id: q10
+    type: multiple_choice
+    stem: "Why did bf16 replace fp16 for large-scale training?"
+    options:
+      - "bf16 has more mantissa bits, so it is more precise"
+      - "bf16 keeps fp32's 8-bit exponent, so gradients never underflow and loss scaling becomes unnecessary"
+      - "bf16 is supported on more hardware"
+      - "bf16 uses fewer bits"
+    correct: 1
+    explanation: "Both are 16 bits. fp16 has better precision (10 mantissa bits versus 7) but only 5 exponent bits, so gradients underflow and loss scaling is required. bf16 trades precision for fp32's range."
+  - id: q11
+    type: multiple_choice
+    stem: "Why keep fp32 master weights in mixed-precision training?"
+    options:
+      - "Because the optimizer cannot operate on bf16 tensors"
+      - "Because small updates rounded into bf16 weights disappear — adding $10^{-4}$ to $1.0$ in bf16 returns $1.0$"
+      - "To allow gradient clipping to work correctly"
+      - "For checkpoint compatibility with fp32 inference"
+    correct: 1
+    explanation: "bf16 has 7 mantissa bits, so an update several orders of magnitude below the weight is lost entirely. The master copy is what lets small updates accumulate over many steps."
+  - id: q12
+    type: multiple_choice
+    stem: "Softmax subtracts the row maximum before exponentiating. What specifically does that prevent?"
+    options:
+      - "The attention weights from summing to more than 1"
+      - "`exp` overflowing to infinity, which happens above about 88 in float32"
+      - "Gradients from vanishing"
+      - "Negative probabilities"
+    correct: 1
+    explanation: "Softmax is shift-invariant, so the subtraction is mathematically free. It caps the largest exponent at $e^0 = 1$ and floors the denominator at 1."
+  - id: q13
+    type: multiple_choice
+    stem: "In the online softmax recurrence $d_{k+1} = d_k e^{m_k - m_{k+1}} + e^{x_{k+1}-m_{k+1}}$, what does the factor $e^{m_k-m_{k+1}}$ do?"
+    options:
+      - "It applies a temperature to the distribution"
+      - "It rescales the accumulated sum from the old maximum to the new one, and equals exactly 1 when the maximum is unchanged"
+      - "It normalizes the new element"
+      - "It corrects for numerical drift in the running sum"
+    correct: 1
+    explanation: "$d_k$ is defined relative to the current maximum. When the maximum moves, everything accumulated so far must be converted to the new reference point — that is the factor's only job."
+  - id: q14
+    type: true_false
+    stem: "FlashAttention reduces the FLOP count of attention."
+    correct: false
+    explanation: "FLOPs are essentially unchanged, and the backward pass does more of them because it recomputes scores. What drops is memory traffic — from $O(S^2)$ to $O(S)$ — and since attention is memory-bound, wall-clock improves substantially."
+  - id: q15
+    type: multiple_choice
+    stem: "Gradient checkpointing with the optimal number of segments gives what memory and compute trade?"
+    options:
+      - "$O(\\log N)$ memory, 2x compute"
+      - "$O(\\sqrt{N})$ memory, about 1.33x total training compute"
+      - "$O(1)$ memory, 3x compute"
+      - "$O(N/2)$ memory, 1.1x compute"
+    correct: 1
+    explanation: "With $K$ segments, memory is $O(K + N/K)$ and backward compute is $O(N + N(K-1)/K)$. Minimizing over $K$ gives $K = \\sqrt{N}$, so $O(\\sqrt{N})$ memory for roughly a third more compute."
+  - id: q16
+    type: multiple_choice
+    stem: "During decoding at batch size 1, roughly what is the arithmetic intensity, and what does that imply?"
+    options:
+      - "About 1 FLOP per byte — deeply memory-bound, so the GPU is nearly idle on compute"
+      - "About 300 FLOP per byte — right at the roofline ridge"
+      - "About 2000 FLOP per byte — compute-bound"
+      - "It depends on sequence length, not batch size"
+    correct: 0
+    explanation: "Each generated token reads every weight and does roughly two FLOPs per weight, so intensity is roughly the batch size. At batch 1 that is around 1, versus an H100 ridge point near 295 — under 1% of peak. This is why continuous batching and speculative decoding exist."
+  - id: q17
+    type: multiple_choice
+    stem: "Your loss spikes at step 40,000 and the gradient-norm trace spikes one step earlier. What is the most likely cause?"
+    options:
+      - "A numerical instability in the forward pass"
+      - "A pathological batch producing an enormous gradient, which the update then applied"
+      - "The learning-rate schedule reaching its peak"
+      - "A hardware fault"
+    correct: 1
+    explanation: "A norm spike preceding the loss spike points at the update, and the usual source is the data — corrupted text, extreme repetition, or an unusual document. A NaN with no preceding norm spike would point at the forward pass instead."
+  - id: q18
+    type: multiple_choice
+    stem: "Which ZeRO stage gives the largest memory saving for the least communication?"
+    options:
+      - "Stage 1, sharding optimizer state"
+      - "Stage 2, sharding gradients"
+      - "Stage 3, sharding parameters"
+      - "They are all equivalent"
+    correct: 0
+    explanation: "Optimizer state is the biggest slice — the two fp32 moments plus the fp32 master are 12 of the 16 bytes per parameter in mixed precision (the moments alone are 8 of 16 in pure fp32) — and stage 1 shards it with essentially no extra communication beyond the existing gradient all-reduce. Stages 2 and 3 add progressively more."

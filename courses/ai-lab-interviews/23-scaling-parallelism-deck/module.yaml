@@ -1,0 +1,8 @@
+title: "Deck: Scaling and Parallelism"
+slug: "scaling-parallelism-deck"
+description: "Spaced-repetition deck for scaling laws, collectives, ZeRO, and the five parallelism axes."
+order: 23
+difficulty: advanced
+estimatedMinutes: 20
+tags: [flashcards, scaling, distributed, parallelism]
+type: flashcards

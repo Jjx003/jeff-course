@@ -1,0 +1,8 @@
+title: "Checkpoint: Math"
+slug: "math-checkpoint"
+description: "Fourteen questions on probability, linear algebra, and the derivatives that show up in ML."
+order: 38
+difficulty: advanced
+estimatedMinutes: 20
+tags: [quiz, math, probability]
+type: quiz

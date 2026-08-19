@@ -1,0 +1,10 @@
+title: "Reasoning Models and Test-Time Compute"
+slug: "reasoning-and-test-time-compute"
+description: "How the o1/R1 generation is trained, what a third axis of compute scaling changes, and the failure modes interviewers probe for."
+order: 47
+difficulty: advanced
+estimatedMinutes: 50
+tags: [reasoning, rl, rlvr, test-time-compute, evaluation, deep-dive]
+type: reading
+section: "Appendix — Optional Deep Dives"
+optional: true

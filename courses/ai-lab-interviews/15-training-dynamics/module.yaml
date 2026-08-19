@@ -1,0 +1,8 @@
+title: "Training Dynamics"
+slug: "training-dynamics"
+description: "AdamW, warmup and decay schedules, initialization, gradient clipping, and the failure modes that actually take down training runs."
+order: 15
+difficulty: advanced
+estimatedMinutes: 65
+tags: [training, optimizers, adamw, schedules, stability]
+type: reading

@@ -1,0 +1,17 @@
+title: "Stable Softmax Operations"
+slug: "stable-softmax-ops"
+description: "Max-subtracted softmax, log-sum-exp, and the online softmax recurrence — implemented, and measured against the failures they prevent."
+order: 18
+difficulty: advanced
+estimatedMinutes: 55
+tags: [numerics, softmax, flashattention, ml-coding, torch]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 2048
+    cpus: 2
+    gpu: none
+    timeoutMs: 600000

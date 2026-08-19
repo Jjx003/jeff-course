@@ -1,0 +1,17 @@
+title: "RMSNorm, SwiGLU, and RoPE"
+slug: "rmsnorm-swiglu-rope"
+description: "Build the three components that replaced LayerNorm, ReLU-MLP, and learned positions — and prove RoPE really is relative."
+order: 8
+difficulty: advanced
+estimatedMinutes: 60
+tags: [rope, rmsnorm, swiglu, ml-coding, torch]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

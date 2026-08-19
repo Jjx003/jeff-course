@@ -1,0 +1,220 @@
+title: "Training, Accounting, and Precision"
+instructions: >
+  For any card asking for a number, say the arithmetic out loud all the way to
+  the answer. That is the skill being trained, not recognition.
+newPerSession: 12
+maxPerSession: 51
+cards:
+  - id: adamw-update
+    front: "Write the AdamW update, including bias correction."
+    back: |
+      $$m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t, \qquad v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2$$
+      $$\hat m_t = \frac{m_t}{1-\beta_1^t}, \qquad \hat v_t = \frac{v_t}{1-\beta_2^t}$$
+      $$\theta_t = \theta_{t-1} - \eta\lambda\theta_{t-1} - \eta\frac{\hat m_t}{\sqrt{\hat v_t}+\epsilon}$$
+    tags: [optimizer]
+  - id: adam-moments
+    front: "What does each Adam moment do?"
+    back: "First moment: running mean of gradients — momentum, so consistent directions accumulate velocity. Second moment: running mean of squared gradients — dividing by its square root gives every parameter its own effective step size, normalizing across wildly different gradient scales."
+    tags: [optimizer]
+  - id: bias-correction-why
+    front: "Why does Adam need bias correction, with a number?"
+    back: "$m$ and $v$ start at zero, so early estimates are biased low. At $t=1$ with $\\beta_2=0.999$, $v_1 = 0.001g^2$ — about 1000x too small, so $\\sqrt{v}$ is 32x too small — but $m$ is only 10x too small, so the first step comes out about 3.2x too large. Dividing by $1-\\beta^t$ fixes it, and the correction fades as $\\beta^t \\to 0$."
+    tags: [optimizer]
+  - id: adam-first-step
+    front: "How big is Adam's very first step?"
+    back: "Exactly the learning rate, whatever the gradient was. At $t=1$, $\\hat m = g$ and $\\hat v = g^2$, so $\\hat m/\\sqrt{\\hat v} = g/|g| = 1$. It makes a lovely unit test."
+    tags: [optimizer]
+  - id: adam-vs-adamw
+    front: "Adam versus AdamW, precisely."
+    back: "Adam adds $\\lambda\\theta$ to the gradient, so the decay passes through the $\\sqrt{v}$ normalization and parameters with large gradients get decayed less — regularization strength ends up coupled to gradient magnitude. AdamW applies $-\\eta\\lambda\\theta$ directly to the parameter, outside the adaptive scaling."
+    tags: [optimizer]
+  - id: no-decay-params
+    front: "Which parameters should not receive weight decay, and why?"
+    back: "Biases and normalization gains. Decaying a norm's scale toward zero shrinks the very activations it exists to normalize. Handled with parameter groups."
+    tags: [optimizer, training]
+  - id: optimizer-vs-schedule
+    front: "How do you decide whether something belongs in the optimizer or the LR schedule?"
+    back: "If it depends on the step count alone, it is a schedule. If it needs per-parameter history, it is the optimizer."
+    tags: [optimizer]
+  - id: warmup-why
+    front: "Why warmup, given that bias correction already exists?"
+    back: "Bias correction fixes the expected magnitude but not the variance. Early $v$ is estimated from a handful of samples and is noisy, so some parameters get enormous updates. Warmup keeps steps small until the estimates settle, and stops the first few batches from dominating the model's early direction."
+    tags: [training]
+  - id: cosine-problem
+    front: "What is the practical problem with cosine decay?"
+    back: "You must commit to a total step count before you start. Train longer than planned and the schedule is wrong; stop early and the model never got its decay phase, which is measurably worse than a properly annealed model at the same token count."
+    tags: [training]
+  - id: wsd
+    front: "What is warmup-stable-decay and why did labs adopt it?"
+    back: "Warmup, hold at peak indefinitely, then a short sharp decay over the last 10–20% when you decide to stop. It decouples the schedule from a total step count, so you can branch a checkpoint from the stable phase and anneal it into a finished model. It buys experimental flexibility, not a better loss curve."
+    tags: [training]
+  - id: lr-batch-scaling
+    front: "How should learning rate scale with batch size?"
+    back: "Linear ($\\eta \\propto B$) is the SGD rule. Square-root ($\\eta \\propto \\sqrt{B}$) is the better rule of thumb for Adam, since the second moment already normalizes gradient magnitude. Beyond the critical batch size, larger batches stop improving gradient quality and only cost compute."
+    tags: [training]
+  - id: mup
+    front: "What is μP and what problem does it solve?"
+    back: "Maximal update parameterization: choose initialization and per-layer learning-rate scalings so the *optimal* hyperparameters are invariant to width. You tune on a small proxy model and transfer to the large one — worth a great deal when one run costs millions."
+    tags: [training]
+  - id: init-std
+    front: "What initialization do modern LLMs use, and what is the residual correction?"
+    back: "Normal with $\\sigma = 0.02$, with the attention-output and FFN-down projections scaled by $1/\\sqrt{2L}$. Without the correction, the residual stream's variance grows linearly in depth because $2L$ sublayers each write into it."
+    tags: [training]
+  - id: he-xavier
+    front: "Xavier versus He initialization."
+    back: "Xavier/Glorot: $\\mathrm{Var}(W) = 2/(n_{in}+n_{out})$, derived to preserve activation variance in both directions for symmetric activations. He/Kaiming: $2/n_{in}$, where the extra factor of 2 compensates for ReLU zeroing about half the units."
+    tags: [training]
+  - id: grad-clip-global
+    front: "Why is gradient clipping global rather than per tensor?"
+    back: "Global clipping scales every gradient by the same factor, preserving the update's direction and only bounding its magnitude. Per-tensor clipping uses different factors for different tensors, which rotates the update into a different direction entirely."
+    tags: [training]
+  - id: loss-spike
+    front: "Loss spikes at step 40k. Diagnosis order?"
+    back: "Gradient-norm trace first: a spike just before the loss spike means it was the update; no spike points at the forward pass. Then inspect the batch — corrupted data, pathological repetition, a very long document. Mitigations: clipping, QK-norm, skipping high-norm batches, and rolling back to a checkpoint past the bad data."
+    tags: [training, debugging]
+  - id: grad-norm-plot
+    front: "What does a healthy gradient-norm trace look like, and what do its failure shapes mean?"
+    back: "Healthy: slowly declining, low variance. Spikes precede loss spikes. A sudden collapse to zero means something upstream broke — dead activations, a masking bug, or a detached graph."
+    tags: [debugging]
+  - id: qk-norm
+    front: "What is QK-norm and what does it prevent?"
+    back: "Normalize Q and K before the score matmul, bounding attention logits. It prevents the attention entropy collapse behind a class of large-model loss spikes, and is increasingly standard at frontier scale."
+    tags: [training, architecture]
+  - id: params-formula
+    front: "Parameter count formula for a transformer."
+    back: "$N \\approx 12Ld^2 + Vd$. Per layer: $4d^2$ attention, $8d^2$ FFN. GQA shrinks attention to $2d^2(1 + G/H)$."
+    tags: [accounting]
+  - id: flops-6nd
+    front: "Training FLOPs, and where the 6 comes from."
+    back: "$C \\approx 6ND$. Two for the forward pass — one multiply and one add per parameter per token — and four for the backward, which computes two gradient matmuls per layer against the forward's one."
+    tags: [accounting]
+  - id: flops-exclusion
+    front: "What does the 6ND estimate leave out, and when does that matter?"
+    back: "Attention score computation, which is $O(S^2)$ rather than $O(N)$ — roughly $6LSd$ per token with causal masking, a fraction $S/(12d)$ of the $6N$ estimate. Negligible for most pretraining, dominant at 128k context. Without a causal mask the count doubles to $12LSd$."
+    tags: [accounting]
+  - id: inference-flops
+    front: "Inference FLOPs per generated token?"
+    back: "$2N$ — the forward pass alone. A 70B model costs about 140 GFLOP per token."
+    tags: [accounting, inference]
+  - id: mfu
+    front: "What is MFU and what range is healthy?"
+    back: "Model FLOPs utilization: achieved FLOP/s divided by hardware peak. 30–50% is a well-tuned large run. Below 20% something is wrong — usually communication, a small batch, or a bad parallelism config. Above 60% is exceptional."
+    tags: [accounting, systems]
+  - id: adam-memory
+    front: "How many bytes per parameter does mixed-precision Adam training need?"
+    back: "16. fp32 master (4) + bf16 working (2) + bf16 gradient (2) + fp32 first moment (4) + fp32 second moment (4). Pure fp32 is also 16 — mixed precision buys throughput, not memory."
+    tags: [accounting, memory]
+  - id: 7b-fullft
+    front: "Can you full-fine-tune a 7B model on one 80 GB GPU?"
+    back: "No. 16 bytes per parameter is 112 GB before activations. Quantizing the Adam moments to 8 bits takes the optimizer state from 8 bytes per parameter to 2, so the total is 10 — about 70 GB, tight but survivable with aggressive checkpointing. Drop the fp32 master too and it is 6 bytes, or 42 GB. LoRA is the real answer: the frozen base is 14 GB in bf16 and adapter state is megabytes."
+    tags: [accounting, memory]
+  - id: activation-memory
+    front: "How does activation memory scale, and what do you do about it?"
+    back: "$\\approx s \\cdot b \\cdot S \\cdot d \\cdot L$ with $s$ roughly 10–30 bytes. It is the only term that scales with batch and sequence, so it is what you attack first. Gradient checkpointing cuts it to $O(\\sqrt{L})$ for about 33% more compute."
+    tags: [memory]
+  - id: logit-tensor
+    front: "What is often the single largest activation in a training step?"
+    back: "The logits: $b \\times S \\times V$ in fp32. At batch 8, 4k sequence, 128k vocabulary that is 16 GB for one tensor — which is why chunked and fused cross-entropy implementations exist."
+    tags: [memory]
+  - id: kv-cache-formula
+    front: "KV cache bytes for a whole sequence?"
+    back: "$2 \\cdot L \\cdot G \\cdot d_h \\cdot S \\cdot \\text{bytes}$. Llama-2-70B geometry (80 layers, 8 KV heads, $d_h$ 128, bf16) is about 0.33 MB per token — 43 GB at 128k context, for one sequence."
+    tags: [inference, memory]
+  - id: arithmetic-intensity
+    front: "Define arithmetic intensity and give the H100 ridge point."
+    back: "FLOPs performed per byte moved. H100: ~990 TFLOP/s over ~3.35 TB/s gives a ridge near 295 FLOP/byte. Below it you are memory-bound, above it compute-bound."
+    tags: [systems, inference]
+  - id: prefill-vs-decode
+    front: "Why is prefill compute-bound and decode memory-bound?"
+    back: "Prefill processes many tokens against each weight read, so intensity is high. Decode reads every weight to produce one token per sequence, so intensity is roughly the batch size — far below the ridge point at any realistic batch. This single fact motivates continuous batching, GQA, weight-only quantization, and speculative decoding."
+    tags: [systems, inference]
+  - id: bf16-vs-fp16
+    front: "fp16 versus bf16 — bits, ranges, and why bf16 won."
+    back: "fp16: 5 exponent, 10 mantissa, max 65504 — better precision, gradients underflow, needed loss scaling. bf16: 8 exponent (fp32's), 7 mantissa — worse precision, full fp32 range, so no loss scaling and no overflow surprises. Casting fp32 to bf16 is a mantissa truncation."
+    tags: [precision]
+  - id: loss-scaling
+    front: "What is loss scaling and why is it unnecessary in bf16?"
+    back: "Multiply the loss by a constant before backward so fp16 gradients land in representable range, then divide before the update; dynamic versions halve the scale and skip the step on an `inf`. bf16 has fp32's exponent range, so gradients never underflow and none of it is needed."
+    tags: [precision]
+  - id: fp32-master
+    front: "Why keep fp32 master weights in mixed-precision training?"
+    back: "With 7 mantissa bits, adding an update of $10^{-4}$ to a weight of 1.0 rounds back to 1.0 — the update vanishes. The master copy is what lets small updates accumulate."
+    tags: [precision]
+  - id: fp8-formats
+    front: "Name the two fp8 formats and where each is used."
+    back: "E4M3 (4 exponent, 3 mantissa, max 448) for forward-pass weights and activations, which are bounded. E5M2 (5 exponent, 2 mantissa, max 57344) for gradients, which have much wider dynamic range."
+    tags: [precision]
+  - id: fp8-hard
+    front: "Why is fp8 training hard while fp8 inference is not?"
+    back: "Training needs scaling factors maintained across steps because 4 exponent bits cannot cover the range alone — classically per-tensor delayed scaling; current practice is finer-grained (DeepSeek-V3 used block-wise scales, Blackwell's MX formats attach a scale per 32-element block). At inference the weights are static, so scales are computed offline once."
+    tags: [precision]
+  - id: stable-softmax-card
+    front: "Write the numerically stable softmax and say what overflows without it."
+    back: |
+      $$\mathrm{softmax}(x)_i = \frac{e^{x_i - x_{\max}}}{\sum_j e^{x_j - x_{\max}}}$$
+
+      In float32, $e^x$ overflows at $x \approx 88.7$. After subtraction the largest exponent is $e^0 = 1$ and the denominator is at least 1.
+    tags: [numerics]
+  - id: logsumexp-card
+    front: "State the log-sum-exp identity."
+    back: "$\\log\\sum_i e^{x_i} = x_{\\max} + \\log\\sum_i e^{x_i - x_{\\max}}$. The largest term inside is $e^0 = 1$, so nothing overflows and the sum is at least 1, so never $\\log(0)$."
+    tags: [numerics]
+  - id: log-softmax-why-card
+    front: "Why compute `x - logsumexp(x)` rather than `log(softmax(x))`?"
+    back: "The naive form materializes a probability that can underflow to exactly zero for a low-probability token, after which the log is $-\\infty$. The information is destroyed in the intermediate value, not by the logarithm."
+    tags: [numerics]
+  - id: online-softmax-card
+    front: "Write the online softmax recurrence and say what the exponential factor does."
+    back: |
+      $$m_{k+1} = \max(m_k, x_{k+1}), \qquad d_{k+1} = d_k e^{m_k - m_{k+1}} + e^{x_{k+1} - m_{k+1}}$$
+
+      The factor rescales the accumulated sum from the old maximum to the new one, and equals exactly 1 whenever the maximum has not changed.
+    tags: [numerics, kernels]
+  - id: flash-from-online
+    front: "What is the one extra step from online softmax to FlashAttention?"
+    back: "Carry an output accumulator alongside the denominator and rescale both by the same factor: $\\mathrm{acc} \\leftarrow \\mathrm{acc}\\,e^{m_k-m_{k+1}} + e^{x_{k+1}-m_{k+1}}v_{k+1}$. That gives the weighted sum in one pass, so the $(B,H,S,S)$ score tensor is never materialized."
+    tags: [numerics, kernels]
+  - id: reductions-fp32
+    front: "Why are reductions computed in fp32 even in a bf16 model?"
+    back: "The accumulator is the problem. With 8 significand bits, once a running bf16 sum is about 256x the incoming term, adding it rounds to nothing — summing 8192 ones in a bf16 accumulator gives exactly 256. Norms, softmax denominators and loss reductions all upcast; library reductions and tensor-core matmuls already accumulate in fp32 internally."
+    tags: [numerics, precision]
+  - id: eps-placement
+    front: "Where does epsilon go in a normalization, and what happens if you get it wrong?"
+    back: "Inside the square root: $\\sqrt{\\sigma^2+\\epsilon}$, not $\\sqrt{\\sigma^2}+\\epsilon$. The wrong placement changes behavior for small-magnitude inputs, and it is a real bug in a few implementations."
+    tags: [numerics]
+  - id: checkpointing-tradeoff
+    front: "Gradient checkpointing: what does it cost and what is the optimal segment count?"
+    back: "Store a subset of activations and recompute the rest. For $N$ layers in $K$ segments: memory $O(K + N/K)$, backward compute $O(N + N(K-1)/K)$. Optimal $K = \\sqrt{N}$, giving $O(\\sqrt{N})$ memory for about 33% more training compute."
+    tags: [memory, training]
+  - id: grad-accumulation
+    front: "How does gradient accumulation work and where is the bug?"
+    back: "Run $k$ micro-batches, accumulating gradients, then step once. By linearity of the mean loss this is equivalent to one large batch. The bug is the division: divide each micro-batch loss by $k$, or divide the accumulated gradient once. Also clip after the last accumulation, not per micro-batch."
+    tags: [training]
+  - id: zero-stages
+    front: "What do ZeRO stages 1, 2, and 3 shard?"
+    back: "Stage 1: optimizer state (the biggest single win — the fp32 master and both moments, 12 of 16 bytes per parameter). Stage 2: adds gradients. Stage 3: adds parameters, gathering each layer's weights just in time and freeing them after use. Communication cost rises with each stage."
+    tags: [distributed, memory]
+  - id: eight-bit-adam
+    front: "What does 8-bit Adam change, and how much does it save?"
+    back: "Quantizes the two moment tensors to 8 bits with block-wise scaling. Optimizer state drops from 8 bytes per parameter to 2, taking a full training setup from 16 to about 10 bytes per parameter with negligible quality impact."
+    tags: [memory, optimizer]
+  - id: train-time-estimate
+    front: "How long to train a 7B model on 1T tokens with 256 H100s at 40% MFU?"
+    back: "$6 \\times 7\\times10^9 \\times 10^{12} = 4.2\\times10^{22}$ FLOPs. Effective throughput $256 \\times 9.9\\times10^{14} \\times 0.4 = 1.0\\times10^{17}$ FLOP/s. About $4.2\\times10^5$ seconds — roughly five days."
+    tags: [accounting]
+  - id: dropout-modern-card
+    front: "Where did dropout go in LLM pretraining?"
+    back: "Mostly gone. With trillions of tokens and roughly one epoch the model is not overfitting, so dropout only adds noise and cost. It comes back for fine-tuning on small datasets."
+    tags: [training]
+  - id: label-smoothing
+    front: "Is label smoothing used in LLM pretraining?"
+    back: "Generally not. It deliberately prevents the model from being confident, which hurts calibration and perplexity — and pretraining is not suffering from overconfidence on a one-epoch corpus. It appears more in classification and some fine-tuning settings."
+    tags: [training]
+  - id: seq-packing
+    front: "What is sequence packing and what has to be handled carefully?"
+    back: "Concatenate short documents into full-length training sequences so no compute is wasted on padding. You must prevent attention from crossing document boundaries — either with a block-diagonal mask or with a cu_seqlens-style variable-length kernel — or documents leak into each other."
+    tags: [training, data]
+  - id: curriculum-annealing
+    front: "What is data annealing at the end of pretraining?"
+    back: "Shifting the data mixture toward high-quality sources — curated text, code, maths, instruction-like data — during the final decay phase. It is one of the main reasons warmup-stable-decay is convenient: the anneal and the LR decay happen together."
+    tags: [training, data]

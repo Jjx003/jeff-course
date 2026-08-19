@@ -1,0 +1,8 @@
+title: "Parallelism and Distributed Training"
+slug: "parallelism"
+description: "Collective operations, and the five axes models are split along — data, tensor, pipeline, context, and expert."
+order: 22
+difficulty: advanced
+estimatedMinutes: 60
+tags: [distributed, parallelism, systems, nccl]
+type: reading

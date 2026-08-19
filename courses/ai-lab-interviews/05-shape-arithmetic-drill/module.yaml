@@ -1,0 +1,8 @@
+title: "Drill: Shapes and Gradient Arithmetic"
+slug: "shape-arithmetic-drill"
+description: "Timed practice on the tensor-shape and FLOP arithmetic you have to do in your head while an interviewer watches you type."
+order: 5
+difficulty: intermediate
+estimatedMinutes: 15
+tags: [drill, shapes, flops, backprop]
+type: drill

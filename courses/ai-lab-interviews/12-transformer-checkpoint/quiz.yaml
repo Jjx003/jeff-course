@@ -1,0 +1,201 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "Why does scaled dot-product attention divide by $\\sqrt{d_k}$?"
+    options:
+      - "To keep the output in the same numerical range as the input embeddings"
+      - "Because the dot product of two unit-variance vectors of length $d_k$ has standard deviation $\\sqrt{d_k}$, so unscaled logits saturate softmax as head dimension grows"
+      - "To compensate for the number of attention heads"
+      - "It normalizes the attention weights so each row sums to 1"
+    correct: 1
+    explanation: "It is a variance-control argument. Softmax already normalizes rows; the scaling exists so the logits entering it stay at unit variance regardless of head dimension, keeping the softmax Jacobian $p_j(1-p_j)$ away from zero."
+  - id: q2
+    type: multiple_choice
+    stem: "You apply the causal mask by zeroing attention probabilities after the softmax instead of setting scores to $-\\infty$ before it. What breaks?"
+    options:
+      - "Nothing — the two are mathematically equivalent"
+      - "Attention weight rows no longer sum to 1, so early positions produce a shrunken output whose scale depends on position"
+      - "The gradient becomes undefined at masked positions"
+      - "Only the first row is affected"
+    correct: 1
+    explanation: "Masking before lets softmax normalize over exactly the allowed keys. Zeroing afterwards leaves rows summing to less than 1 — worst at position 0, which loses almost all its mass — so the output is scaled by a position-dependent factor."
+  - id: q3
+    type: multiple_choice
+    stem: "`x.view(B, H, S, dh)` instead of `x.view(B, S, H, dh).transpose(1, 2)`. What happens?"
+    options:
+      - "A runtime error, because the shapes are incompatible"
+      - "The shape is identical but heads become chunks of the sequence rather than slices of the feature dimension — the model trains anyway, to a worse result"
+      - "Nothing, they are equivalent for contiguous tensors"
+      - "The gradient no longer flows to the query projection"
+    correct: 1
+    explanation: "Both produce $(B,H,S,d_h)$. The buggy version reinterprets the flat buffer so head 0 is the first $S/H$ tokens instead of the first $d_h$ channels. Nothing complains, which is exactly what makes it dangerous."
+  - id: q4
+    type: multiple_choice
+    stem: "Llama-2-70B uses 64 query heads and 8 KV heads. What is the primary benefit?"
+    options:
+      - "8x fewer FLOPs in the attention computation"
+      - "An 8x smaller KV cache, which is what makes large decoding batch sizes fit in memory"
+      - "8x faster training"
+      - "It reduces the parameter count by 8x"
+    correct: 1
+    explanation: "GQA is a memory-bandwidth and capacity optimization, not a FLOP one — the query heads still all compute. Decoding reads the whole cache each token, so the cache size sets the achievable batch size and therefore throughput."
+  - id: q5
+    type: multiple_choice
+    stem: "Why is RoPE applied to Q and K but never to V?"
+    options:
+      - "Applying it to V would be too expensive"
+      - "Position should determine which tokens you attend to, not what content is retrieved from them"
+      - "V is not involved in the dot product, so a rotation would have no effect"
+      - "It is applied to V as well in most implementations"
+    correct: 1
+    explanation: "The relative-position property comes from the Q-K dot product. Rotating V makes retrieved content position-dependent, which the model must then spend capacity undoing. It is a real bug people ship."
+  - id: q6
+    type: multiple_choice
+    stem: "What makes RoPE's attention scores depend only on relative position?"
+    options:
+      - "The sinusoidal frequencies are periodic"
+      - "Rotation matrices are orthogonal, so $R_m^{\\top}R_n = R_{n-m}$ and the rotations partially cancel in the dot product"
+      - "Positions are normalized to $[0,1]$ before the rotation"
+      - "The rotation is applied after the softmax"
+    correct: 1
+    explanation: "$(R_m q)^{\\top}(R_n k) = q^{\\top}R_{n-m}k$. Absolute position enters the computation; only the difference survives into the score."
+  - id: q7
+    type: true_false
+    stem: "A checkpoint trained with interleaved RoPE channel pairing will produce correct output if served with split-half pairing."
+    correct: false
+    explanation: "Both conventions are valid rotations and both train fine, but they are different rotations. Mixing them between training and serving produces fluent-sounding garbage — a well-known production bug."
+  - id: q8
+    type: multiple_choice
+    stem: "RMSNorm drops mean subtraction relative to LayerNorm. Why is that acceptable?"
+    options:
+      - "Because transformer activations are already zero-mean by construction"
+      - "Empirically, re-scaling is what stabilizes training; re-centering was not contributing enough to justify a second reduction pass"
+      - "Because the residual connection re-centers the activations"
+      - "It is not acceptable — RMSNorm is measurably worse but cheaper"
+    correct: 1
+    explanation: "The RMSNorm paper's finding is that the re-scaling invariance is what matters. Dropping the mean saves a reduction and $d$ bias parameters per norm at no measurable quality cost."
+  - id: q9
+    type: multiple_choice
+    stem: "Why do RMSNorm implementations compute the statistic in fp32 even in a bf16 model?"
+    options:
+      - "Because `rsqrt` is not implemented for bf16"
+      - "Summing thousands of squared bf16 values accumulates unacceptable error with only 8 mantissa bits"
+      - "To avoid overflow, since bf16 has a smaller exponent range"
+      - "It is only done for numerical reproducibility across hardware"
+    correct: 1
+    explanation: "bf16 has fp32's exponent range, so overflow is not the concern — precision is. A reduction over $d$ channels in bf16 loses far too much, so the statistic is computed in fp32 and the result cast back."
+  - id: q10
+    type: multiple_choice
+    stem: "You omit the final norm before the output head in a pre-norm model. What is the symptom?"
+    options:
+      - "The model fails to train at all"
+      - "Logits carry an arbitrary depth-dependent scale, so the model trains but is quietly worse"
+      - "The loss immediately becomes NaN"
+      - "Generation produces the same token repeatedly"
+    correct: 1
+    explanation: "The residual stream's magnitude grows with depth in a pre-norm model. Nothing crashes; quality degrades silently. This is why it is a favourite seeded bug in debug-the-transformer interviews."
+  - id: q11
+    type: multiple_choice
+    stem: "A newly initialized LM with a 32,000-token vocabulary shows an initial loss of 2.1. What is the most likely explanation?"
+    options:
+      - "The initialization variance is too small"
+      - "The model is seeing the answer — a broken causal mask or an unshifted loss"
+      - "The learning rate is too high"
+      - "This is normal for a well-initialized model"
+    correct: 1
+    explanation: "An uninformative model should score $\\ln(32000) \\approx 10.4$. A loss far below that means information is leaking from the labels into the prediction."
+  - id: q12
+    type: multiple_choice
+    stem: "What is the parameter count of one transformer layer with model dimension $d$, no biases?"
+    options:
+      - "$4d^2$"
+      - "$8d^2$"
+      - "$12d^2$"
+      - "$16d^2$"
+    correct: 2
+    explanation: "$4d^2$ for the four attention projections plus $8d^2$ for the FFN — whether that is a $4d$ ReLU MLP or a SwiGLU at $8d/3$, both come to $8d^2$."
+  - id: q13
+    type: multiple_choice
+    stem: "Why is SwiGLU's hidden dimension $\\frac{8}{3}d$ rather than $4d$?"
+    options:
+      - "It performs better at that specific ratio"
+      - "SwiGLU uses three weight matrices instead of two, so $\\frac{8}{3}d$ holds the parameter count equal to a $4d$ ReLU FFN"
+      - "It matches the attention block's parameter count"
+      - "It is the largest size that fits kernel tiling constraints"
+    correct: 1
+    explanation: "$3 \\cdot d \\cdot d_{ff} = 8d^2$ gives $d_{ff} = \\frac{8}{3}d$. Implementations round up to a multiple of 256, which is where Llama-2-7B's 11008 comes from."
+  - id: q14
+    type: multiple_choice
+    stem: "In a pre-norm block, which is correct?"
+    options:
+      - "`x = Norm(x + Attn(x))`"
+      - "`x = x + Attn(Norm(x))`"
+      - "`x = Norm(x) + Attn(Norm(x))`"
+      - "`x = Norm(x) + Attn(x)`"
+    correct: 1
+    explanation: "The residual adds the unnormalized `x`. `Norm(x + Attn(x))` is post-norm; `Norm(x) + Attn(Norm(x))` normalizes what flows into the addition, which destroys the clean gradient highway that motivates pre-norm in the first place."
+  - id: q15
+    type: multiple_choice
+    stem: "A tied embedding/output matrix receives gradient from how many paths, and how are they combined?"
+    options:
+      - "One path — PyTorch deduplicates shared parameters"
+      - "Two paths — the embedding lookup and the output projection — and they sum"
+      - "Two paths, and they are averaged"
+      - "Two paths, but only the output projection's gradient is applied"
+    correct: 1
+    explanation: "This is the branch-sum rule: a tensor used by multiple consumers accumulates the gradient from each. Weight tying is the most common place it appears in production code."
+  - id: q16
+    type: multiple_choice
+    stem: "Which statement about attention's quadratic cost is most accurate at inference time with a KV cache?"
+    options:
+      - "Compute and memory are both quadratic in context length"
+      - "Compute per generated token is linear in context, and the cache itself is linear in context — the quadratic term applies to prefill, not decode"
+      - "Everything is linear once a cache is used"
+      - "The cache is quadratic in context length"
+    correct: 1
+    explanation: "Prefill over $S$ tokens is $O(S^2)$. Each decode step attends over $S$ cached keys, so it is $O(S)$ per token, and the cache grows linearly. Being precise about which regime you mean is the point."
+  - id: q17
+    type: true_false
+    stem: "FlashAttention computes an approximation of attention in exchange for lower memory use."
+    correct: false
+    explanation: "The output is exact. It avoids materializing the $(B,H,S,S)$ score tensor by tiling with an online softmax recurrence, trading recomputation for memory traffic. FLOPs are essentially unchanged; wall-clock improves because attention is memory-bound."
+  - id: q18
+    type: multiple_choice
+    stem: "What problem does an attention sink describe?"
+    options:
+      - "Attention weights vanishing in deep models"
+      - "Models dumping excess attention mass on the first few tokens, so naively evicting them from a KV cache destroys quality"
+      - "A head that attends only to the diagonal"
+      - "Numerical underflow in the softmax denominator"
+    correct: 1
+    explanation: "The first tokens act as a no-op destination for attention the model does not need. Streaming approaches keep them pinned in the cache permanently for exactly this reason."
+  - id: q19
+    type: multiple_choice
+    stem: "You want to expand a model's context from 4k to 32k. Which is NOT a standard approach?"
+    options:
+      - "Position interpolation — divide position indices by a scale factor"
+      - "NTK-aware scaling — increase the RoPE base"
+      - "YaRN — per-frequency interpolation plus an attention temperature correction"
+      - "Retrain the learned positional embedding table with a larger maximum length"
+    correct: 3
+    explanation: "The first three are the standard RoPE extension family. The fourth describes learned absolute embeddings, which modern models do not use — and it would require full retraining rather than brief continued pretraining."
+  - id: q20
+    type: multiple_choice
+    stem: "An MoE layer with 8 experts and top-2 routing has roughly how many times the parameters and how many times the per-token FLOPs of a dense layer?"
+    options:
+      - "8x parameters, 8x FLOPs"
+      - "8x parameters, ~2x FLOPs"
+      - "2x parameters, 2x FLOPs"
+      - "8x parameters, ~1x FLOPs"
+    correct: 1
+    explanation: "All 8 experts exist in memory, so parameters scale with expert count. Each token is routed to 2 of them, so FFN FLOPs scale with $k$, not $N$. That decoupling is the entire point of MoE — and the reason all experts must still be resident."
+  - id: q21
+    type: multiple_choice
+    stem: "DeepSeek's Multi-head Latent Attention (MLA) reduces the KV cache by a different mechanism than GQA. What is it?"
+    options:
+      - "It shares a single K and V head across all query heads"
+      - "It compresses K and V into a low-rank latent per token, caches only that latent, and absorbs the up-projections into the query and output projections at inference"
+      - "It quantizes the cached K and V to 4 bits"
+      - "It restricts every layer to a sliding window so only recent tokens are cached"
+    correct: 1
+    explanation: "Sharing heads is MQA/GQA; quantization and sliding windows are orthogonal techniques that can be stacked on top. MLA is low-rank compression — only the latent plus a small decoupled RoPE key is cached, and DeepSeek reports quality at or above full MHA."

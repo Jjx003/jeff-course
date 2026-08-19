@@ -1,0 +1,17 @@
+title: "Backprop From Scratch"
+slug: "backprop-from-scratch"
+description: "Write forward and backward passes for a two-layer MLP in numpy, verify them against central finite differences, then confirm they match torch autograd exactly."
+order: 3
+difficulty: intermediate
+estimatedMinutes: 60
+tags: [backprop, numpy, gradients, ml-coding]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 2048
+    cpus: 2
+    gpu: none
+    timeoutMs: 600000

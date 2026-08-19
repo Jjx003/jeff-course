@@ -1,0 +1,8 @@
+title: "Drill: Model Accounting"
+slug: "accounting-drill"
+description: "Timed practice on parameter counts, training FLOPs, memory footprints, and KV cache size — the arithmetic you have to do out loud."
+order: 14
+difficulty: advanced
+estimatedMinutes: 15
+tags: [drill, accounting, memory, flops]
+type: drill

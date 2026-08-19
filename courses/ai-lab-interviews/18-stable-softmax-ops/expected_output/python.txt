@@ -1,0 +1,50 @@
+=== Numerically stable softmax operations ===
+
+--- 1. where naive softmax dies ---
+  logits scaled by     1: naive finite True   stable sums to 1 True
+  logits scaled by    10: naive finite True   stable sums to 1 True
+  logits scaled by    50: naive finite False  stable sums to 1 True
+  logits scaled by    90: naive finite False  stable sums to 1 True
+  logits scaled by   200: naive finite False  stable sums to 1 True
+float32 exp overflows above x = 88.7
+stable softmax survives every scale: True
+
+--- 2. stable softmax is exactly the same function ---
+matches torch.softmax: True
+invariant to a +1000 shift: True
+
+--- 3. logsumexp ---
+matches torch.logsumexp: True
+naive log(sum(exp)) is finite: False
+logsumexp is finite: True
+
+--- 4. log_softmax versus log(softmax) in the tail ---
+x - logsumexp(x) matches F.log_softmax: True
+naive log(softmax(x)) has -inf entries: True
+our version has no -inf entries: True
+our max error is smaller: True
+
+--- 5. the online softmax recurrence ---
+running max equals the true max: True
+running denominator equals the two-pass one: True
+reconstructed probabilities match torch.softmax: True
+survives a monotonically increasing stream (max changes every step): True
+survives logits that would overflow a naive pass: True
+
+--- 6. the FlashAttention accumulator ---
+streamed weighted sum matches the materialized one: True
+(the accumulator is rescaled alongside the denominator - that is the
+ step from online softmax to FlashAttention)
+
+--- 7. why reductions stay in fp32 ---
+summing 8192 squared values one element at a time:
+  fp64 reference 132246.5   bf16 accumulator 37376.0   fp32 accumulator 132245.6
+the bf16 accumulator is off by more than 10%: True
+the fp32 accumulator is within 0.001%: True
+summing 8192 ones in a bf16 accumulator gives: 256
+(with 8 significand bits, 256 + 1 rounds back to 256 - the sum stalls)
+torch's own .sum() on the bf16 tensor stays within 1%: True
+(torch upcasts reduction accumulators internally - the danger is in
+ reductions and kernels you write yourself)
+
+ALL CHECKS PASS: True

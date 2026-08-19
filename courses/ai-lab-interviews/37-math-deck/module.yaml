@@ -1,0 +1,8 @@
+title: "Deck: Math"
+slug: "math-deck"
+description: "Spaced-repetition deck for distributions, probability techniques, linear algebra, and the derivatives you must produce cold."
+order: 37
+difficulty: advanced
+estimatedMinutes: 18
+tags: [flashcards, math, probability, linear-algebra]
+type: flashcards

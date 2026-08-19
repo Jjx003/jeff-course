@@ -1,0 +1,8 @@
+title: "Drill: Inference Arithmetic"
+slug: "inference-arithmetic-drill"
+description: "Timed practice on cache size, arithmetic intensity, token rates, batch capacity, and speculative-decoding yield."
+order: 27
+difficulty: advanced
+estimatedMinutes: 15
+tags: [drill, inference, memory, latency]
+type: drill

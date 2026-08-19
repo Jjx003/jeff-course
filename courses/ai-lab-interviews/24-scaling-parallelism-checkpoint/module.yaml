@@ -1,0 +1,8 @@
+title: "Checkpoint: Scaling and Parallelism"
+slug: "scaling-parallelism-checkpoint"
+description: "Fifteen questions on scaling laws, collectives, ZeRO, and sharding strategy."
+order: 24
+difficulty: advanced
+estimatedMinutes: 20
+tags: [quiz, scaling, distributed]
+type: quiz

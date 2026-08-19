@@ -1,0 +1,28 @@
+=== Two-layer MLP, hand-written backward ===
+batch: N=16 D=5 H=7 C=3   dtype: float64
+initial loss: 1.252246
+chance loss (ln C): 1.098612
+
+--- check 1: central finite differences ---
+step h = 1e-05, tolerance = 1e-07
+  W1  shape (5, 7)   rel err < 1e-07: True
+  b1  shape (7,)     rel err < 1e-07: True
+  W2  shape (7, 3)   rel err < 1e-07: True
+  b2  shape (3,)     rel err < 1e-07: True
+finite differences agree: True
+
+--- check 2: torch autograd ---
+loss matches torch: True
+  W1  matches autograd: True
+  b1  matches autograd: True
+  W2  matches autograd: True
+  b2  matches autograd: True
+autograd agrees: True
+
+--- check 3: it actually trains ---
+steps: 20   lr: 0.5
+loss start -> end: 1.252246 -> 0.013191
+loss decreased every step: True
+final loss below 0.1: True
+
+ALL CHECKS PASS: True

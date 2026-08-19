@@ -1,0 +1,141 @@
+questions:
+  - id: q1
+    type: multiple_choice
+    stem: "The core Chinchilla finding is that, at fixed training compute:"
+    options:
+      - "Model size should scale roughly as $C^{0.73}$ and data as $C^{0.27}$"
+      - "Model size and data should scale equally, at roughly $C^{0.5}$ each — about 20 tokens per parameter"
+      - "Data should scale faster than model size, at roughly 100 tokens per parameter"
+      - "The ratio depends on the architecture and cannot be stated generally"
+    correct: 1
+    explanation: "Scaling the model as $C^{0.73}$ was Kaplan's conclusion. Hoffmann et al. attributed the discrepancy primarily to Kaplan holding the learning-rate schedule fixed across model sizes, which under-trains the small ones; later analyses also point to his use of non-embedding parameter counts and a narrow size range. Tuning the schedule per run gives equal scaling, confirmed by three independent methods."
+  - id: q2
+    type: multiple_choice
+    stem: "You have $10^{22}$ FLOPs and want a compute-optimal model. Roughly what size?"
+    options:
+      - "About 3B parameters on 60B tokens"
+      - "About 9B parameters on 180B tokens"
+      - "About 30B parameters on 600B tokens"
+      - "About 90B parameters on 1.8T tokens"
+    correct: 1
+    explanation: "$N = \\sqrt{C/120} = \\sqrt{10^{22}/120} \\approx 9.1\\times10^{9}$, so about 9B on roughly 180B tokens."
+  - id: q3
+    type: multiple_choice
+    stem: "Llama-3-8B was trained on 15T tokens — roughly 1875 tokens per parameter. Why train so far past compute-optimal?"
+    options:
+      - "Because the Chinchilla ratio was found to be wrong"
+      - "Because compute-optimal minimizes training cost, and for a model that will be served heavily, inference cost dominates over its lifetime"
+      - "Because more data always improves the model without limit"
+      - "Because 8B models cannot reach good loss at 160B tokens"
+    correct: 1
+    explanation: "Chinchilla answers 'cheapest to train for a given loss'. It says nothing about serving. A smaller model trained longer costs more to train and far less per served token, and over a trillion tokens that trade is overwhelmingly favourable."
+  - id: q4
+    type: true_false
+    stem: "Scaling laws predict downstream benchmark performance as reliably as they predict pretraining loss."
+    correct: false
+    explanation: "They predict loss. The map from loss to benchmark score is monotone but bumpy, and apparent emergent jumps often reflect a metric's discreteness rather than a change in the model."
+  - id: q5
+    type: multiple_choice
+    stem: "The identity 'all-reduce = reduce-scatter + all-gather' explains which fact?"
+    options:
+      - "Why ring all-reduce is bandwidth-optimal"
+      - "Why ZeRO stage 2 shards gradients at no additional communication cost"
+      - "Why tensor parallelism must stay inside a node"
+      - "Why pipeline parallelism has a bubble"
+    correct: 1
+    explanation: "Stage 2 replaces the gradient all-reduce with just its reduce-scatter half, so total volume is unchanged while gradient memory drops by a factor of $P$."
+  - id: q6
+    type: multiple_choice
+    stem: "In tensor-parallel FFN, why is the up projection split column-wise and the down projection row-wise, rather than the other way around?"
+    options:
+      - "It balances memory more evenly across devices"
+      - "Column-splitting lets each device apply the elementwise nonlinearity to its own complete columns with no communication; the reverse order would force a collective before the nonlinearity"
+      - "Row-splitting the first matrix is not mathematically valid"
+      - "It reduces the number of parameters per device"
+    correct: 1
+    explanation: "GeLU or SwiGLU is elementwise, so a column block is self-contained. Getting the order backwards doubles the number of collectives per FFN."
+  - id: q7
+    type: multiple_choice
+    stem: "A pipeline with 8 stages and 16 microbatches idles what fraction of the time under the naive schedule?"
+    options:
+      - "About 8%"
+      - "About 30%"
+      - "About 50%"
+      - "About 12%"
+    correct: 1
+    explanation: "$(P-1)/(M+P-1) = 7/23 \\approx 30\\%$. Doubling microbatches to 32 would bring it to about 18%."
+  - id: q8
+    type: multiple_choice
+    stem: "Which parallelism axis is best suited to crossing a slow inter-node interconnect?"
+    options:
+      - "Tensor parallelism"
+      - "Pipeline parallelism"
+      - "Context parallelism"
+      - "Expert parallelism"
+    correct: 1
+    explanation: "Pipeline communication is point-to-point activation transfers at stage boundaries — tiny volume. Tensor parallelism needs two all-reduces per layer on the critical path and belongs inside a node."
+  - id: q9
+    type: multiple_choice
+    stem: "ZeRO stage 3 reduces memory to $16\\Psi/P$. What does it cost?"
+    options:
+      - "Nothing — it is strictly better than stage 2"
+      - "About 50% more communication, since parameters must be gathered in both the forward and backward passes"
+      - "It doubles the compute"
+      - "It requires tensor parallelism to be enabled"
+    correct: 1
+    explanation: "Each layer's parameters are all-gathered just before use and freed after, in both passes. That extra gathering is the price of the memory saving."
+  - id: q10
+    type: multiple_choice
+    stem: "Which collective does expert parallelism depend on, and what is its systems risk?"
+    options:
+      - "All-reduce; the risk is bandwidth saturation"
+      - "All-to-all; the risk is that routing load imbalance turns directly into stragglers"
+      - "Broadcast; the risk is a single-device bottleneck"
+      - "Reduce-scatter; the risk is memory fragmentation"
+    correct: 1
+    explanation: "Every device sends each token to whichever device holds its chosen expert. All-to-all is the most bandwidth-hungry collective, and an overloaded expert makes its device the straggler for the whole step."
+  - id: q11
+    type: multiple_choice
+    stem: "Your training run reports 15% MFU. What is the first thing to check?"
+    options:
+      - "Whether the learning rate is too low"
+      - "Communication — a tensor-parallel group spanning nodes, or an all-reduce not overlapping with the backward pass"
+      - "Whether the dataset is shuffled"
+      - "The initialization scheme"
+    correct: 1
+    explanation: "MFU measures how much of the hardware's FLOP capacity you are using; low values are almost always communication or a batch too small to saturate the device. Learning rate and initialization affect quality, not utilization."
+  - id: q12
+    type: multiple_choice
+    stem: "What is the relationship between ZeRO-3 and FSDP?"
+    options:
+      - "FSDP is a strictly more memory-efficient successor"
+      - "They are the same algorithm from different lineages — DeepSpeed's optimizer-centric version and PyTorch's module-wrapping version"
+      - "FSDP shards only parameters; ZeRO-3 shards parameters and activations"
+      - "FSDP is for inference; ZeRO-3 is for training"
+    correct: 1
+    explanation: "Same memory and communication behavior, different ergonomics. FSDP is the native PyTorch path."
+  - id: q13
+    type: true_false
+    stem: "Repeating pretraining data for up to about four epochs gives nearly the same benefit as fresh data."
+    correct: true
+    explanation: "Up to roughly 4 epochs repeated data is nearly as valuable; past that returns collapse and eventually go negative. It is the central finding behind current data-exhaustion arguments."
+  - id: q14
+    type: multiple_choice
+    stem: "You want to know whether a new attention variant is worth training at 70B. What is the strongest evidence you can get cheaply?"
+    options:
+      - "Train one 1B model with each variant and compare final loss"
+      - "Train a ladder of sizes under each variant, fit scaling laws, and compare the fitted curves"
+      - "Compare parameter counts and FLOPs analytically"
+      - "Benchmark inference throughput for both"
+    correct: 1
+    explanation: "A single small-scale comparison cannot distinguish 'this helps' from 'this helps small models'. Comparing fitted curves shows whether the benefit persists or shrinks with scale — which is exactly what you need to know before committing."
+  - id: q15
+    type: multiple_choice
+    stem: "In what order should you reach for parallelism when scaling a training run?"
+    options:
+      - "Pipeline, then tensor, then data"
+      - "Data with ZeRO-1, then tensor within a node, then pipeline across nodes, then context or expert only if the workload demands them"
+      - "Tensor first, since it shards the most memory"
+      - "It does not matter; the total memory is the same"
+    correct: 1
+    explanation: "Data parallelism with ZeRO-1 is cheapest and shards three quarters of the training state. Tensor parallelism is the next lever but is capped at the node boundary by bandwidth. Pipeline is what crosses nodes. Context and expert parallelism are workload-specific."

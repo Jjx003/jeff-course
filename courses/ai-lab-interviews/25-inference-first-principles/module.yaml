@@ -1,0 +1,8 @@
+title: "Inference From First Principles"
+slug: "inference-first-principles"
+description: "Prefill and decode, the KV cache, continuous batching, sampling, and speculative decoding — derived from arithmetic intensity rather than memorized."
+order: 25
+difficulty: advanced
+estimatedMinutes: 65
+tags: [inference, kv-cache, batching, sampling, speculative]
+type: reading

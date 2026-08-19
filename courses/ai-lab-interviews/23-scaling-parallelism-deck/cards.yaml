@@ -1,0 +1,138 @@
+title: "Scaling and Parallelism"
+instructions: >
+  Answer parallelism cards with the communication cost attached, and scaling
+  cards with the cost being optimized named explicitly.
+newPerSession: 12
+maxPerSession: 32
+cards:
+  - id: scaling-parametric
+    front: "Write the Chinchilla parametric loss form and name each term."
+    back: |
+      $$L(N, D) = E + \frac{A}{N^{\alpha}} + \frac{B}{D^{\beta}}$$
+
+      $E \approx 1.69$: irreducible entropy of text. $A/N^\alpha$: model too small. $B/D^\beta$: data too little. With $\alpha \approx 0.34$, $\beta \approx 0.28$ close together, the optimum scales $N$ and $D$ at roughly the same rate.
+    tags: [scaling]
+  - id: chinchilla-ratio
+    front: "What is the Chinchilla result, in one sentence and one number?"
+    back: "At fixed training compute, parameters and tokens should scale equally — about 20 tokens per parameter. Chinchilla (70B, 1.4T tokens) beat Gopher (280B, 300B tokens) at the same compute."
+    tags: [scaling]
+  - id: kaplan-error
+    front: "What did Kaplan get wrong, and why?"
+    back: "The conclusion that model size should scale much faster than data ($N \\propto C^{0.73}$). The cause was a fixed learning-rate schedule across model sizes rather than one tuned per run, which systematically under-trained the smaller models and made parameters look more valuable than they are."
+    tags: [scaling]
+  - id: compute-optimal-arith
+    front: "You have $10^{23}$ FLOPs and want compute-optimal. What size model, on how many tokens?"
+    back: "$N = \\sqrt{C/(6\\times20)} = \\sqrt{10^{23}/120} \\approx 2.9\\times10^{10}$ — about 29B, on roughly 580B tokens."
+    tags: [scaling, accounting]
+  - id: inference-optimal
+    front: "Why do deployed models train far past compute-optimal?"
+    back: "Chinchilla optimizes training compute and ignores inference entirely. A smaller model trained longer costs more to train per unit of quality and far less per token to serve, so over a trillion served tokens the training difference is a rounding error. Llama-3-8B saw 15T tokens — about 1875 per parameter, 90x past Chinchilla."
+    tags: [scaling]
+  - id: irreducible-loss
+    front: "Why does the scaling law have an irreducible term?"
+    back: "Natural text has entropy. Even a perfect model of the true distribution cannot beat it. The Chinchilla fit puts it near 1.69 nats."
+    tags: [scaling]
+  - id: scaling-ladder
+    front: "How do you use scaling laws to decide whether an intervention is worth trying at scale?"
+    back: "Train a ladder of small models under both the intervention and the baseline, fit a scaling law to each, and compare the fitted curves rather than individual points. That catches interventions whose benefit shrinks with scale — which a single small-scale A/B cannot distinguish from a real win."
+    tags: [scaling, research]
+  - id: scaling-caveats
+    front: "Name three honest caveats when presenting a scaling-law extrapolation."
+    back: "Extrapolating more than about one order of magnitude past your largest fitted point is speculative. The fit is only valid if hyperparameters were tuned at every rung. And it predicts loss, not downstream capability — that map is monotone but bumpy."
+    tags: [scaling, research]
+  - id: data-repetition
+    front: "How many epochs can you repeat pretraining data before it stops helping?"
+    back: "About 4. Up to there, repeated data is nearly as valuable as fresh data; past it, returns collapse and eventually go negative. This is why the data-exhaustion question is live."
+    tags: [scaling, data]
+  - id: collectives-list
+    front: "Name the collective operations and what each does."
+    back: "broadcast: one to all. reduce: all onto one. all-reduce: sum, result everywhere. all-gather: concatenate shards onto everyone. reduce-scatter: sum, each keeps one shard. all-to-all: everyone sends a distinct piece to everyone."
+    tags: [distributed]
+  - id: allreduce-identity
+    front: "State the identity that explains why ZeRO stage 2 is nearly free."
+    back: "all-reduce = reduce-scatter + all-gather, each half moving the same volume. Stage 2 replaces the gradient all-reduce with just the reduce-scatter half, so total communication is unchanged."
+    tags: [distributed]
+  - id: ring-allreduce-cost
+    front: "What is ring all-reduce's per-device communication volume?"
+    back: "$2N(P-1)/P$, which is bandwidth-optimal. It decomposes into a reduce-scatter and an all-gather, each sending $N/P$ bytes in each of $P-1$ steps."
+    tags: [distributed]
+  - id: five-axes
+    front: "Name the five parallelism axes and what each splits."
+    back: "Data: the batch. Tensor: matrices within a layer. Pipeline: layers across devices. Context: the sequence. Expert: MoE experts across devices."
+    tags: [distributed]
+  - id: dp-limit
+    front: "What limits plain data parallelism?"
+    back: "Memory. Every device holds the full model and full optimizer state — 16 bytes per parameter, so 112 GB for a 7B model, which does not fit on an 80 GB card at all. ZeRO exists to remove that redundancy."
+    tags: [distributed]
+  - id: zero1
+    front: "ZeRO stage 1: what is sharded, what does it save, what does it cost?"
+    back: "Optimizer state. Memory per device goes from $16\\Psi$ to $4\\Psi + 12\\Psi/P$ — the fp32 master plus both moments, 12 of the 16 bytes per parameter, and the single biggest win. Communication is essentially unchanged."
+    tags: [distributed, memory]
+  - id: zero2
+    front: "ZeRO stage 2: what changes, and why is the communication cost identical to stage 1?"
+    back: "Gradients are also sharded: the all-reduce becomes a reduce-scatter. Volume is unchanged because all-reduce already decomposes into reduce-scatter plus all-gather, and stage 2 simply skips the second half."
+    tags: [distributed, memory]
+  - id: zero3
+    front: "ZeRO stage 3: what changes, and what does it cost?"
+    back: "Parameters are sharded too; each layer's weights are all-gathered just before use and freed after. Memory becomes $16\\Psi/P$. Communication rises about 50%, since parameters are gathered in both forward and backward."
+    tags: [distributed, memory]
+  - id: zero3-vs-fsdp
+    front: "ZeRO-3 versus FSDP?"
+    back: "Same algorithm from different lineages. ZeRO-3 came from DeepSpeed and is organized around the optimizer; FSDP is PyTorch's native implementation organized around wrapping modules. Different ergonomics, same memory and communication behavior."
+    tags: [distributed]
+  - id: tp-ffn-split
+    front: "How do you tensor-parallel an FFN, and why in that order?"
+    back: "Column-split the up projection so each device applies the elementwise nonlinearity to complete columns with no communication, then row-split the down projection to match, and one all-reduce sums the partials. Row-splitting first would force a collective before the nonlinearity, doubling the count."
+    tags: [distributed]
+  - id: tp-attention-split
+    front: "How do you tensor-parallel attention?"
+    back: "Give each device a subset of heads: $W_Q, W_K, W_V$ column-split, $W_O$ row-split, one all-reduce at the end. Same column-then-row pattern as the FFN."
+    tags: [distributed]
+  - id: tp-node-limit
+    front: "Why does tensor parallelism stay inside a node?"
+    back: "Two all-reduces per layer, on both forward and backward, all on the critical path — hundreds of collectives per step. NVLink is around 900 GB/s versus 50–100 GB/s inter-node. An order of magnitude of bandwidth on the most communication-heavy axis."
+    tags: [distributed]
+  - id: sequence-parallel
+    front: "What is sequence parallelism and what does it pair with?"
+    back: "It splits along the sequence axis the parts of a layer that tensor parallelism leaves replicated — norms and dropout. It pairs with TP, converting some all-reduces into reduce-scatter/all-gather pairs and cutting activation memory."
+    tags: [distributed]
+  - id: pipeline-bubble
+    front: "Write the pipeline bubble fraction and give a number."
+    back: "$(P-1)/(M+P-1)$ for $P$ stages and $M$ microbatches. At $P=4$, $M=4$ that is 43% idle; at $M=32$ it is 8.6%."
+    tags: [distributed]
+  - id: pipeline-fixes
+    front: "Four ways to shrink the pipeline bubble."
+    back: "More microbatches (limited by activation memory). 1F1B scheduling, which holds far fewer in-flight activations so you can afford more microbatches. Interleaved stages, giving each device several non-contiguous chunks. Zero-bubble schedules that split the backward pass into input-gradient and weight-gradient halves and reorder them."
+    tags: [distributed]
+  - id: pipeline-comm
+    front: "Why is pipeline parallelism the right axis for crossing slow interconnects?"
+    back: "Its communication is point-to-point activation transfers at stage boundaries, not collectives — tiny volume compared to tensor parallelism's per-layer all-reduces. You pay in bubble and scheduling complexity instead."
+    tags: [distributed]
+  - id: context-parallel
+    front: "What is context parallelism and what makes attention the hard part?"
+    back: "The sequence is split across devices. Everything except attention is local; attention needs every query to see every key, so K and V must be gathered. Ring Attention overlaps that transfer with computation by passing KV blocks around a ring. This is how million-token contexts are trained."
+    tags: [distributed, long-context]
+  - id: expert-parallel
+    front: "What collective does expert parallelism need, and what is the systems risk?"
+    back: "All-to-all: each device sends every token to whichever device holds its chosen expert and receives results back. All-to-all is the most bandwidth-hungry collective, and routing load imbalance turns directly into stragglers — which is why MoE load-balancing losses matter for throughput, not just quality."
+    tags: [distributed, moe]
+  - id: parallelism-order
+    front: "In what order do you reach for the parallelism axes?"
+    back: "Data parallel with ZeRO-1 first — cheapest, and shards three quarters of the training state. Tensor parallel next, capped at the node boundary, when a layer will not fit. Pipeline parallel across nodes. Context parallel only if the sequence demands it. Expert parallel only for MoE."
+    tags: [distributed]
+  - id: standard-recipe
+    front: "What does a typical large-scale training parallelism config look like?"
+    back: "TP 8 within a node over NVLink, PP 4–16 across nodes, data parallel for the remaining devices with ZeRO-1, and sequence parallelism enabled alongside TP."
+    tags: [distributed]
+  - id: seventy-b-one-node
+    front: "Can you full-fine-tune a 70B model on one 8x80 GB node?"
+    back: "No. 16 bytes per parameter is 1.12 TB against 640 GB available. TP 8 gets you to about 140 GB per device, still over. On one node the answer is LoRA on a frozen bf16 base; full fine-tuning needs multiple nodes with pipeline parallelism between them."
+    tags: [distributed, accounting]
+  - id: mfu-diagnosis
+    front: "MFU is 15%. What do you look at?"
+    back: "Communication first — a TP group spanning nodes, or a data-parallel all-reduce not overlapping with backward. Then batch size, since small batches leave the GPU memory-bound. Then the pipeline bubble, then kernel efficiency. 30–50% is healthy; below 20% something structural is wrong."
+    tags: [distributed, systems]
+  - id: moe-scaling
+    front: "How does an MoE change the scaling picture?"
+    back: "It has its own scaling law in terms of *active* parameters rather than total. You get far more parameters at nearly constant per-token FLOPs, at the cost of all experts being resident in memory, all-to-all routing traffic, and less stable training."
+    tags: [scaling, moe]

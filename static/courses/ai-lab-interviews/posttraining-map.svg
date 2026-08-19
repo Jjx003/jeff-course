@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="806.4pt" height="309.6pt" viewBox="0 0 806.4 309.6" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-08-19T13:32:29.030499</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.1, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 309.6 
+L 806.4 309.6 
+L 806.4 0 
+L 0 0 
+z
+" style="fill: #f8fafc"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 24.924 92.621119 
+L 174.93 92.621119 
+Q 178.8432 92.621119 178.8432 90.341074 
+L 178.8432 52.340333 
+Q 178.8432 50.060289 174.93 50.060289 
+L 24.924 50.060289 
+Q 21.0108 50.060289 21.0108 52.340333 
+L 21.0108 90.341074 
+Q 21.0108 92.621119 24.924 92.621119 
+z
+" clip-path="url(#p70ee726998)" style="fill: #0f172a"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 214.062 92.621119 
+L 364.068 92.621119 
+Q 367.9812 92.621119 367.9812 90.341074 
+L 367.9812 52.340333 
+Q 367.9812 50.060289 364.068 50.060289 
+L 214.062 50.060289 
+Q 210.1488 50.060289 210.1488 52.340333 
+L 210.1488 90.341074 
+Q 210.1488 92.621119 214.062 92.621119 
+z
+" clip-path="url(#p70ee726998)" style="fill: #2563eb"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 403.2 92.621119 
+L 553.206 92.621119 
+Q 557.1192 92.621119 557.1192 90.341074 
+L 557.1192 52.340333 
+Q 557.1192 50.060289 553.206 50.060289 
+L 403.2 50.060289 
+Q 399.2868 50.060289 399.2868 52.340333 
+L 399.2868 90.341074 
+Q 399.2868 92.621119 403.2 92.621119 
+z
+" clip-path="url(#p70ee726998)" style="fill: #7c3aed"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 598.86 92.621119 
+L 768.432 92.621119 
+Q 772.3452 92.621119 772.3452 90.341074 
+L 772.3452 52.340333 
+Q 772.3452 50.060289 768.432 50.060289 
+L 598.86 50.060289 
+Q 594.9468 50.060289 594.9468 52.340333 
+L 594.9468 90.341074 
+Q 594.9468 92.621119 598.86 92.621119 
+z
+" clip-path="url(#p70ee726998)" style="fill: #dc2626"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 403.2 168.6226 
+L 553.206 168.6226 
+Q 557.1192 168.6226 557.1192 166.342556 
+L 557.1192 124.541741 
+Q 557.1192 122.261696 553.206 122.261696 
+L 403.2 122.261696 
+Q 399.2868 122.261696 399.2868 124.541741 
+L 399.2868 166.342556 
+Q 399.2868 168.6226 403.2 168.6226 
+z
+" clip-path="url(#p70ee726998)" style="fill: #16a34a"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 598.86 168.6226 
+L 768.432 168.6226 
+Q 772.3452 168.6226 772.3452 166.342556 
+L 772.3452 124.541741 
+Q 772.3452 122.261696 768.432 122.261696 
+L 598.86 122.261696 
+Q 594.9468 122.261696 594.9468 124.541741 
+L 594.9468 166.342556 
+Q 594.9468 168.6226 598.86 168.6226 
+z
+" clip-path="url(#p70ee726998)" style="fill: #ea580c"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 24.924 233.223859 
+L 351.024 233.223859 
+Q 354.9372 233.223859 354.9372 230.943815 
+L 354.9372 185.342926 
+Q 354.9372 183.062881 351.024 183.062881 
+L 24.924 183.062881 
+Q 21.0108 183.062881 21.0108 185.342926 
+L 21.0108 230.943815 
+Q 21.0108 233.223859 24.924 233.223859 
+z
+" clip-path="url(#p70ee726998)" style="fill: #f8fafc"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 24.924 233.223859 
+L 351.024 233.223859 
+Q 354.9372 233.223859 354.9372 230.943815 
+L 354.9372 185.342926 
+Q 354.9372 183.062881 351.024 183.062881 
+L 24.924 183.062881 
+Q 21.0108 183.062881 21.0108 185.342926 
+L 21.0108 230.943815 
+Q 21.0108 233.223859 24.924 233.223859 
+L 24.924 233.223859 
+z
+" clip-path="url(#p70ee726998)" style="fill: none; stroke: #475569; stroke-width: 1.1; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 403.2 233.223859 
+L 768.432 233.223859 
+Q 772.3452 233.223859 772.3452 230.943815 
+L 772.3452 185.342926 
+Q 772.3452 183.062881 768.432 183.062881 
+L 403.2 183.062881 
+Q 399.2868 183.062881 399.2868 185.342926 
+L 399.2868 230.943815 
+Q 399.2868 233.223859 403.2 233.223859 
+z
+" clip-path="url(#p70ee726998)" style="fill: #f8fafc"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 403.2 233.223859 
+L 768.432 233.223859 
+Q 772.3452 233.223859 772.3452 230.943815 
+L 772.3452 185.342926 
+Q 772.3452 183.062881 768.432 183.062881 
+L 403.2 183.062881 
+Q 399.2868 183.062881 399.2868 185.342926 
+L 399.2868 230.943815 
+Q 399.2868 233.223859 403.2 233.223859 
+L 403.2 233.223859 
+z
+" clip-path="url(#p70ee726998)" style="fill: none; stroke: #475569; stroke-width: 1.1; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_1">
+    <text style="font-size: 9.5px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(78.333797 68.783543)">Pretrained</text>
+    <text style="font-size: 9.5px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(75.609969 80.819505)">base model</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 9.5px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(281.733672 68.648465)">SFT</text>
+    <text style="font-size: 9.5px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(256.294453 80.819505)">instruction data</text>
+   </g>
+   <g id="patch_12">
+    <path d="M 176.931104 71.340704 
+Q 192.867568 71.340704 207.238785 71.340704 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+    <path d="M 202.838785 69.140704 
+L 207.238785 71.340704 
+L 202.838785 73.540704 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 9.5px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(448.111008 68.783543)">Reward model</text>
+    <text style="font-size: 9.5px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(435.391398 79.833138)">pairwise preferences</text>
+   </g>
+   <g id="patch_13">
+    <path d="M 366.069104 71.340704 
+Q 382.005568 71.340704 396.376785 71.340704 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+    <path d="M 391.976785 69.140704 
+L 396.376785 71.340704 
+L 391.976785 73.540704 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 8.8px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(675.400813 63.27229)">PPO</text>
+    <text style="font-size: 8.8px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(647.136313 74.505266)">actor + critic + RM</text>
+    <text style="font-size: 8.8px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(650.164063 85.742368)">+ KL to reference</text>
+   </g>
+   <g id="patch_14">
+    <path d="M 555.206109 71.340704 
+Q 574.404073 71.340704 592.036789 71.340704 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+    <path d="M 587.636789 69.140704 
+L 592.036789 71.340704 
+L 587.636789 73.540704 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 8.8px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(469.336313 137.373734)">DPO</text>
+    <text style="font-size: 8.8px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(444.074125 148.132336)">no reward model,</text>
+    <text style="font-size: 8.8px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(454.234 158.81325)">no sampling</text>
+   </g>
+   <g id="patch_15">
+    <path d="M 291.024804 92.629839 
+Q 365.697177 107.441145 438.834213 121.947916 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+    <path d="M 434.946327 118.933892 
+L 438.834213 121.947916 
+L 434.090263 123.24981 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 8.8px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(672.21425 137.373734)">GRPO</text>
+    <text style="font-size: 8.8px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(653.794063 147.664148)">group baseline,</text>
+    <text style="font-size: 8.8px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #ffffff" transform="translate(668.155938 159.755812)">no critic</text>
+   </g>
+   <g id="patch_16">
+    <path d="M 300.842934 93.553252 
+Q 468.420723 108.011481 634.439057 122.335164 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+    <path d="M 630.244451 119.76509 
+L 634.439057 122.335164 
+L 629.866234 124.148804 
+" style="fill: none; stroke: #475569; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 9px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #0f172a" transform="translate(148.826813 200.019552)">What each removes</text>
+    <text style="font-size: 9px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #0f172a" transform="translate(95.578453 210.41587)">DPO: the reward model and the sampling loop</text>
+    <text style="font-size: 9px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #0f172a" transform="translate(84.247594 221.818361)">GRPO: the value network, replaced by a group mean</text>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 9px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #0f172a" transform="translate(547.369828 200.019552)">Where each is used</text>
+    <text style="font-size: 9px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #0f172a" transform="translate(477.136781 210.463683)">DPO: cheap alignment when you have preference pairs</text>
+    <text style="font-size: 9px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #0f172a" transform="translate(479.525297 221.866173)">GRPO: verifiable-reward RL — maths, code, reasoning</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 12px; font-family: 'Segoe UI', 'DejaVu Sans'; text-anchor: middle; fill: #0f172a" x="403.2" y="21.24" transform="rotate(-0 403.2 21.24)">Post-training: what each method drops from the one before</text>
+   </g>
+  </g>
+  <g id="text_10">
+   <text style="font-size: 9.5px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #475569" transform="translate(9.6768 274.850322)">The classic RLHF pipeline is the top row. DPO reparameterizes the RLHF objective so the optimal policy can be trained directly on</text>
+   <text style="font-size: 9.5px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #475569" transform="translate(9.6768 288.274082)">preference pairs, deleting both the reward model and the sampling loop. GRPO keeps online RL but replaces the learned value network</text>
+   <text style="font-size: 9.5px; font-family: 'Segoe UI', 'DejaVu Sans'; fill: #475569" transform="translate(9.6768 301.647373)">with the mean reward of a sampled group, which is what makes large-scale verifiable-reward training affordable.</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p70ee726998">
+   <rect x="11.88" y="35.24" width="782.64" height="205.204"/>
+  </clipPath>
+ </defs>
+</svg>

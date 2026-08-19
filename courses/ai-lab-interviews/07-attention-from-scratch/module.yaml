@@ -1,0 +1,17 @@
+title: "Attention From Scratch"
+slug: "attention-from-scratch"
+description: "Implement causal multi-head attention, extend it to grouped-query attention, and prove both match torch's fused kernel exactly."
+order: 7
+difficulty: advanced
+estimatedMinutes: 75
+tags: [attention, gqa, ml-coding, torch]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

@@ -1,0 +1,103 @@
+title: "Tokenization, Data, and Evaluation"
+instructions: >
+  Several of these are the moves that make an experiment-design answer
+  credible. Say them as things you would do, not things you know.
+newPerSession: 12
+maxPerSession: 24
+cards:
+  - id: bpe-algorithm
+    front: "Describe BPE training and encoding."
+    back: "Training: start from all 256 byte values, repeatedly count adjacent pairs across the corpus, merge the most frequent into a new token, record the merge. Encoding: replay the merges in the order they were learned."
+    tags: [tokenization]
+  - id: bpe-merge-order
+    front: "When encoding with BPE, which applicable merge do you apply first?"
+    back: "The earliest-learned one, by merge rank — not the leftmost by position. BPE is defined by merge order, so a greedy left-to-right scan produces a different segmentation from the one training produced, and the model is then silently mis-tokenized."
+    tags: [tokenization]
+  - id: byte-level-why
+    front: "What does starting from bytes rather than characters buy?"
+    back: "Every possible input encodes, so there is no out-of-vocabulary token and there cannot be one. The cost is that non-Latin scripts start at several bytes per character, which merges only partly recover."
+    tags: [tokenization]
+  - id: pretokenization
+    front: "Why pre-tokenize before BPE, and what convention does it create?"
+    back: "Merges must not cross word boundaries, or BPE learns tokens like `\" the cat\"` that generalize badly and flood the vocabulary with near-duplicates. It also creates the convention that tokens carry their *leading* space — which is why a trailing space in a prompt changes the tokenization and measurably changes completions."
+    tags: [tokenization]
+  - id: char-counting
+    front: "Why can models not count the letters in a word?"
+    back: "They never see letters. 'strawberry' is two or three tokens, so the character-level information was discarded before the first layer. It is a representation limitation, not a reasoning one — and saying that precisely is the point."
+    tags: [tokenization]
+  - id: vocab-tradeoff
+    front: "What does vocabulary size trade off, in both directions?"
+    back: "Larger: fewer tokens per document, more text per context, cheaper per character — but more embedding parameters, a slower softmax, and rarer tokens whose embeddings are poorly trained. Compression improves sublinearly, so returns diminish sharply. Most models sit between 32k and 256k."
+    tags: [tokenization]
+  - id: number-splitting
+    front: "How does tokenization affect arithmetic?"
+    back: "`1234` might be one token, or `12`+`34`, or `1`+`234`, depending on corpus frequency, so accuracy varies with how numbers happen to split. Several models now force digit-by-digit tokenization for exactly this reason."
+    tags: [tokenization]
+  - id: language-inequity
+    front: "What is the token-cost asymmetry across languages?"
+    back: "English is roughly 4 characters per token; many other languages are 2 or fewer, so the same content costs 2–4x more tokens — more expensive to serve and consuming context faster. A real fairness issue traceable directly to byte-level tokenization plus an English-heavy merge corpus."
+    tags: [tokenization]
+  - id: glitch-tokens
+    front: "What causes glitch tokens like SolidGoldMagikarp?"
+    back: "The tokenizer was trained on a different corpus from the model. Those tokens exist in the vocabulary but almost never appear in the model's training data, so their embeddings are essentially untrained and prompting with them produces bizarre behaviour."
+    tags: [tokenization]
+  - id: sentencepiece
+    front: "How does SentencePiece differ from GPT-style BPE?"
+    back: "It treats the input as a raw stream including spaces (as an explicit marker), so it needs no pre-tokenization regex and detokenizes losslessly. Better for languages without whitespace word boundaries."
+    tags: [tokenization]
+  - id: unigram-lm
+    front: "What is Unigram LM tokenization?"
+    back: "Start with a large candidate vocabulary and prune it, keeping the segmentation that maximizes likelihood. Unlike BPE it can sample different segmentations of the same text, which is a useful regularizer."
+    tags: [tokenization]
+  - id: data-pipeline
+    front: "List the stages of a pretraining data pipeline."
+    back: "Acquire, extract text from HTML, identify language, quality-filter with heuristics plus a learned classifier, deduplicate exactly then fuzzily, decontaminate against eval sets, mix sources at chosen ratios, tokenize and pack."
+    tags: [data]
+  - id: dedup-importance
+    front: "Which data-pipeline stage has the highest leverage, and why?"
+    back: "Deduplication. Duplicated text causes memorization, wastes compute, and inflates evaluation scores. Removing near-duplicates measurably improves models at a fixed token count — one of the most reliably reproduced findings in the field."
+    tags: [data]
+  - id: minhash
+    front: "How does MinHash near-duplicate detection work?"
+    back: "Shingle each document, hash the shingles, keep the minimum hash per permutation to form a signature, and bucket documents by signature bands. Documents sharing a band become candidates for exact comparison."
+    tags: [data]
+  - id: data-mixture
+    front: "How much does data mixture matter, and give two examples."
+    back: "Roughly as much as architecture. Code improves reasoning even on non-code tasks; maths does too. Multilingual data costs some English performance and buys a lot elsewhere."
+    tags: [data]
+  - id: annealing-data
+    front: "What is data annealing and when does it happen?"
+    back: "Shifting the mixture toward high-quality curated sources during the final learning-rate decay phase. It is one reason warmup-stable-decay is convenient — the data anneal and the LR decay happen together."
+    tags: [data, training]
+  - id: packing-boundaries
+    front: "What must you be careful about when packing documents into training sequences?"
+    back: "Attention must not cross document boundaries — either a block-diagonal mask or a variable-length kernel with cumulative sequence lengths. Otherwise documents leak into each other and the model learns spurious continuations."
+    tags: [data, training]
+  - id: eval-formats
+    front: "Name the four evaluation formats and one weakness of each."
+    back: "Multiple choice — sensitive to likelihood-normalization choices worth several points. Generative — sensitive to prompt format and answer parsing. Model-graded — inherits the judge's biases, notably toward longer responses. Human preference — expensive, slow, and subject to presentation effects."
+    tags: [evaluation]
+  - id: contamination-detection
+    front: "Five ways to detect benchmark contamination."
+    back: "N-gram overlap (standard, and weakest — paraphrases pass through). Canary strings inserted into training data. Exchangeability tests, since a benchmark's examples are exchangeable and a contaminated model prefers the dataset's canonical row order to a shuffled one. Temporal holdouts on post-cutoff data — the cleanest signal. And anomalously low perplexity relative to comparable unseen text."
+    tags: [evaluation]
+  - id: believe-the-score
+    front: "A model scores 85% on a benchmark. What determines how much you believe it?"
+    back: "Whether the benchmark predates the training cutoff, whether decontamination was run and its method published, whether a temporal holdout or private variant agrees, and how much the number moves with prompt format. Without a fresh variant it is not a capability claim."
+    tags: [evaluation]
+  - id: prompt-format-sensitivity
+    front: "How much can prompt format move a benchmark score?"
+    back: "Ten points is not unusual — few-shot ordering, formatting, and answer-extraction rules all matter. Any reported score without its format is close to meaningless."
+    tags: [evaluation]
+  - id: eval-overfitting
+    front: "What is the subtle way a held-out eval stops being held out?"
+    back: "You. Across many iterations of model development, decisions made by looking at the eval turn it into a training signal via the researcher. That is why frozen private test sets and freshly-authored variants exist."
+    tags: [evaluation]
+  - id: aggregate-hiding
+    front: "What can an aggregate benchmark score hide?"
+    back: "A regression on an important subset while the average rises. Always look at per-category breakdowns before believing a headline number."
+    tags: [evaluation]
+  - id: perplexity-limits
+    front: "Why is perplexity a poor cross-model comparison metric?"
+    back: "It depends on the tokenizer — a model with better compression assigns probability over fewer, larger tokens, so per-token perplexity is not comparable. Normalize per byte or per character if you must compare across tokenizers."
+    tags: [evaluation]

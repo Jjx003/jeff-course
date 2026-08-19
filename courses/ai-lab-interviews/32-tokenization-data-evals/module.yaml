@@ -1,0 +1,8 @@
+title: "Tokenization, Data, and Evaluation"
+slug: "tokenization-data-evals"
+description: "BPE and its pathologies, what a pretraining data pipeline actually does, and how to evaluate a model without fooling yourself."
+order: 32
+difficulty: advanced
+estimatedMinutes: 60
+tags: [tokenization, bpe, data, evaluation, contamination]
+type: reading

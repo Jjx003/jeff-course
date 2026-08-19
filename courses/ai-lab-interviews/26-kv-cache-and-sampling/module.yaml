@@ -1,0 +1,17 @@
+title: "KV Cache and Sampling"
+slug: "kv-cache-and-sampling"
+description: "Add a KV cache to a decoder and prove it is exact, then implement temperature, top-k, and top-p and prove they do what they claim."
+order: 26
+difficulty: advanced
+estimatedMinutes: 70
+tags: [inference, kv-cache, sampling, ml-coding, torch]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

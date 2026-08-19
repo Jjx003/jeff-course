@@ -1,0 +1,154 @@
+title: "Probability"
+instructions: "Whole numbers. Where the prompt says 'times 10' or 'as a percent', answer accordingly."
+roundSeconds: 150
+targetAccuracy: 0.85
+itemsPerRound: 20
+items:
+  - id: binomial_mean
+    prompt_template: "X ~ Binomial(n={{n}}, p=0.{{p}}). What is E[X], times 10?"
+    params:
+      n: { min: 10, max: 100, step: 10 }
+      p: { min: 1, max: 9, step: 1 }
+    correct_formula: "Math.round(10 * n * p / 10)"
+    tolerance: 1
+    explanation_template: "E[X] = np = {{n}} * 0.{{p}} = {{(n*p/10).toFixed(1)}}. Decompose into indicators and use linearity - never derive from the PMF."
+  - id: binomial_var
+    prompt_template: "X ~ Binomial(n={{n}}, p=0.5). What is Var[X], times 10?"
+    params:
+      n: { min: 10, max: 100, step: 10 }
+    correct_formula: "Math.round(10 * n * 0.25)"
+    tolerance: 1
+    explanation_template: "Var = np(1-p) = {{n}} * 0.25 = {{(n*0.25).toFixed(2)}}. Variance adds across independent Bernoullis."
+  - id: bernoulli_var
+    prompt_template: "X ~ Bernoulli(p=0.{{p}}). What is Var[X], times 100?"
+    params:
+      p: { min: 1, max: 9, step: 1 }
+    correct_formula: "Math.round(100 * (p/10) * (1 - p/10))"
+    tolerance: 1
+    explanation_template: "p(1-p) = 0.{{p}} * {{(1-p/10).toFixed(1)}} = {{((p/10)*(1-p/10)).toFixed(2)}}. Maximized at p = 0.5, and it uses the trick that X^2 = X for an indicator."
+  - id: geometric_mean
+    prompt_template: "A trial succeeds with probability 1/{{k}}. Expected number of trials until the first success?"
+    params:
+      k: { min: 2, max: 20, step: 1 }
+    correct_formula: "k"
+    answer_suffix: " trials"
+    tolerance: 0
+    explanation_template: "Geometric with p = 1/{{k}}, so E = 1/p = {{k}}. Memorylessness means past failures tell you nothing."
+  - id: geometric_var
+    prompt_template: "X ~ Geometric(p = 1/{{k}}). What is Var[X]?"
+    params:
+      k: { min: 2, max: 12, step: 1 }
+    correct_formula: "k * k - k"
+    tolerance: 0
+    explanation_template: "Var = (1-p)/p^2 with p = 1/{{k}}, which is (1 - 1/{{k}}) * {{k}}^2 = {{k*k-k}}. The mean is {{k}}, so the variance is nearly the square of the mean - geometric waiting times are very spread out."
+  - id: poisson_var
+    prompt_template: "Events arrive at rate {{lam}} per hour, Poisson. Over {{t}} hours, what is the variance of the count?"
+    params:
+      lam: { min: 1, max: 10, step: 1 }
+      t: { min: 1, max: 8, step: 1 }
+    correct_formula: "lam * t"
+    tolerance: 0
+    explanation_template: "N(t) ~ Poisson(lambda*t), and for a Poisson the mean equals the variance: {{lam}} * {{t}} = {{lam*t}}. Count data whose variance exceeds its mean is overdispersed and is NOT Poisson."
+  - id: exponential_mean
+    prompt_template: "Waiting time is Exponential with rate {{lam}} per hour. Expected wait in minutes?"
+    params:
+      lam: { min: 1, max: 12, step: 1 }
+    correct_formula: "Math.round(60 / lam)"
+    answer_suffix: " min"
+    tolerance: 1
+    explanation_template: "E = 1/lambda = 1/{{lam}} hours = {{Math.round(60/lam)}} minutes. Exponential is the continuous memoryless distribution, and the gap between Poisson events."
+  - id: uniform_var
+    prompt_template: "X ~ Uniform(0, {{b}}). What is Var[X], times 10?"
+    params:
+      b: { min: 2, max: 12, step: 2 }
+    correct_formula: "Math.round(10 * b * b / 12)"
+    tolerance: 1
+    explanation_template: "(b-a)^2 / 12 = {{b}}^2 / 12 = {{(b*b/12).toFixed(2)}}."
+  - id: coupon_collector
+    prompt_template: "Collecting {{n}} distinct coupons uniformly at random. Expected draws, using n*ln(n) + 0.577n?"
+    params:
+      n: { min: 4, max: 40, step: 2 }
+    correct_formula: "Math.round(n * Math.log(n) + 0.5772 * n)"
+    answer_suffix: " draws"
+    tolerance: 2
+    explanation_template: "Split into stages: going from i-1 to i distinct coupons is geometric with p = (n-i+1)/n, so E = n*H_n, which is about n*ln(n) + 0.577n = {{Math.round(n*Math.log(n)+0.5772*n)}}."
+  - id: fixed_points
+    prompt_template: "A uniformly random permutation of {{n}} elements. Expected number of fixed points?"
+    params:
+      n: { min: 3, max: 50, step: 1 }
+    correct_formula: "1"
+    tolerance: 0
+    explanation_template: "Each element is fixed with probability 1/n, and there are n of them, so the expectation is exactly 1 for every n. The indicators are dependent - linearity does not care."
+  - id: gamblers_ruin
+    prompt_template: "Fair random walk, starting at {{i}}, absorbing at 0 and {{N}}. Probability of reaching {{N}}, as a percent?"
+    params:
+      i: { min: 1, max: 9, step: 1 }
+      N: { min: 10, max: 20, step: 10 }
+    correct_formula: "Math.round(100 * i / N)"
+    answer_suffix: "%"
+    tolerance: 1
+    explanation_template: "First-step analysis gives P_i = p*P_(i+1) + q*P_(i-1) with P_0 = 0 and P_N = 1; for a fair walk the solution is linear, so P_i = i/N = {{Math.round(100*i/N)}}%."
+  - id: bayes_disease
+    prompt_template: "A disease affects 1 in {{prev}}. A test has 99% sensitivity and 99% specificity. Given a positive result, probability of disease as a percent?"
+    params:
+      prev: { min: 100, max: 1000, step: 100 }
+    correct_formula: "Math.round(100 * (0.99 / prev) / (0.99 / prev + 0.01 * (1 - 1/prev)))"
+    answer_suffix: "%"
+    tolerance: 2
+    explanation_template: "True positives 0.99/{{prev}}; false positives 0.01*(1 - 1/{{prev}}). When the base rate is comparable to the false-positive rate, a positive result is close to a coin flip."
+  - id: markov_bound
+    prompt_template: "X is non-negative with mean {{mu}}. Markov's inequality bounds P(X >= {{a}}) by what percent?"
+    params:
+      mu: { min: 1, max: 10, step: 1 }
+      a: { min: 10, max: 50, step: 10 }
+    correct_formula: "Math.round(100 * Math.min(1, mu / a))"
+    answer_suffix: "%"
+    tolerance: 1
+    explanation_template: "P(X >= a) <= E[X]/a = {{mu}}/{{a}}. Markov needs only the mean - if a question gives you nothing else, that is the hint."
+  - id: chebyshev_bound
+    prompt_template: "Chebyshev's inequality bounds the probability of being at least {{k}} standard deviations from the mean by what percent?"
+    params:
+      k: { min: 2, max: 5, step: 1 }
+    correct_formula: "Math.round(100 / (k * k))"
+    answer_suffix: "%"
+    tolerance: 1
+    explanation_template: "P(|X - mu| >= k*sigma) <= 1/k^2 = {{(1/(k*k)).toFixed(3)}}. Chebyshev needs the mean and the variance."
+  - id: sum_variance
+    prompt_template: "{{n}} independent variables each with variance {{v}}. What is the variance of their sum?"
+    params:
+      n: { min: 2, max: 20, step: 2 }
+      v: { min: 1, max: 9, step: 1 }
+    correct_formula: "n * v"
+    tolerance: 0
+    explanation_template: "Variance adds for independent variables: {{n}} * {{v}} = {{n*v}}. The variance of the MEAN would be v/n instead - a standard trap."
+  - id: mean_variance
+    prompt_template: "The sample mean of {{n}} i.i.d. variables each with variance {{v}}00. What is the variance of the mean?"
+    params:
+      n: { min: 2, max: 20, step: 2 }
+      v: { min: 1, max: 9, step: 1 }
+    correct_formula: "Math.round(v * 100 / n)"
+    tolerance: 1
+    explanation_template: "Var(mean) = v/n = {{v}}00/{{n}} = {{Math.round(v*100/n)}}. Standard error shrinks as 1/sqrt(n), which is why halving it costs four times the data."
+  - id: expected_hh
+    prompt_template: "Fair coin. Expected number of flips until you first see HH?"
+    params:
+      k: { min: 1, max: 1, step: 1 }
+    correct_formula: "6"
+    answer_suffix: " flips"
+    tolerance: 0
+    explanation_template: "First-step analysis: E = 0.5(1 + E_H) + 0.5(1 + E) and E_H = 0.5(1) + 0.5(1 + E), giving E = 6. A failed HH (seeing a T) sends you all the way back to the start."
+  - id: expected_ht
+    prompt_template: "Fair coin. Expected number of flips until you first see HT?"
+    params:
+      k: { min: 1, max: 1, step: 1 }
+    correct_formula: "4"
+    answer_suffix: " flips"
+    tolerance: 0
+    explanation_template: "4, versus 6 for HH. A failed HT (seeing another H) leaves you still one T from success, whereas a failed HH restarts you. Overlapping patterns take longer, and being able to say WHY is the follow-up that gets scored."
+  - id: geometric_series
+    prompt_template: "Sum of the geometric series with ratio 1/{{k}}, starting at k=0, times 100?"
+    params:
+      k: { min: 2, max: 10, step: 1 }
+    correct_formula: "Math.round(100 / (1 - 1/k))"
+    tolerance: 2
+    explanation_template: "1/(1 - r) with r = 1/{{k}}, giving {{(1/(1-1/k)).toFixed(3)}}. Sanity check: at r = 1/2 the sum is 2."

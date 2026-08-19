@@ -1,0 +1,151 @@
+title: "Shapes and Gradient Arithmetic"
+instructions: "Answer with the whole number. Units are shown for you, and they are decimal: 1 MB = 10^6 bytes, 1 GB = 10^9."
+roundSeconds: 150
+targetAccuracy: 0.85
+itemsPerRound: 20
+items:
+  - id: broadcast_dim
+    prompt_template: "Broadcasting dimensions {{a}} and {{b}}: what is the resulting size? Answer -1 if they are incompatible."
+    params:
+      a: { min: 1, max: 8, step: 1 }
+      b: { min: 1, max: 8, step: 1 }
+    correct_formula: "a === 1 ? b : (b === 1 || a === b ? a : -1)"
+    tolerance: 0
+    explanation_template: "Equal dimensions match, a dimension of 1 expands to the other, anything else is incompatible."
+  - id: linear_params
+    prompt_template: "A `nn.Linear({{d_in}}, {{d_out}})` with bias. How many thousands of parameters?"
+    params:
+      d_in: { min: 256, max: 2048, step: 256 }
+      d_out: { min: 256, max: 2048, step: 256 }
+    correct_formula: "Math.round((d_in * d_out + d_out) / 1000)"
+    answer_suffix: "k"
+    tolerance: 5
+    tolerancePercent: 1
+    explanation_template: "d_in * d_out weights plus d_out biases = {{d_in}} * {{d_out}} + {{d_out}}."
+  - id: head_dim
+    prompt_template: "{{heads}} attention heads, each of head dimension {{hd}}. What is d_model?"
+    params:
+      heads: { min: 4, max: 64, step: 4 }
+      hd: { min: 32, max: 256, step: 32 }
+    correct_formula: "heads * hd"
+    tolerance: 0
+    explanation_template: "d_model = n_heads * head_dim = {{heads}} * {{hd}}. The Q projection reshapes (batch, seq, d_model) into (batch, seq, heads, head_dim), then transposes to put heads before seq."
+  - id: attention_scores
+    prompt_template: "Attention scores for batch {{b}}, {{h}} heads, sequence {{s}}. How many millions of elements in the score matrix?"
+    params:
+      b: { min: 2, max: 4, step: 2 }
+      h: { min: 16, max: 32, step: 16 }
+      s: { min: 2048, max: 4096, step: 1024 }
+    correct_formula: "Math.round((b * h * s * s) / 1000000)"
+    answer_suffix: "M"
+    tolerance: 20
+    tolerancePercent: 1
+    explanation_template: "Scores are (batch, heads, seq, seq): {{b}} * {{h}} * {{s}} * {{s}}. Quadratic in sequence length — this tensor is exactly what FlashAttention refuses to materialize."
+  - id: matmul_flops
+    prompt_template: "Multiply a ({{m}}, {{k}}) matrix by a ({{k}}, {{n}}) matrix. How many megaFLOPs, counting a multiply-add as 2?"
+    params:
+      m: { min: 256, max: 1024, step: 128 }
+      k: { min: 256, max: 1024, step: 128 }
+      n: { min: 256, max: 1024, step: 128 }
+    correct_formula: "Math.round((2 * m * k * n) / 1000000)"
+    answer_suffix: " MFLOP"
+    tolerance: 8
+    tolerancePercent: 1
+    explanation_template: "2 * m * k * n = 2 * {{m}} * {{k}} * {{n}}."
+  - id: ffn_params
+    prompt_template: "A standard 4x FFN (two bias-free linears, d to 4d and back) with d = {{d}}. How many millions of parameters?"
+    params:
+      d: { min: 1024, max: 8192, step: 1024 }
+    correct_formula: "Math.round((8 * d * d) / 1000000)"
+    answer_suffix: "M"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "d * 4d up plus 4d * d down = 8d^2 = 8 * {{d}}^2."
+  - id: swiglu_params
+    prompt_template: "A SwiGLU FFN with three bias-free matrices and hidden size 8d/3, where d = {{d}}. How many millions of parameters?"
+    params:
+      d: { min: 1024, max: 8192, step: 1024 }
+    correct_formula: "Math.round((3 * d * (8 * d / 3)) / 1000000)"
+    answer_suffix: "M"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "Three matrices of d by 8d/3 = 8d^2 — the same as a standard 4x FFN, which is exactly why 8d/3 was chosen."
+  - id: attention_params
+    prompt_template: "Multi-head attention with d_model = {{d}} and four bias-free projections (Q, K, V, O). How many millions of parameters?"
+    params:
+      d: { min: 1024, max: 8192, step: 1024 }
+    correct_formula: "Math.round((4 * d * d) / 1000000)"
+    answer_suffix: "M"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "Four d-by-d matrices = 4d^2. With the 8d^2 FFN that gives the familiar 12d^2 per transformer layer."
+  - id: layer_params
+    prompt_template: "A full transformer layer (attention plus 4x FFN, no biases) with d_model = {{d}}. How many millions of parameters?"
+    params:
+      d: { min: 1024, max: 8192, step: 1024 }
+    correct_formula: "Math.round((12 * d * d) / 1000000)"
+    answer_suffix: "M"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "12d^2 per layer: 4d^2 attention plus 8d^2 FFN. This is the single most useful number to have memorized."
+  - id: embedding_params
+    prompt_template: "Embedding table for a {{vocab}}k-token vocabulary at d_model = {{d}}. How many millions of parameters?"
+    params:
+      vocab: { min: 32, max: 256, step: 32 }
+      d: { min: 1024, max: 8192, step: 1024 }
+    correct_formula: "Math.round((vocab * 1000 * d) / 1000000)"
+    answer_suffix: "M"
+    tolerance: 5
+    tolerancePercent: 1
+    explanation_template: "vocab * d_model = {{vocab}}000 * {{d}}. At small d_model this dominates the parameter count, which is why weight tying matters most for small models."
+  - id: gqa_kv_params
+    prompt_template: "GQA with d_model = {{d}}, {{q_heads}} query heads and {{kv_heads}} KV heads. How many millions of parameters in the K and V projections combined?"
+    params:
+      d: { min: 4096, max: 8192, step: 2048 }
+      q_heads: { min: 32, max: 64, step: 32 }
+      kv_heads: { min: 4, max: 8, step: 4 }
+    correct_formula: "Math.round((2 * d * (d / q_heads) * kv_heads) / 1000000)"
+    answer_suffix: "M"
+    tolerance: 1
+    tolerancePercent: 1
+    explanation_template: "Each of K and V projects d down to kv_heads * head_dim, where head_dim = d / q_heads. So 2 * d * (d/q_heads) * kv_heads."
+  - id: grad_elements
+    prompt_template: "You call backward on a loss. How many thousands of elements are in the gradient of a ({{d_in}}, {{d_out}}) weight matrix?"
+    params:
+      d_in: { min: 256, max: 2048, step: 256 }
+      d_out: { min: 256, max: 2048, step: 256 }
+    correct_formula: "Math.round((d_in * d_out) / 1000)"
+    answer_suffix: "k"
+    tolerance: 5
+    tolerancePercent: 1
+    explanation_template: "A gradient always has the same shape as its tensor: {{d_in}} * {{d_out}}."
+  - id: adam_state
+    prompt_template: "A {{p}}B-parameter model trained in fp32 with Adam. How many GB for weights, gradients, and both optimizer moments?"
+    params:
+      p: { min: 1, max: 8, step: 1 }
+    correct_formula: "p * 16"
+    answer_suffix: " GB"
+    tolerance: 0
+    explanation_template: "4 bytes each for the parameter, the gradient, the first moment and the second moment = 16 bytes per parameter."
+  - id: activation_batch
+    prompt_template: "One activation tensor of shape (batch {{b}}, seq {{s}}, d_model {{d}}) in bf16. How many MB?"
+    params:
+      b: { min: 2, max: 8, step: 1 }
+      s: { min: 2048, max: 4096, step: 1024 }
+      d: { min: 1024, max: 4096, step: 1024 }
+    correct_formula: "Math.round((b * s * d * 2) / 1000000)"
+    answer_suffix: " MB"
+    tolerance: 2
+    tolerancePercent: 1
+    explanation_template: "b * s * d elements at 2 bytes each. Multiply by the number of stored activations per layer and by layer count to see why training memory explodes."
+  - id: logits_size
+    prompt_template: "Logits for batch {{b}}, sequence {{s}}, vocabulary {{vocab}}k, in fp32. How many MB?"
+    params:
+      b: { min: 1, max: 4, step: 1 }
+      s: { min: 1024, max: 4096, step: 1024 }
+      vocab: { min: 32, max: 128, step: 32 }
+    correct_formula: "Math.round((b * s * vocab * 1000 * 4) / 1000000)"
+    answer_suffix: " MB"
+    tolerance: 10
+    tolerancePercent: 1
+    explanation_template: "b * s * vocab * 4 bytes. The logit tensor is often the single largest activation in a training step, which is why chunked or fused cross-entropy exists."

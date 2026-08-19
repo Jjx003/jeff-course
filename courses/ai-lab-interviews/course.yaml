@@ -1,0 +1,19 @@
+title: "Getting Hired at an AI Lab"
+slug: "ai-lab-interviews"
+description: >
+  A deliberate, end-to-end preparation track for Research Scientist, Research
+  Engineer, and Member of Technical Staff interviews at frontier AI labs. It is
+  organized around the six interview formats these loops actually use — ML
+  coding, general coding, technical discussion, research discussion, math, and
+  behavioral — and it assumes you already know ML but have never had to produce
+  it under a 45-minute clock with the autocomplete turned off. Readings build
+  the picture; PyTorch exercises turn implementing and debugging a transformer
+  into muscle memory; drills make the arithmetic automatic; spaced-repetition
+  decks keep the rapid-fire facts loaded months after you read them. A final
+  appendix of optional deep dives — mixture-of-experts, reasoning models,
+  long-context attention, and agents — sits after the final test for the
+  topics a 2026 loop is likely to wander into. Coding modules run on CPU.
+  No GPU, no API keys, no lab access required.
+tags: [machine-learning, llm, interviews, transformers, pytorch, careers]
+difficulty: advanced
+order: 0

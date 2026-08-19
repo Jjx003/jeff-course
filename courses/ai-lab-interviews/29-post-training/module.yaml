@@ -1,0 +1,8 @@
+title: "Post-Training: SFT, RLHF, DPO, GRPO"
+slug: "post-training"
+description: "How a base model becomes an assistant — and what each method after RLHF deleted from the one before it."
+order: 29
+difficulty: advanced
+estimatedMinutes: 70
+tags: [rlhf, dpo, grpo, ppo, alignment, post-training]
+type: reading

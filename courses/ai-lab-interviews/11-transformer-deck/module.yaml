@@ -1,0 +1,8 @@
+title: "Deck: The Transformer"
+slug: "transformer-deck"
+description: "Spaced-repetition deck for attention, positional encoding, normalization, and the accounting that goes with them."
+order: 11
+difficulty: advanced
+estimatedMinutes: 25
+tags: [flashcards, transformer, attention, rope]
+type: flashcards

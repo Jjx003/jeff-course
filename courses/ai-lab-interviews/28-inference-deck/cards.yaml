@@ -1,0 +1,151 @@
+title: "Inference and Serving"
+instructions: >
+  For each card, check whether your answer connects back to the one underlying
+  fact: decoding is memory-bandwidth bound.
+newPerSession: 12
+maxPerSession: 36
+cards:
+  - id: decode-memory-bound
+    front: "Why is decoding memory-bandwidth bound? Give the arithmetic."
+    back: "Each generated token reads every weight from HBM and performs about two FLOPs per weight, so arithmetic intensity is roughly the batch size. An H100's ridge point is near 295 FLOP/byte (990 TFLOP/s over 3.35 TB/s), so even batch 64 sits at about 20% of peak compute."
+    tags: [inference]
+  - id: prefill-vs-decode-card
+    front: "Contrast prefill and decode on four axes."
+    back: "Prefill: whole prompt at once, high arithmetic intensity, compute-bound, sets TTFT. Decode: one token per sequence, intensity roughly the batch size, memory-bound, sets TPOT. Different enough that serious systems schedule them separately — 'prefill/decode disaggregation'."
+    tags: [inference]
+  - id: serving-metrics
+    front: "Name the four serving metrics and say which one actually matters."
+    back: "TTFT (time to first token, driven by prefill), TPOT or ITL (time per output token, driven by decode), throughput (total tokens/s), and goodput (throughput that meets your latency SLO). Goodput is the one that matters and the one people forget to name."
+    tags: [inference, serving]
+  - id: latency-throughput-tension
+    front: "State the central tension in serving."
+    back: "Larger batches raise throughput and worsen per-request latency. Every serving question is a point on that curve, so name which one you are optimizing before you answer."
+    tags: [serving]
+  - id: kv-cache-what
+    front: "What does the KV cache store and what does it save?"
+    back: "Keys and values for every position, per layer, so they are not recomputed each step. Without it, generating $n$ tokens is $O(n^3)$ of attention work; with it, $O(n^2)$, and each step is $O(t)$."
+    tags: [inference, kv-cache]
+  - id: kv-cache-arith
+    front: "Write the KV cache formula and give the Llama-2-70B number."
+    back: "$2 \\cdot L \\cdot G \\cdot d_h \\cdot b \\cdot S \\cdot$ bytes. For 80 layers, 8 KV heads, $d_h$ 128, bf16: about 0.33 MB per token — 1.3 GB at 4k, 43 GB at 128k, per sequence. The weights are 140 GB, so at 32k and batch 32 the cache is more than twice the model."
+    tags: [inference, kv-cache]
+  - id: kv-cache-gqa-store
+    front: "With GQA, how many heads does the cache store?"
+    back: "$G$, not $H$. The `repeat_interleave` to $H$ heads happens after the cache read, never before. Caching repeated heads throws away the entire benefit of GQA and is a real shipped bug."
+    tags: [kv-cache]
+  - id: rope-offset-bug
+    front: "What is the classic KV-cache bug involving RoPE?"
+    back: "During decode the query tensor has sequence length 1, so its internal index is 0. Rotating by position 0 tells every generated token it is the first token in the sequence. Nothing crashes, output stays fluent, and quality degrades with length. The fix is to pass an absolute offset equal to the cache length."
+    tags: [kv-cache, debugging]
+  - id: kv-cache-mask
+    front: "Do you need a causal mask during cached decoding?"
+    back: "No — with a query length of 1, position $t$ may legitimately attend to all of $0..t$. A mask is only needed when the query length exceeds 1, and then it must align to the right edge: `tril(diagonal=T - s)` for a query block of length $s$ against $T$ keys."
+    tags: [kv-cache]
+  - id: kv-reduction-options
+    front: "Five ways to reduce KV cache pressure."
+    back: "GQA (4–8x, free). KV quantization to int8/int4 (2–4x, must be done at runtime). Paged attention (removes fragmentation). Eviction or sliding windows (cheap and lossy, and it fights attention sinks). Prefix sharing (often the biggest single win in practice)."
+    tags: [kv-cache, serving]
+  - id: static-batching-fail
+    front: "Why does static batching waste so much capacity?"
+    back: "Generation lengths vary by an order of magnitude. A batch of 32 where one request wants 2000 tokens and the rest want 50 keeps 31 slots idle for the entire tail, and in a bandwidth-bound regime an idle slot is wasted bandwidth."
+    tags: [serving]
+  - id: continuous-batching-card
+    front: "What is continuous batching and roughly what does it buy?"
+    back: "Scheduling at the iteration level rather than the request level: when a sequence emits EOS it is evicted immediately and a queued request takes its slot on the next step. Often 10–20x throughput over naive static batching. The single most important idea in LLM serving."
+    tags: [serving]
+  - id: chunked-prefill
+    front: "What is chunked prefill and what does it trade?"
+    back: "Splitting a long prompt into pieces and interleaving them with decode steps, so one 8k-token prefill does not stall every sequence already generating. Trades a little TTFT for a lot of TPOT stability. Modern servers do it by default."
+    tags: [serving]
+  - id: paged-attention-card
+    front: "What problem does paged attention solve, and what falls out for free?"
+    back: "Fragmentation, not size. Contiguous per-sequence allocation sized for the maximum length wastes most of its reservation. Fixed-size blocks (usually 16 tokens) with a per-sequence block table remove internal fragmentation — and copy-on-write prefix sharing falls out for free, since sequences can point at the same physical blocks until they diverge."
+    tags: [serving]
+  - id: prefix-sharing-card
+    front: "What is prefix sharing and why does it matter so much in practice?"
+    back: "Many requests share a long system prompt, so its cache is computed once and referenced by every sequence rather than duplicated. With 64 requests sharing a 2000-token prompt that is 126k token-slots recovered — often the highest-leverage single change in a real serving stack."
+    tags: [serving]
+  - id: p99-diagnosis
+    front: "Throughput is fine but p99 latency is bad. What do you check?"
+    back: "Long prefills blocking decode steps — one 8k prompt stalls everyone already generating; chunked prefill fixes it. Then queueing delay from an admission policy letting the batch exceed the latency budget, and preemption when the KV cache fills."
+    tags: [serving, debugging]
+  - id: temperature-card
+    front: "What does temperature do, and what does it not do?"
+    back: "Divides logits by $T$ before the softmax: $T<1$ sharpens, $T>1$ flattens, $T\\to0$ approaches greedy. It never changes the argmax, because it is a monotone transform — which is why temperature alone cannot fix a confidently wrong model."
+    tags: [sampling]
+  - id: topk-flaw
+    front: "What is wrong with top-k sampling?"
+    back: "A fixed $k$ is too permissive when the model is confident — admitting nonsense into a nearly deterministic step — and too restrictive when it is uncertain. The cutoff ignores the shape of the distribution."
+    tags: [sampling]
+  - id: topp-card
+    front: "How does top-p work and what does it fix?"
+    back: "Keep the smallest set of tokens whose cumulative probability reaches $p$. The cutoff adapts to each distribution: at $p=0.9$ a confident distribution might keep 1 token and an uncertain one 5, which is exactly top-k's failure fixed."
+    tags: [sampling]
+  - id: topp-implementation
+    front: "Two implementation details that make top-p correct."
+    back: "Compare `cumulative - probs >= p`, not `cumulative >= p`, so the token that crosses the threshold is kept — otherwise you retain strictly less than $p$. And force the top token to survive, or a distribution whose top token already exceeds $p$ loses everything and softmax returns `nan`."
+    tags: [sampling]
+  - id: sampling-order
+    front: "In what order are sampling transforms applied, and why?"
+    back: "Penalties, then temperature, then truncation, then renormalize. Temperature reshapes the distribution, so a top-p cutoff computed before it would measure a distribution you are not going to sample from."
+    tags: [sampling]
+  - id: min-p
+    front: "What is min-p sampling?"
+    back: "Keep tokens with probability at least $p \\times p_{\\max}$ — a threshold relative to the top token rather than an absolute cumulative mass. More robust at high temperature, where top-p can admit a very long tail."
+    tags: [sampling]
+  - id: repetition-penalty
+    front: "What is the risk with repetition and frequency penalties?"
+    back: "They are blunt: subtracting from the logits of already-generated tokens damages legitimate repetition too — code indentation, a repeated variable name, a person's name in a story. Useful, but a symptom fix rather than a cause fix."
+    tags: [sampling]
+  - id: spec-decoding-mechanism
+    front: "How does speculative decoding work, mechanically?"
+    back: "A small draft model proposes $\\gamma$ tokens; the target verifies all of them in a single forward pass, since verification over $\\gamma+1$ positions is a parallel prefill-like operation. Accepted tokens are kept, and generation resumes from the first rejection."
+    tags: [speculative]
+  - id: spec-exact
+    front: "Why does speculative decoding leave the output distribution unchanged?"
+    back: "Accept draft token $x$ with probability $\\min(1, p_{target}(x)/p_{draft}(x))$; on rejection, sample from the normalized residual $\\max(0, p_{target}-p_{draft})$. That rejection-sampling scheme provably yields exactly $p_{target}$. It is not an approximation — which is what distinguishes it from every other inference speedup."
+    tags: [speculative]
+  - id: spec-why-free
+    front: "Why is verifying $\\gamma+1$ tokens barely more expensive than verifying one?"
+    back: "Decode is memory-bound: you read the weights once either way, and the extra positions cost only FLOPs you were not using. Speculative decoding spends idle compute to buy back bandwidth-limited steps."
+    tags: [speculative]
+  - id: spec-expected-yield
+    front: "Write the expected tokens per verification step, and say what limits it."
+    back: "$(1-\\alpha^{\\gamma+1})/(1-\\alpha)$ for per-token acceptance $\\alpha$. One rejection ends the run, so the tail is geometric and returns diminish fast in $\\gamma$. As $\\gamma \\to \\infty$ it converges to $1/(1-\\alpha)$ — acceptance rate, not draft length, is the binding constraint."
+    tags: [speculative]
+  - id: spec-variants
+    front: "Name three speculative-decoding variants that avoid a separate draft model."
+    back: "Medusa — extra prediction heads on the target model. EAGLE — drafting in feature space rather than token space. N-gram or prompt-lookup drafting — no model at all, just copying candidate continuations from the prompt, which works startlingly well for summarization and code editing."
+    tags: [speculative]
+  - id: weight-only-quant
+    front: "Why is weight-only quantization so effective for serving?"
+    back: "Decode is bandwidth-bound, so halving the bytes read per token nearly halves the time per token. The weights are dequantized on the fly and the matmul still runs in bf16 — it buys bandwidth, not FLOPs, which is exactly what a memory-bound workload needs."
+    tags: [quantization, inference]
+  - id: activation-quant-hard
+    front: "Why is activation quantization harder than weight quantization?"
+    back: "Activations have large outlier channels that weights do not. SmoothQuant migrates the difficulty into the weights by rescaling both sides; AWQ protects the salient weight channels identified from activation statistics."
+    tags: [quantization]
+  - id: kv-quant-difference
+    front: "What makes KV-cache quantization different from weight quantization?"
+    back: "The cache is produced at runtime, so it cannot be quantized offline — the scheme must be cheap and per-token. Keys are typically more outlier-prone than values, so schemes often treat them differently."
+    tags: [quantization, kv-cache]
+  - id: attention-sink-serving
+    front: "Why can you not simply evict the oldest tokens from a KV cache?"
+    back: "Attention sinks. Models dump excess attention mass on the first few tokens, so removing them destroys quality even though those tokens carry little content. Streaming schemes pin the first few permanently and slide the rest."
+    tags: [kv-cache, long-context]
+  - id: decode-token-rate
+    front: "Estimate the batch-1 token rate for a 70B bf16 model on one H100."
+    back: "Weights are 140 GB, read once per token. 3350 GB/s / 140 GB gives about 24 tokens per second as a hard ceiling — and 70B does not fit on one H100 anyway, which is itself the point."
+    tags: [inference, accounting]
+  - id: batch-capacity
+    front: "What actually caps serving batch size?"
+    back: "KV cache capacity. Free HBM after weights, divided by cache bytes per sequence at your context length. That number caps concurrency, which caps throughput — which is why GQA, cache quantization, and paged attention all translate directly into throughput."
+    tags: [serving, accounting]
+  - id: pd-disaggregation
+    front: "What is prefill/decode disaggregation and when do you reach for it?"
+    back: "Run prefill and decode on separate GPU pools and ship the finished KV cache between them over RDMA, overlapped with compute. Prefill is compute-bound and decode is bandwidth-bound, so co-locating them lets each spoil the other's latency target. Reach for it at scale, when tight TTFT and TPOT must both hold under mixed traffic. Mooncake was the first prominent public system; it is now standard in vLLM, SGLang, and production stacks."
+    tags: [serving]
+  - id: mla-card
+    front: "What is MLA and why does it matter for serving?"
+    back: "Multi-head latent attention (DeepSeek): cache one small shared latent vector per token instead of per-head K and V, and decompress on the fly. It cuts the KV cache by an order of magnitude relative to MHA — a stronger version of the GQA trade — and is the reason DeepSeek-V2/V3 serve long contexts cheaply."
+    tags: [kv-cache, serving]

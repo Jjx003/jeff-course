@@ -1,0 +1,8 @@
+title: "Deck: Inference and Serving"
+slug: "inference-deck"
+description: "Spaced-repetition deck for the KV cache, batching, sampling, speculative decoding, and serving quantization."
+order: 28
+difficulty: advanced
+estimatedMinutes: 20
+tags: [flashcards, inference, serving, sampling]
+type: flashcards

@@ -1,0 +1,8 @@
+title: "Deck: Fundamentals"
+slug: "fundamentals-deck"
+description: "Spaced-repetition deck for activations, gradients, backprop, and autograd — the facts a rapid-fire interviewer expects instantly."
+order: 4
+difficulty: intermediate
+estimatedMinutes: 20
+tags: [flashcards, fundamentals, backprop]
+type: flashcards

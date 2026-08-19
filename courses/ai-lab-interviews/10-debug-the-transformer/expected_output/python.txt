@@ -1,0 +1,40 @@
+=== Debug the transformer ===
+vocab 512  d_model 64  layers 4  heads 8  head_dim 8
+
+Probes run local to global. Fix the first failure, rerun, repeat.
+
+--- 1. the causal mask ---
+  [PASS] mask is lower-triangular with the diagonal included
+  [PASS] row i allows exactly i+1 keys
+
+--- 2. head splitting ---
+  [PASS] split_heads gives (B, H, S, head_dim)
+  [PASS] merge_heads inverts split_heads
+  [PASS] head h holds feature channels [h*dh, (h+1)*dh)
+
+--- 3. the attention kernel ---
+  [PASS] attention matches the fused kernel with an open mask
+
+--- 4. the attention module ---
+  [PASS] Attention.forward matches the reference
+
+--- 5. the final norm ---
+  [PASS] hidden state entering the output head has RMS near 1
+
+--- 6. the loss shift ---
+  [PASS] loss is ~0 for logits that predict the NEXT token
+  [PASS] loss is large for logits that predict the CURRENT token
+
+--- 7. the initialization check ---
+  [PASS] initial loss is near ln(vocab) = 6.238
+
+--- 8. causality ---
+  [PASS] changing a future token leaves earlier logits untouched
+
+--- 9. end to end: memorize a sequence ---
+  loss 6.2227 -> 0.0029 over 300 steps
+  [PASS] final loss below 0.05
+  [PASS] greedy decoding reproduces all 20 tokens
+
+probes passed: 14 / 14
+ALL CHECKS PASS: True

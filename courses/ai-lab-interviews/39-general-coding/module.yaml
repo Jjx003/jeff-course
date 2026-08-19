@@ -1,0 +1,8 @@
+title: "General Coding, ML Flavored"
+slug: "general-coding"
+description: "The LeetCode subset that actually appears in AI lab loops, and how the same primitives show up inside ML coding interviews."
+order: 39
+difficulty: intermediate
+estimatedMinutes: 45
+tags: [algorithms, leetcode, interviews]
+type: reading

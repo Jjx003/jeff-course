@@ -1,0 +1,10 @@
+title: "Agents and Long-Horizon Work"
+slug: "agents-and-long-horizon-work"
+description: "Why reliability compounds against you, what context engineering actually means, and how labs train and evaluate models that act over many steps."
+order: 49
+difficulty: advanced
+estimatedMinutes: 40
+tags: [agents, tool-use, evaluation, rl, deep-dive]
+type: reading
+section: "Appendix — Optional Deep Dives"
+optional: true

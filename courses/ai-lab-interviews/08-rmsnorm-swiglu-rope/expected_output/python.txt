@@ -1,0 +1,37 @@
+=== RMSNorm, SwiGLU, RoPE ===
+batch: 2  seq: 32  d_model: 64  heads: 8  head_dim: 8
+
+--- RMSNorm ---
+output shape: (2, 32, 64)
+matches float64 reference: True
+ones input maps to ones: True
+row RMS after norm is 1: True
+
+--- why the fp32 upcast matters ---
+fp32-internal norm is closer to the float64 answer: True
+error ratio (naive / upcast) exceeds 2x: True
+
+--- SwiGLU ---
+d_model: 64   swiglu hidden (8d/3): 170   relu hidden (4d): 256
+swiglu params: 32640
+relu ffn params: 32768
+within 2% of each other: True
+output shape: (2, 32, 64)
+8d^2 for d=64: 32768
+
+--- RoPE is a rotation ---
+cache shapes: cos (32, 4)  sin (32, 4)
+output shape: (2, 8, 32, 8)
+norms preserved: True
+position 0 is the identity: True
+
+--- RoPE is relative ---
+q at m, k at n; the score should depend only on m - n:
+  offset m-n = 0: same score at three absolute positions: True
+  offset m-n = 1: same score at three absolute positions: True
+  offset m-n = 4: same score at three absolute positions: True
+
+--- RoPE is not a no-op ---
+scores at offsets 0, -1, -2, -8 are distinct: True
+
+ALL CHECKS PASS: True

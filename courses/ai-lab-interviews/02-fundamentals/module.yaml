@@ -1,0 +1,8 @@
+title: "Fundamentals You Cannot Fumble"
+slug: "fundamentals"
+description: "MLPs, activations, Jacobians, backpropagation, and autograd — the layer of knowledge every other interview question stands on."
+order: 2
+difficulty: intermediate
+estimatedMinutes: 55
+tags: [fundamentals, backprop, autograd, activations]
+type: reading

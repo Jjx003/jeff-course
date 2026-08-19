@@ -1,0 +1,8 @@
+title: "Math for ML Interviews"
+slug: "math-for-interviews"
+description: "Probability, linear algebra, and calculus at the depth the math interview actually asks for — with the technique-selection table that makes probability questions tractable."
+order: 35
+difficulty: advanced
+estimatedMinutes: 70
+tags: [math, probability, linear-algebra, calculus]
+type: reading

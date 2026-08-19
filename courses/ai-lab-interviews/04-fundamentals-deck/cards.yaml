@@ -1,0 +1,193 @@
+title: "Fundamentals"
+instructions: >
+  Say each answer out loud before flipping. Grade Again whenever you could not
+  have delivered the answer cleanly in an interview.
+newPerSession: 12
+maxPerSession: 40
+cards:
+  - id: linear-backward
+    front: "Forward is $Z = XW + b$ with $X$ of shape $(m, n_{in})$. Write all three backward gradients."
+    back: |
+      $$\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Z}W^{\top}, \quad \frac{\partial L}{\partial W} = X^{\top}\frac{\partial L}{\partial Z}, \quad \frac{\partial L}{\partial b} = \sum_i \frac{\partial L}{\partial Z_{i,:}}$$
+
+      Shapes are forced: every gradient matches its tensor. $W$ and $b$ are shared across the batch so their gradients contract it away; $X$ is per-example so the batch dimension survives.
+    tags: [backprop]
+  - id: grad-shape-rule
+    front: "One rule that resolves almost every 'which way does the transpose go' question."
+    back: "The gradient of a tensor has the same shape as the tensor. There is exactly one arrangement of the matmul that produces it."
+    tags: [backprop]
+  - id: shared-vs-unshared
+    front: "How do you know whether a gradient sums over the batch dimension or keeps it?"
+    back: "Shared across the batch (weights, biases) → the batch dimension is contracted away, so it sums. Not shared (activations) → the batch dimension is preserved, so it stacks."
+    tags: [backprop]
+  - id: nn-linear-layout
+    front: "What shape does `nn.Linear(d_in, d_out)` store its weight as, and why?"
+    back: "$(d_{out}, d_{in})$ — transposed relative to the math. The forward computes `x @ W.T`, and the transpose is free because it only changes strides. The layout makes $\\partial L/\\partial W$ come out already matching the parameter shape."
+    tags: [pytorch]
+  - id: softmax-ce-grad
+    front: "Gradient of cross-entropy loss with respect to the logits?"
+    back: |
+      $$\frac{\partial L}{\partial z} = p - \mathrm{onehot}(t)$$
+
+      This is why frameworks fuse softmax and cross-entropy into one op, and why `F.cross_entropy` takes logits rather than probabilities.
+    tags: [backprop, loss]
+  - id: ce-logits-trap
+    front: "What goes wrong if you pass softmax probabilities to `F.cross_entropy`?"
+    back: "A double softmax. The distribution flattens, the gradient signal shrinks, and the model still trains — just much worse. It is a favourite interview trap precisely because it does not crash."
+    tags: [pytorch, loss]
+  - id: softmax-jacobian
+    front: "Write the softmax Jacobian $\\partial p_j / \\partial z_i$."
+    back: |
+      $$\frac{\partial p_j}{\partial z_i} = \begin{cases} p_j(1-p_j) & i = j \\ -p_j p_i & i \neq j \end{cases}$$
+    tags: [math, backprop]
+  - id: sigmoid-derivative
+    front: "Derivative of $\\sigma(x)$?"
+    back: "$\\sigma'(x) = \\sigma(x)(1-\\sigma(x))$, with a maximum of $0.25$ at $x=0$."
+    tags: [activations]
+  - id: tanh-derivative
+    front: "Derivative of $\\tanh(x)$, and its relationship to sigmoid?"
+    back: "$\\tanh'(x) = 1 - \\tanh^2(x)$, peaking at 1. And $\\tanh(x) = 2\\sigma(2x) - 1$."
+    tags: [activations]
+  - id: sigmoid-dead
+    front: "Two reasons sigmoid is not used in hidden layers."
+    back: "1. Vanishing gradients — $\\sigma' \\le 0.25$, so depth multiplies the gradient down exponentially. 2. Not zero-centered — all outputs are positive, so every weight into a neuron receives a same-signed gradient and updates zigzag."
+    tags: [activations]
+  - id: dying-relu
+    front: "What is a dying ReLU?"
+    back: "A neuron whose pre-activation is negative for every input in the data distribution. Its gradient is zero forever and it can never recover, usually caused by one oversized learning-rate step. Leaky ReLU exists to keep a trickle of gradient flowing."
+    tags: [activations]
+  - id: swish
+    front: "Define Swish and its derivative."
+    back: |
+      $$\mathrm{Swish}(x) = x\,\sigma(x)$$
+      $$\mathrm{Swish}'(x) = \sigma(x) + \mathrm{Swish}(x)(1 - \sigma(x))$$
+
+      Smooth and non-monotonic, unlike ReLU.
+    tags: [activations]
+  - id: swiglu-def
+    front: "Define GLU and SwiGLU."
+    back: |
+      $$\mathrm{GLU}(x) = (xW_1)\odot\sigma(xW_2)$$
+      $$\mathrm{SwiGLU}(x) = (xW_1)\odot\mathrm{Swish}(xW_2)$$
+
+      One projection is content, the other is a multiplicative gate.
+    tags: [activations, architecture]
+  - id: swiglu-hidden-dim
+    front: "SwiGLU needs three weight matrices instead of two. How do implementations keep the parameter count fixed?"
+    back: "They shrink the FFN hidden dimension from $4d$ to about $\\frac{8}{3}d$. Knowing this specific number signals you have read an implementation, not a summary."
+    tags: [architecture]
+  - id: why-nonlinear
+    front: "Why do neural networks need nonlinearities at all?"
+    back: "Without them a stack of linear layers collapses: $W_1W_2x = Wx$. Depth adds no representational power. With them the network becomes a universal approximator and depth buys expressivity far more cheaply than width."
+    tags: [fundamentals]
+  - id: backprop-node-intuitions
+    front: "What does each of add, max, and multiply do to an upstream gradient?"
+    back: "Add distributes it unchanged to every summand. Max routes all of it to the argmax and zero elsewhere. Multiply swaps the forward coefficients — the gradient to $a$ is upstream times $b$."
+    tags: [backprop]
+  - id: branch-sum
+    front: "A tensor $y$ feeds two different downstream ops. What happens to its gradient?"
+    back: "The two paths sum: $\\partial L/\\partial y = \\partial L/\\partial a \\cdot \\partial a/\\partial y + \\partial L/\\partial b \\cdot \\partial b/\\partial y$. Forgetting this is the classic hand-written-backprop bug, and it is what bites with weight-tied embeddings."
+    tags: [backprop]
+  - id: backward-cost
+    front: "How does the cost of backward compare to forward?"
+    back: "Same big-O; roughly 2x the FLOPs. Each layer computes two gradient matmuls — one for the input, one for the parameters — against the forward pass's single matmul. Hence the common 6N FLOPs-per-token-per-parameter training estimate: 2N forward, 4N backward."
+    tags: [backprop, accounting]
+  - id: backward-scalar
+    front: "Why does `.backward()` require a scalar?"
+    back: "It computes $\\partial L/\\partial\\theta$ — one number per parameter — which only makes sense for scalar $L$. PyTorch implicitly seeds a scalar backward with $\\partial L/\\partial L = 1$; a non-scalar needs an explicit `gradient=` argument."
+    tags: [pytorch, backprop]
+  - id: mean-loss-linearity
+    front: "Why is gradient accumulation mathematically equivalent to a larger batch?"
+    back: "By linearity, the gradient of a mean loss is the mean of the per-example gradients: $\\partial L/\\partial\\theta = \\frac{1}{N}\\sum_i \\partial\\ell_i/\\partial\\theta$. The catch is dividing correctly — that is where the real bug lives."
+    tags: [training, backprop]
+  - id: checkpointing
+    front: "What is gradient checkpointing, and what is the optimal number of checkpoints?"
+    back: "Store only a subset of activations and recompute the rest in the backward pass. For $N$ layers in $K$ segments: memory $O(K + N/K)$, backward compute $O(N + N(K-1)/K)$. Optimal $K = \\sqrt{N}$, giving $O(\\sqrt{N})$ memory for roughly 33% extra training compute."
+    tags: [memory, training]
+  - id: activation-storage
+    front: "Why does training use so much more memory than inference at the same batch size?"
+    back: "The backward pass needs forward intermediates, so every activation is retained across the whole forward pass. Inference frees each layer's activations as soon as the next layer consumes them."
+    tags: [memory]
+  - id: grad-check-central
+    front: "Why use a central finite difference rather than a forward one for gradient checking?"
+    back: "Central difference error is $O(h^2)$; forward difference is $O(h)$. In float64 with $h \\approx 10^{-5}$ the central version reaches about $10^{-9}$ relative error, which is tight enough to catch real bugs."
+    tags: [debugging]
+  - id: grad-check-relerr
+    front: "Why compare gradients by relative error rather than absolute difference?"
+    back: |
+      A gradient of magnitude $10^4$ and one of magnitude $10^{-4}$ cannot share an absolute threshold. Use
+      $$\frac{|a-b|}{\max(|a|+|b|,\varepsilon)}$$
+    tags: [debugging]
+  - id: grad-check-two-ways
+    front: "You wrote a backward pass by hand. Name two independent ways to verify it and what each catches."
+    back: "Central finite differences catch genuine math errors — a missing transpose, a dropped mask, a misplaced $1/N$. Comparing to autograd catches convention mismatches — weight layout, reduction mode, loss definition. Neither catches what the other does."
+    tags: [debugging]
+  - id: relu-kink
+    front: "Why can gradient checking be unreliable at a ReLU?"
+    back: "The kink problem. If a pre-activation is near zero, the $\\pm h$ perturbation can straddle the discontinuity, so the numerical and analytic gradients legitimately disagree. Perturb away from the boundary or check with inputs far from the kink."
+    tags: [debugging]
+  - id: stable-softmax
+    front: "Write the numerically stable softmax and say why the naive one fails."
+    back: |
+      $$\mathrm{softmax}(x)_i = \frac{e^{x_i - x_{\max}}}{\sum_j e^{x_j - x_{\max}}}$$
+
+      Softmax is invariant to a constant shift. In float32, $e^{x}$ overflows around $x \approx 88$. After subtraction the largest exponent is $e^0 = 1$ and the denominator is at least 1.
+    tags: [numerics]
+  - id: logsumexp
+    front: "Write the stable log-sum-exp identity."
+    back: |
+      $$\log\sum_i e^{x_i} = x_{\max} + \log\sum_i e^{x_i - x_{\max}}$$
+
+      Largest term is $e^0 = 1$ so nothing overflows, and the sum is at least 1 so you never take $\log(0)$.
+    tags: [numerics]
+  - id: log-softmax-why
+    front: "Why compute `x - logsumexp(x)` instead of `log(softmax(x))`?"
+    back: "It never materializes a tiny probability that then has to be logged. Taking $\\log$ of a value near zero is where precision dies; log-sum-exp is stable throughout."
+    tags: [numerics]
+  - id: autograd-accumulate
+    front: "Why does `optimizer.zero_grad()` exist?"
+    back: "`.grad` is accumulated into, not overwritten. That is deliberate — it is what makes gradient accumulation and multi-loss backward work — but it means a forgotten `zero_grad()` silently sums gradients across steps."
+    tags: [pytorch]
+  - id: detach-vs-nograd
+    front: "`detach()` versus `torch.no_grad()` — when do you use each?"
+    back: "`detach()` cuts one tensor out of the graph: use it for a stop-gradient inside a loss, like the reference model in DPO or the target in distillation. `no_grad()` disables graph construction for a whole block: use it for evaluation and generation."
+    tags: [pytorch]
+  - id: leaf-tensors
+    front: "Which tensors keep `.grad` after a backward pass?"
+    back: "Leaf tensors — the ones you created, typically parameters. Intermediate activation gradients are computed, passed along, and discarded, unless you call `retain_grad()`."
+    tags: [pytorch]
+  - id: inplace-error
+    front: "What causes 'a variable needed for gradient computation has been modified by an inplace operation'?"
+    back: "An in-place op overwrote a value that autograd had cached for the backward pass. Common culprits: `x += y` on an activation, or `relu_()` on a tensor a later gradient depends on."
+    tags: [pytorch, debugging]
+  - id: he-init
+    front: "What initialization goes with ReLU, and why that variance?"
+    back: "He init: $\\mathcal{N}(0, 2/n_{in})$. The factor of 2 compensates for ReLU zeroing roughly half the units, keeping activation variance stable across depth. Xavier/Glorot uses $1/n_{in}$ (or $2/(n_{in}+n_{out})$) and matches symmetric activations like tanh."
+    tags: [training]
+  - id: jacobian-hessian
+    front: "For a function with $n$ inputs and $m$ outputs, what shape is the Jacobian? What about the Hessian?"
+    back: "Jacobian: $m \\times n$ of first partials. Hessian (scalar output only): $n \\times n$ of second partials, $H_{ij} = \\partial^2 f/\\partial x_i \\partial x_j$. The Hessian of a loss describes the curvature of the loss landscape."
+    tags: [math]
+  - id: elementwise-jacobian
+    front: "For an elementwise activation $h = f(z)$, what is $\\partial h/\\partial z$?"
+    back: "A diagonal matrix, $\\mathrm{diag}(f'(z))$ — which is why in code it is a broadcast multiply rather than a matmul."
+    tags: [math, backprop]
+  - id: useful-jacobians
+    front: "Give $\\partial(Wx+b)/\\partial x$, $\\partial(Wx+b)/\\partial b$, and $\\partial(u^{\\top}h)/\\partial u$."
+    back: "$W$, the identity $I$, and $h^{\\top}$ respectively."
+    tags: [math]
+  - id: entropy-ce-kl
+    front: "State the relationship between cross-entropy, KL divergence, and entropy."
+    back: |
+      $$\mathrm{CE}(p, q) = \mathrm{KL}(p \| q) + H(p)$$
+
+      $H(p)$ is irreducible, so minimizing cross-entropy over $q$ is exactly minimizing the KL divergence.
+    tags: [math, loss]
+  - id: nll-equivalence
+    front: "Why is language-model cross-entropy loss the same thing as negative log likelihood?"
+    back: "The target distribution is one-hot at the true next token, so $\\mathrm{CE} = -\\log p(x_t \\mid x_{<t})$. Summed over the sequence, that is the negative log likelihood of the text under the model."
+    tags: [loss]
+  - id: perplexity
+    front: "Define perplexity in terms of the loss."
+    back: "$\\mathrm{PPL} = e^{L}$ where $L$ is the mean per-token cross-entropy in nats. Interpretation: the effective number of equally likely choices the model is deciding between at each token."
+    tags: [loss, eval]

@@ -1,0 +1,8 @@
+title: "Deck: Tokenization, Data, and Evaluation"
+slug: "tokenization-data-deck"
+description: "Spaced-repetition deck for BPE, data pipelines, contamination, and evaluation methodology."
+order: 34
+difficulty: advanced
+estimatedMinutes: 15
+tags: [flashcards, tokenization, data, evaluation]
+type: flashcards
