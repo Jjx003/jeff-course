@@ -1,7 +1,7 @@
 title: "Protein model workloads"
 slug: "protein-model-workloads"
 description: "Map LLM optimization ideas onto ESMFold, AlphaFold-style diffusion, Chai, and Boltz workloads."
-order: 15
+order: 18
 difficulty: advanced
 estimatedMinutes: 40
 tags: [protein-folding, esmfold, alphafold, boltz]

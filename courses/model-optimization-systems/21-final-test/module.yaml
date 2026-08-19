@@ -1,9 +1,9 @@
 title: "Final test: optimization systems"
 slug: "final-test"
 description: "A cumulative exam on model optimization for LLMs and protein models."
-order: 18
+order: 21
 difficulty: advanced
-estimatedMinutes: 30
+estimatedMinutes: 35
 tags: [test, quantization, serving, protein-folding]
 type: test
 

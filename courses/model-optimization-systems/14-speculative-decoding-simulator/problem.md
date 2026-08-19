@@ -167,8 +167,8 @@ printed stdout.
 You have a speculative sampler that is provably distribution-preserving, an
 exact algebraic certificate that the acceptance rule is correct, a measurement
 of what the classic residual bug costs, and an honest assessment of how far the
-reading's committed-token formula can be trusted. The next module leaves LLM
-serving for protein model workloads, where the same proposal-plus-verification
-instinct shows up as cheap screens in front of expensive structure models — but
-without the lossless guarantee you just proved here, which is exactly why those
-pipelines have to worry about false negatives.
+reading's committed-token formula can be trusted. That closes the single-GPU
+story — and opens the question the course has been deferring since module 2:
+the 70B model every floor was computed for does not fit on one GPU at all. The
+next module distributes it, and the roofline gains its final term:
+communication.

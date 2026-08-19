@@ -11,6 +11,8 @@ The quiz covers:
 - paged cache management,
 - continuous batching,
 - speculative decoding,
+- tensor, pipeline, and expert parallelism,
+- latency measurement: TTFT, ITL, percentiles, coordinated omission,
 - protein language model workloads,
 - sequence packing,
 - AlphaFold/Chai/Boltz-style systems intuition.
@@ -52,6 +54,16 @@ GPU work flowing as requests start, stop, and grow at different rates.
 Speculative decoding is a latency idea. A cheap proposal mechanism tries to let
 one target-model verification step commit multiple output tokens. It is useful
 only when accepted-token gain exceeds draft overhead.
+
+Parallelism strategies differ by what crosses the wire. Tensor parallelism
+pays two latency-dominated all-reduces per layer and buys per-token speed;
+pipeline parallelism pays almost nothing per stage boundary and buys capacity
+and throughput but cannot cut inter-token latency; expert parallelism pays two
+all-to-alls per MoE layer and is what lets a sparse model's aggregate batch
+climb the roofline. And measurement has its own failure modes: percentiles
+need sample sizes, short benchmarks near saturation measure luck, and a
+closed-loop load generator understates tail latency by backing off exactly
+when the server congests.
 
 ## Biology concepts to review
 

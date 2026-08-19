@@ -52,4 +52,15 @@ questions:
     options: ["Continuous batching", "NF4 codebook design", "Protein contact maps", "SVD initialization"]
     correct: 0
     explanation: "Continuous batching schedules work at token granularity instead of waiting for a whole batch to finish."
+  - id: q9
+    type: multiple_choice
+    stem: "Tensor parallelism at degree 8 delivers about a 6x decode speedup rather than 8x. The dominant reason is:"
+    options: ["The GPUs have less total memory", "A fixed per-collective latency cost that does not shrink as GPUs are added", "Floating-point error from sharding", "The KV cache must be recomputed on every rank"]
+    correct: 1
+    explanation: "The weight-read term divides by p, but the ~160 small all-reduces per token cost roughly constant latency. Amdahl's law with communication as the serial term."
+  - id: q10
+    type: true_false
+    stem: "The p99 latency computed from 50 requests is just the largest observed latency."
+    correct: true
+    explanation: "The nearest-rank p99 index is ceil(0.99 * n), which equals n for n < 100. Tail percentiles need sample sizes to mean anything."
 

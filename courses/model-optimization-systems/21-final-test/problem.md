@@ -11,6 +11,8 @@ covers the whole arc:
 - KV-cache serving,
 - continuous batching,
 - speculative decoding,
+- distributed inference: tensor, pipeline, and expert parallelism,
+- serving measurement: TTFT, ITL, percentiles, and load curves,
 - protein language model workloads,
 - biomolecular structure-prediction systems.
 

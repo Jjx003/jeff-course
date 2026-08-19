@@ -40,6 +40,23 @@ Quantization can help an embedding model while subtly changing downstream
 ranking. MSA caching can dominate AlphaFold2-style throughput but does almost
 nothing for a single-sequence PLM route.
 
+![Log-log chart of relative cost against chain length for linear, quadratic, and cubic terms, beside a table listing which cost term each pipeline stage pays](/courses/model-optimization-systems/protein-cost-profile.svg)
+
+The chart is the reason this module exists as something other than an LLM
+appendix. In language modeling the worst term you normally meet is $O(L^2)$,
+and the entire attention-kernel literature exists to tame it. Folding models
+have an $O(L^3)$ term, and it is not an implementation detail — it comes from
+the triangle operations that give the pair representation its geometric
+consistency, so it cannot be tiled away without changing the model.
+
+The practical consequence is that the toolbox from the first half of this course
+attacks the *middle* rows of that table and leaves the top and bottom alone.
+FlashAttention improves the $O(sL^2c)$ MSA attention. Quantization improves the
+per-parameter cost of the trunk. Neither touches the $O(L^3c)$ triangle updates,
+and neither touches the database search that often dominates a single cold
+request. Reaching for a kernel optimization before profiling is, in this domain,
+a good way to make the fast part faster.
+
 ## ESMFold-style systems
 
 ESMFold showed that a large protein language model can predict structure

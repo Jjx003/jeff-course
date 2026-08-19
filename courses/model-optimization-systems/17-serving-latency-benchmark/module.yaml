@@ -1,0 +1,17 @@
+title: "Measure TTFT and p99 without fooling yourself"
+slug: "serving-latency-benchmark"
+description: "Build a discrete-event serving benchmark: nearest-rank percentiles done exactly, an M/D/1 queue verified against the Pollaczek-Khinchine closed form, the load-latency hockey stick, and a measured demonstration of coordinated omission."
+order: 17
+difficulty: advanced
+estimatedMinutes: 65
+tags: [benchmarking, latency, percentiles, queueing, serving]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

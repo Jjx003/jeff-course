@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" role="img" aria-labelledby="title desc">
+  <title id="title">Dynamic LoRA versus merged LoRA through one projection</title>
+  <desc id="desc">On the left, a dynamic adapter keeps the frozen base matrix and applies a low-rank branch alongside it, so many adapters share one base copy at the cost of extra kernels. On the right, the adapter is folded into the base matrix, giving a single dense matmul but one full-size copy of the weights per adapter variant.</desc>
+  <defs>
+    <marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#475569"/></marker>
+    <style>
+      .h{font:700 19px system-ui;fill:#0f172a}
+      .t{font:15px system-ui;fill:#1e293b}
+      .s{font:13px system-ui;fill:#475569}
+      .m{font:italic 14px system-ui;fill:#0f172a}
+      .l{stroke:#475569;stroke-width:2.5;fill:none;marker-end:url(#a2)}
+    </style>
+  </defs>
+  <rect width="1000" height="520" rx="24" fill="#f8fafc"/>
+  <text x="40" y="40" class="h">One projection, two deployment shapes</text>
+  <text x="40" y="62" class="s">d_in = d_out = 4096, rank r = 16, &#945; = 32. Base matrix W is frozen; only A and B were trained.</text>
+
+  <path d="M500 88V464" stroke="#cbd5e1" stroke-width="2"/>
+
+  <text x="40" y="112" class="h" fill="#1e3a8a">Dynamic adapter</text>
+  <text x="40" y="133" class="m">y = Wx + (&#945;/r)&#183;B(Ax)</text>
+
+  <circle cx="70" cy="205" r="20" fill="#e2e8f0" stroke="#475569"/><text x="70" y="211" class="t" text-anchor="middle">x</text>
+  <rect x="130" y="160" width="150" height="52" rx="12" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="205" y="182" class="t" text-anchor="middle">W  (frozen)</text>
+  <text x="205" y="201" class="s" text-anchor="middle">4096 &#215; 4096</text>
+
+  <rect x="130" y="248" width="66" height="46" rx="10" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="163" y="269" class="t" text-anchor="middle">A</text><text x="163" y="286" class="s" text-anchor="middle">16&#215;4096</text>
+  <rect x="214" y="248" width="66" height="46" rx="10" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="247" y="269" class="t" text-anchor="middle">B</text><text x="247" y="286" class="s" text-anchor="middle">4096&#215;16</text>
+
+  <circle cx="345" cy="205" r="19" fill="#fef3c7" stroke="#d97706"/><text x="345" y="212" class="t" text-anchor="middle">+</text>
+  <circle cx="430" cy="205" r="20" fill="#e2e8f0" stroke="#475569"/><text x="430" y="211" class="t" text-anchor="middle">y</text>
+
+  <g class="l">
+    <path d="M92 198L128 189"/><path d="M92 216L128 260"/>
+    <path d="M198 271H210"/>
+    <path d="M282 186L326 198"/><path d="M282 264L328 218"/>
+    <path d="M366 205H408"/>
+  </g>
+
+  <rect x="40" y="330" width="420" height="112" rx="14" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="58" y="354" class="t" fill="#1e3a8a">One base copy serves every adapter</text>
+  <text x="58" y="378" class="s">&#8226; extra FLOPs: 2r(d_in+d_out) = 0.26 MFLOP vs 33.6 MFLOP base &#8212; 0.78%</text>
+  <text x="58" y="399" class="s">&#8226; extra weights held resident: 0.26 MB per adapter in BF16</text>
+  <text x="58" y="420" class="s">&#8226; cost is launches and layout, not arithmetic; requests using</text>
+  <text x="70" y="437" class="s">different adapters can still share one batch if the kernel gathers B and A per row</text>
+
+  <text x="540" y="112" class="h" fill="#7c2d12">Merged adapter</text>
+  <text x="540" y="133" class="m">W&#8242; = W + (&#945;/r)&#183;BA, then y = W&#8242;x</text>
+
+  <circle cx="570" cy="205" r="20" fill="#e2e8f0" stroke="#475569"/><text x="570" y="211" class="t" text-anchor="middle">x</text>
+  <rect x="640" y="160" width="200" height="52" rx="12" fill="#ffedd5" stroke="#ea580c"/>
+  <text x="740" y="182" class="t" text-anchor="middle">W&#8242;  (dense)</text>
+  <text x="740" y="201" class="s" text-anchor="middle">4096 &#215; 4096</text>
+  <circle cx="900" cy="205" r="20" fill="#e2e8f0" stroke="#475569"/><text x="900" y="211" class="t" text-anchor="middle">y</text>
+  <g class="l"><path d="M592 205H636"/><path d="M842 205H878"/></g>
+
+  <rect x="540" y="248" width="300" height="46" rx="10" fill="#fff7ed" stroke="#fdba74" stroke-dasharray="6 4"/>
+  <text x="690" y="277" class="s" text-anchor="middle" fill="#7c2d12">one 32 MB copy per adapter variant</text>
+
+  <rect x="540" y="330" width="420" height="112" rx="14" fill="#fff7ed" stroke="#ea580c"/>
+  <text x="558" y="354" class="t" fill="#7c2d12">Fastest path, least flexible</text>
+  <text x="558" y="378" class="s">&#8226; a single dense GEMM: no branch, no gather, no extra launch</text>
+  <text x="558" y="399" class="s">&#8226; ten adapters means ten full copies of the model</text>
+  <text x="558" y="420" class="s">&#8226; merging into a quantized base re-introduces quantization error,</text>
+  <text x="570" y="437" class="s">so the merged model has to be re-evaluated, not assumed equal</text>
+
+  <text x="40" y="482" class="s">Production stacks usually do both: merge the one or two hottest adapters, keep the long tail dynamic and paged in from CPU.</text>
+  <text x="40" y="502" class="s">The choice is a serving decision, not a training one &#8212; the adapter weights are identical either way.</text>
+</svg>

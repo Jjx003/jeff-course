@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" role="img" aria-labelledby="title desc">
+  <title id="title">Megatron-style tensor-parallel MLP across four GPUs</title>
+  <desc id="desc">The input x is replicated on all four GPUs. Each GPU holds a column shard of the up projection, applies the elementwise nonlinearity locally, then multiplies by its row shard of the down projection to produce a partial sum of the full output. A single all-reduce sums the four partials into y. The nonlinearity is free because column shards never need mixing; the only communication in the whole block is the final all-reduce.</desc>
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#475569"/></marker>
+    <style>
+      .h{font:700 19px system-ui;fill:#0f172a}
+      .t{font:15px system-ui;fill:#1e293b}
+      .s{font:13px system-ui;fill:#475569}
+      .m{font:italic 14px system-ui;fill:#0f172a}
+      .l{stroke:#475569;stroke-width:2.2;fill:none;marker-end:url(#ar)}
+      .lr{stroke:#dc2626;stroke-width:2.6;fill:none;marker-end:url(#ar)}
+    </style>
+  </defs>
+  <rect width="1000" height="600" rx="24" fill="#f8fafc"/>
+  <text x="40" y="40" class="h">One MLP, four GPUs, one all-reduce</text>
+  <text x="40" y="62" class="s">hidden h = 8192, FFN 4h = 32768. Column-cut W_up, row-cut W_down; the elementwise &#963; slots between them for free.</text>
+
+  <circle cx="80" cy="300" r="24" fill="#e2e8f0" stroke="#475569"/>
+  <text x="80" y="306" class="t" text-anchor="middle">x</text>
+  <text x="80" y="238" class="s" text-anchor="middle">full hidden vector,</text>
+  <text x="80" y="255" class="s" text-anchor="middle">replicated on all GPUs</text>
+
+  <!-- GPU lanes -->
+  <g>
+    <rect x="170" y="96" width="510" height="104" rx="14" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="186" y="118" class="s">GPU 0</text>
+    <rect x="196" y="128" width="130" height="52" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="261" y="150" class="t" text-anchor="middle">W_up[:, 0]</text>
+    <text x="261" y="168" class="s" text-anchor="middle">cols 0..8191</text>
+    <circle cx="392" cy="154" r="20" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="392" y="160" class="t" text-anchor="middle">&#963;</text>
+    <rect x="458" y="128" width="130" height="52" rx="10" fill="#ffedd5" stroke="#ea580c"/>
+    <text x="523" y="150" class="t" text-anchor="middle">W_down[0, :]</text>
+    <text x="523" y="168" class="s" text-anchor="middle">rows 0..8191</text>
+    <g class="l"><path d="M328 154H370"/><path d="M414 154H456"/><path d="M590 154H636"/></g>
+    <text x="652" y="146" class="m">y&#8320;</text>
+  </g>
+  <g>
+    <rect x="170" y="212" width="510" height="104" rx="14" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="186" y="234" class="s">GPU 1</text>
+    <rect x="196" y="244" width="130" height="52" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="261" y="266" class="t" text-anchor="middle">W_up[:, 1]</text>
+    <text x="261" y="284" class="s" text-anchor="middle">cols 8192..16383</text>
+    <circle cx="392" cy="270" r="20" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="392" y="276" class="t" text-anchor="middle">&#963;</text>
+    <rect x="458" y="244" width="130" height="52" rx="10" fill="#ffedd5" stroke="#ea580c"/>
+    <text x="523" y="266" class="t" text-anchor="middle">W_down[1, :]</text>
+    <text x="523" y="284" class="s" text-anchor="middle">rows 8192..16383</text>
+    <g class="l"><path d="M328 270H370"/><path d="M414 270H456"/><path d="M590 270H636"/></g>
+    <text x="652" y="262" class="m">y&#8321;</text>
+  </g>
+  <g>
+    <rect x="170" y="328" width="510" height="104" rx="14" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="186" y="350" class="s">GPU 2</text>
+    <rect x="196" y="360" width="130" height="52" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="261" y="382" class="t" text-anchor="middle">W_up[:, 2]</text>
+    <text x="261" y="400" class="s" text-anchor="middle">cols 16384..24575</text>
+    <circle cx="392" cy="386" r="20" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="392" y="392" class="t" text-anchor="middle">&#963;</text>
+    <rect x="458" y="360" width="130" height="52" rx="10" fill="#ffedd5" stroke="#ea580c"/>
+    <text x="523" y="382" class="t" text-anchor="middle">W_down[2, :]</text>
+    <text x="523" y="400" class="s" text-anchor="middle">rows 16384..24575</text>
+    <g class="l"><path d="M328 386H370"/><path d="M414 386H456"/><path d="M590 386H636"/></g>
+    <text x="652" y="378" class="m">y&#8322;</text>
+  </g>
+  <g>
+    <rect x="170" y="444" width="510" height="104" rx="14" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="186" y="466" class="s">GPU 3</text>
+    <rect x="196" y="476" width="130" height="52" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="261" y="498" class="t" text-anchor="middle">W_up[:, 3]</text>
+    <text x="261" y="516" class="s" text-anchor="middle">cols 24576..32767</text>
+    <circle cx="392" cy="502" r="20" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="392" y="508" class="t" text-anchor="middle">&#963;</text>
+    <rect x="458" y="476" width="130" height="52" rx="10" fill="#ffedd5" stroke="#ea580c"/>
+    <text x="523" y="498" class="t" text-anchor="middle">W_down[3, :]</text>
+    <text x="523" y="516" class="s" text-anchor="middle">rows 24576..32767</text>
+    <g class="l"><path d="M328 502H370"/><path d="M414 502H456"/><path d="M590 502H636"/></g>
+    <text x="652" y="494" class="m">y&#8323;</text>
+  </g>
+
+  <!-- fan-out from x -->
+  <g class="l">
+    <path d="M102 288 C130 240 140 180 192 158"/>
+    <path d="M104 294 C130 280 150 272 192 270"/>
+    <path d="M104 308 C130 330 150 378 192 384"/>
+    <path d="M102 314 C130 370 140 460 192 496"/>
+  </g>
+
+  <!-- all-reduce -->
+  <circle cx="790" cy="322" r="42" fill="#fee2e2" stroke="#dc2626" stroke-width="2.5"/>
+  <text x="790" y="316" class="t" text-anchor="middle" fill="#991b1b">all-</text>
+  <text x="790" y="336" class="t" text-anchor="middle" fill="#991b1b">reduce</text>
+  <g class="lr">
+    <path d="M676 150 C720 170 740 240 752 296"/>
+    <path d="M676 266 C710 276 730 290 748 306"/>
+    <path d="M676 382 C710 370 730 356 748 340"/>
+    <path d="M676 498 C720 476 740 404 752 348"/>
+  </g>
+  <circle cx="910" cy="322" r="24" fill="#e2e8f0" stroke="#475569"/>
+  <text x="910" y="328" class="t" text-anchor="middle">y</text>
+  <g class="l"><path d="M834 322H882"/></g>
+  <text x="910" y="374" class="s" text-anchor="middle">y = y&#8320;+y&#8321;+y&#8322;+y&#8323;</text>
+  <text x="910" y="392" class="s" text-anchor="middle">the only communication</text>
+  <text x="910" y="410" class="s" text-anchor="middle">in the whole block</text>
+
+  <text x="170" y="578" class="s">Each &#963; is applied to a local shard &#8212; elementwise ops never mix columns. Attention shards the same way: heads are named</text>
+  <text x="170" y="595" class="s">groups of columns of W_qkv, and the output projection is the row-parallel half. Two all-reduces per transformer layer, total.</text>
+</svg>

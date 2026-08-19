@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" role="img" aria-labelledby="title desc">
+  <title id="title">Attention intermediate footprint per head, materialized versus tiled</title>
+  <desc id="desc">Log-log chart of bytes held for attention intermediates against sequence length for one head with head dimension 128 in BF16. Materializing the score and probability matrices grows quadratically, reaching 268 megabytes at length 8192 and 4.3 gigabytes at 32768. Tiled attention carries only the output accumulator and two softmax statistics per row, growing linearly to 8.5 megabytes at 32768.</desc>
+  <defs>
+    <style>
+      .h{font:700 20px system-ui;fill:#0f172a}
+      .t{font:15px system-ui;fill:#1e293b}
+      .s{font:13px system-ui;fill:#475569}
+      .ax{font:12px system-ui;fill:#64748b}
+      .grid{stroke:#e2e8f0;stroke-width:1}
+    </style>
+  </defs>
+  <rect width="1000" height="560" rx="24" fill="#f8fafc"/>
+  <text x="40" y="40" class="h">The intermediate that never gets written</text>
+  <text x="40" y="62" class="s">Per attention head, head dimension d = 128, BF16. Slope 2 versus slope 1 &#8212; the gap widens with every doubling of context.</text>
+
+  <g class="grid">
+    <path d="M130 440H930M130 370H930M130 300H930M130 230H930M130 160H930M130 90H930"/>
+    <path d="M263.3 440V90M396.6 440V90M529.9 440V90M663.2 440V90M796.5 440V90"/>
+  </g>
+  <path d="M130 90V440H930" stroke="#475569" stroke-width="2" fill="none"/>
+
+  <g class="ax">
+    <text x="130" y="459" text-anchor="middle">512</text>
+    <text x="263.3" y="459" text-anchor="middle">1K</text>
+    <text x="396.6" y="459" text-anchor="middle">2K</text>
+    <text x="529.9" y="459" text-anchor="middle">4K</text>
+    <text x="663.2" y="459" text-anchor="middle">8K</text>
+    <text x="796.5" y="459" text-anchor="middle">16K</text>
+    <text x="929.8" y="459" text-anchor="middle">32K</text>
+    <text x="122" y="444" text-anchor="end">0.1 MB</text>
+    <text x="122" y="374" text-anchor="end">1 MB</text>
+    <text x="122" y="304" text-anchor="end">10 MB</text>
+    <text x="122" y="234" text-anchor="end">100 MB</text>
+    <text x="122" y="164" text-anchor="end">1 GB</text>
+    <text x="122" y="94" text-anchor="end">10 GB</text>
+  </g>
+  <text x="530" y="486" class="t" text-anchor="middle">sequence length L</text>
+  <text x="34" y="265" class="t" text-anchor="middle" transform="rotate(-90 34 265)">bytes held per head</text>
+
+  <path d="M130 368.5L263.3 326.5L396.6 284.3L529.9 242.1L663.2 200.1L796.5 157.8L929.8 115.7"
+        fill="none" stroke="#dc2626" stroke-width="3.5"/>
+  <path d="M130 432L263.3 409.8L396.6 389.3L529.9 368.2L663.2 347L796.5 326L929.8 304.9"
+        fill="none" stroke="#16a34a" stroke-width="3.5"/>
+
+  <g>
+    <circle cx="663.2" cy="200.1" r="6" fill="#dc2626"/>
+    <circle cx="663.2" cy="347" r="6" fill="#16a34a"/>
+    <path d="M663.2 206v135" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <text x="676" y="278" class="s" fill="#0f172a">126&#215; at L = 8K</text>
+  </g>
+
+  <rect x="150" y="106" width="330" height="76" rx="12" fill="#fee2e2" stroke="#dc2626"/>
+  <text x="168" y="130" class="t" fill="#7f1d1d">Materialized: S and P, both L &#215; L</text>
+  <text x="168" y="152" class="s">2 &#183; L&#178; &#183; 2 bytes &#8212; 268 MB at 8K, 4.3 GB at 32K</text>
+  <text x="168" y="172" class="s">written to HBM, read back, then thrown away</text>
+
+  <rect x="150" y="366" width="330" height="76" rx="12" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="168" y="390" class="t" fill="#14532d">Tiled: O accumulator plus m and l</text>
+  <text x="168" y="412" class="s">L &#183; (d+2) &#183; 2 bytes &#8212; 2.1 MB at 8K, 8.5 MB at 32K</text>
+  <text x="168" y="432" class="s">scores exist only inside SRAM, one tile at a time</text>
+
+  <rect x="40" y="500" width="920" height="42" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="58" y="518" class="s">The IO-complexity theorem is about traffic, not footprint: standard attention makes &#920;(Ld + L&#178;) HBM accesses, tiled attention &#920;(L&#178;d&#178;/M) with SRAM size M.</text>
+  <text x="58" y="536" class="s">Both are quadratic in L; the win is the constant d&#178;/M, which is roughly 1/25 at d = 64 and M = 100 KB. Footprint, shown above, is where the asymptotics actually differ.</text>
+</svg>

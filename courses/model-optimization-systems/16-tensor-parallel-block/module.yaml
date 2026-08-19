@@ -1,0 +1,17 @@
+title: "Shard a transformer block with tensor parallelism"
+slug: "tensor-parallel-block"
+description: "Implement column- and row-parallel sharding for an MLP and GQA attention across simulated devices, count every byte the collectives move, prove the sharded block matches the unsharded one exactly, and measure what the wrong cut costs."
+order: 16
+difficulty: advanced
+estimatedMinutes: 65
+tags: [distributed, tensor-parallelism, collectives, torch]
+type: coding
+languages: [python]
+defaultLanguage: python
+runtime:
+  recommendedMode: baremetal
+  resources:
+    memoryMb: 4096
+    cpus: 2
+    gpu: none
+    timeoutMs: 900000

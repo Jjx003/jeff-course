@@ -1,0 +1,8 @@
+title: "Distributed inference: TP, PP, and MoE"
+slug: "distributed-inference"
+description: "Shard a model that does not fit on one GPU: tensor and pipeline parallelism, what collectives cost, how sharding interacts with the KV cache, and why MoE changes the batching math."
+order: 15
+difficulty: advanced
+estimatedMinutes: 45
+tags: [distributed, tensor-parallelism, pipeline-parallelism, moe, collectives, serving]
+type: reading

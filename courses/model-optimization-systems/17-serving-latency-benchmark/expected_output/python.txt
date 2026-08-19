@@ -1,0 +1,38 @@
+=== Measuring latency without fooling yourself ===
+
+--- Part 1: the percentile itself ---
+nearest-rank percentiles of 1..1000: p50=500 p90=900 p99=990 p99.9=999
+p99 of a 20-sample run: 20 (that is just the sample maximum)
+smallest n where p99 is not the maximum: 100
+
+--- Part 2: M/D/1 against Pollaczek-Khinchine ---
+deterministic service 20.0 ms, 80000 arrivals per load, first 5000 dropped
+rho=0.50  measured mean wait  10.093 ms   P-K  10.000 ms   ratio 1.009
+rho=0.70  measured mean wait  22.960 ms   P-K  23.333 ms   ratio 0.984
+rho=0.90  measured mean wait  99.696 ms   P-K  90.000 ms   ratio 1.108
+
+--- Part 2b: twenty short benchmarks of the same server ---
+rho=0.90, 1000 requests per run, 20 seeds: mean wait ranges 50.7 to 119.7 ms (2.4x spread)
+long-run truth (P-K): 90.0 ms
+(near saturation, a short benchmark measures which busy periods you
+ happened to catch, not the server)
+
+--- Part 3: the load-latency curve (prefill + tokens x ITL) ---
+service = 40.0 ms prefill + tokens x 5.0 ms, tokens uniform 16..256 -> mean 720.0 ms
+  rho   req/s  wait meas  wait P-K  ttft p50  ttft p99
+ 0.50    0.69      432.8     443.0      40.0    3067.8
+ 0.70    0.97     1035.6    1037.6     639.3    6064.8
+ 0.80    1.11     1902.8    1776.9    1214.5   10099.1
+ 0.90    1.25     3959.7    3989.9    2714.2   17620.4
+ 0.95    1.32     8739.4    8450.9    5925.9   41701.7
+(the mean has a closed form; the tail does not - you have to measure it)
+
+--- Part 4: coordinated omission ---
+target load: rho=0.98 -> 1.36 req/s on a 1.39 req/s server
+open loop   (arrivals keep coming): ttft p50   12152.2 ms   p99   50772.7 ms
+closed loop (16 clients, think 11.04 s): ttft p50    1226.6 ms   p99    5232.9 ms   (1.22 req/s achieved)
+closed-loop p99 understates open-loop p99 by 9.7x
+(each waiting client stops sending, so the load generator backs off
+ exactly when the server struggles - the missing requests are the slow ones)
+
+=== all checks passed ===

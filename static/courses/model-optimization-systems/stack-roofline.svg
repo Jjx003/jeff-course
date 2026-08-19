@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" role="img" aria-labelledby="title desc">
+  <title id="title">Roofline for one H100 SXM, with LLM inference operating points</title>
+  <desc id="desc">Log-log roofline. The sloped roof is memory bandwidth at 3.35 terabytes per second, the flat roof is 989 BF16 teraflops per second, and they meet at a ridge point of 295 FLOP per byte. Batch-1 BF16 decode sits at 1 FLOP per byte, far under the sloped roof; batch-32 decode reaches 32; INT4 weights multiply intensity by four; prefill of a long prompt sits past the ridge point against the compute roof.</desc>
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#475569"/></marker>
+    <style>
+      .h{font:700 20px system-ui;fill:#0f172a}
+      .t{font:15px system-ui;fill:#1e293b}
+      .s{font:13px system-ui;fill:#475569}
+      .ax{font:12px system-ui;fill:#64748b}
+      .grid{stroke:#e2e8f0;stroke-width:1;fill:none}
+      .axis{stroke:#475569;stroke-width:2;fill:none}
+      .roof{stroke:#0f172a;stroke-width:3.5;fill:none;stroke-linejoin:round}
+      .drop{stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:4 4;fill:none}
+    </style>
+  </defs>
+  <rect width="1000" height="520" rx="24" fill="#f8fafc"/>
+  <text x="40" y="42" class="h">Where LLM inference sits on the roofline</text>
+  <text x="40" y="64" class="s">NVIDIA H100 SXM: 989 TFLOP/s dense BF16, 3.35 TB/s HBM3. Ridge point = 989 / 3.35 = 295 FLOP/byte.</text>
+
+  <g class="grid">
+    <path d="M110 381.6H930M110 284.2H930M110 186.8H930M110 89.4H930"/>
+    <path d="M222.8 440V70M335.6 440V70M448.4 440V70M561.2 440V70M674 440V70M786.8 440V70M899.6 440V70"/>
+  </g>
+  <path class="axis" d="M110 70V440H930"/>
+
+  <g class="ax">
+    <text x="110" y="459" text-anchor="middle">0.25</text>
+    <text x="222.8" y="459" text-anchor="middle">1</text>
+    <text x="335.6" y="459" text-anchor="middle">4</text>
+    <text x="448.4" y="459" text-anchor="middle">16</text>
+    <text x="561.2" y="459" text-anchor="middle">64</text>
+    <text x="674" y="459" text-anchor="middle">256</text>
+    <text x="786.8" y="459" text-anchor="middle">1024</text>
+    <text x="899.6" y="459" text-anchor="middle">4096</text>
+    <text x="102" y="386" text-anchor="end">1</text>
+    <text x="102" y="288" text-anchor="end">10</text>
+    <text x="102" y="191" text-anchor="end">100</text>
+    <text x="102" y="94" text-anchor="end">1000</text>
+  </g>
+  <text x="520" y="486" class="t" text-anchor="middle">arithmetic intensity I  (FLOP per byte of weights read)</text>
+  <text x="34" y="255" class="t" text-anchor="middle" transform="rotate(-90 34 255)">achieved TFLOP/s</text>
+
+  <path class="roof" d="M110 389.1L685.5 89.8H930"/>
+  <text x="820" y="80" class="s" fill="#0f172a">compute roof: 989 TFLOP/s</text>
+  <text x="150" y="345" class="s" fill="#0f172a" transform="rotate(-27.5 150 345)">memory roof: slope = 3.35 TB/s</text>
+
+  <path class="drop" d="M685.5 89.8V440"/>
+  <circle cx="685.5" cy="89.8" r="6" fill="#0f172a"/>
+  <text x="697" y="122" class="t" fill="#0f172a">ridge point</text>
+  <text x="697" y="142" class="s">I* = 295</text>
+
+  <g>
+    <path class="drop" d="M222.8 330.4V440M504.8 183.8V440M617.6 125.2V440"/>
+    <circle cx="222.8" cy="330.4" r="7" fill="#dc2626"/>
+    <circle cx="504.8" cy="183.8" r="7" fill="#ea580c"/>
+    <circle cx="617.6" cy="125.2" r="7" fill="#16a34a"/>
+    <circle cx="843.2" cy="89.8" r="7" fill="#2563eb"/>
+  </g>
+
+  <g class="s">
+    <rect x="128" y="252" width="196" height="62" rx="10" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="140" y="274" class="t" fill="#7f1d1d">decode, B = 1, BF16</text>
+    <text x="140" y="296">I = 1 &#8594; 3.4 TFLOP/s (0.3% of peak)</text>
+
+    <rect x="396" y="215" width="212" height="62" rx="10" fill="#ffedd5" stroke="#ea580c"/>
+    <text x="408" y="237" class="t" fill="#7c2d12">decode, B = 32, BF16</text>
+    <text x="408" y="259">I = B = 32 &#8594; 107 TFLOP/s</text>
+
+    <rect x="600" y="300" width="216" height="62" rx="10" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="612" y="322" class="t" fill="#14532d">decode, B = 32, INT4</text>
+    <text x="612" y="344">I = 4B = 128 &#8594; 429 TFLOP/s</text>
+
+    <rect x="716" y="150" width="204" height="62" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="728" y="172" class="t" fill="#1e3a8a">prefill, 2048 tokens</text>
+    <text x="728" y="194">past the ridge: compute-bound</text>
+  </g>
+  <path d="M224 252L228 200" stroke="#dc2626" stroke-width="1.5" fill="none"/>
+  <path d="M505 215V196" stroke="#ea580c" stroke-width="1.5" fill="none"/>
+  <path d="M660 300L625 138" stroke="#16a34a" stroke-width="1.5" fill="none"/>
+  <path d="M830 150L843 100" stroke="#2563eb" stroke-width="1.5" fill="none"/>
+
+  <text x="110" y="508" class="s">For a weight-stationary decode step, intensity equals the batch size: reading one BF16 weight (2 bytes) buys 2B FLOPs. Quantizing to INT4 multiplies it by 4.</text>
+</svg>

@@ -27,12 +27,15 @@ a stack:
 | Kernels | Can the math run as one efficient program? | FlashAttention, fused MLPs, Triton kernels |
 | Serving memory | Can we keep active requests resident? | KV cache layout, paging, prefix reuse |
 | Decoding | Can we generate fewer expensive steps? | speculative decoding, draft heads, batching |
+| Parallelism | Can the model span GPUs without drowning in communication? | tensor/pipeline/expert parallel, collectives |
 | Workload shaping | Can we feed the accelerator better inputs? | sequence packing, bucketing, routing |
+| Measurement | Did it actually get faster, for whom? | TTFT/ITL percentiles, load curves, honest load generation |
 
 This first module is a map. The rest of the course fills in the parts with
 small exercises: a roofline estimator, an INT4 quantizer, a LoRA merge, a
 streaming softmax, a continuous batching simulator, a speculative decoding
-simulator, and a protein sequence-packing heuristic.
+simulator, a tensor-parallel transformer block, a serving-latency benchmark,
+and a protein sequence-packing heuristic.
 
 ## Why inference feels different from training
 
@@ -81,6 +84,77 @@ synchronization, non-ideal layouts, cache misses, scheduler decisions, network
 communication, CPU overhead, and kernels that do not hit the advertised peak.
 Still, the larger floor is a good first guess at the bottleneck.
 
+## Arithmetic intensity, derived rather than asserted
+
+The two floors above compete, and the ratio between them has a name. Define
+**arithmetic intensity** as work per byte moved:
+
+$$
+I = \frac{F}{B}
+$$
+
+A kernel is memory-bound when $t_\text{memory} > t_\text{compute}$, which after
+substituting the two floors is exactly the condition
+
+$$
+\frac{B}{\beta} > \frac{F}{\phi}
+\quad\Longleftrightarrow\quad
+I < \frac{\phi}{\beta}
+$$
+
+The quantity $\phi/\beta$ depends only on the hardware. It is called the
+**ridge point**, and it is the single most useful number to memorize about an
+accelerator. For an H100 SXM at 989 BF16 TFLOP/s and 3.35 TB/s of HBM3:
+
+$$
+I^{*} = \frac{989 \times 10^{12}}{3.35 \times 10^{12}} \approx 295
+\ \text{FLOP/byte}
+$$
+
+Below 295 FLOPs per byte, the memory system sets the pace no matter how good
+your kernels are. Above it, you are finally paying for the Tensor Cores.
+
+Now compute $I$ for a decode step. A decoder-only model with $N$ parameters
+costs about $2N$ FLOPs per token — one multiply and one add per weight. If
+weights are stored at $b$ bytes each and the batch contains $B$ sequences all
+generating a token at the same time, then the weights are read **once** for the
+whole batch:
+
+$$
+F = 2NB, \qquad \text{bytes} = bN, \qquad
+I = \frac{2NB}{bN} = \frac{2B}{b}
+$$
+
+The parameter count cancels. Intensity during decode does not depend on how big
+the model is — only on the batch size and the weight format:
+
+| Weight format | $b$ | $I$ | Batch needed to reach $I^{*} = 295$ |
+|---|---:|---:|---:|
+| BF16 | 2 | $B$ | 295 |
+| FP8 | 1 | $2B$ | 148 |
+| INT4 | 0.5 | $4B$ | 74 |
+
+This one table explains a great deal of production practice. At batch 1 in
+BF16, intensity is 1 and the GPU delivers about $3.35$ TFLOP/s — roughly
+0.3 percent of its rated peak. Nothing is broken; the machine is simply waiting
+on memory. Batching and quantization are the two levers that move you right
+along the axis, and the table says how far each one moves you.
+
+![Roofline for one H100 SXM with batch-1 decode, batch-32 decode, INT4 decode, and long-prompt prefill marked as operating points](/courses/model-optimization-systems/stack-roofline.svg)
+
+*The same hardware, four workloads. Prefill sits past the ridge point because a
+2048-token prompt reuses each weight 2048 times. Decode has to buy its reuse
+with batch size, and the KV cache is what makes batch size expensive.*
+
+Notice what the table does **not** say. It does not say INT4 makes decode four
+times faster; it says INT4 moves you four times further right, and the speedup
+you collect depends on where you started. Going from $I=1$ to $I=4$ on the
+sloped roof is a genuine 4× because you are bandwidth-limited the whole way.
+Going from $I=200$ to $I=800$ buys you almost nothing, because you were already
+past the ridge and the flat roof caps you. Quantization is a bandwidth
+optimization that happens to also save storage, and it stops paying at exactly
+the point where the workload stops being bandwidth-bound.
+
 ## Why protein models belong in this course
 
 Protein models are not just LLMs with a different alphabet. They inherit many
@@ -127,6 +201,8 @@ small, inspectable pieces that make a production server less mysterious:
 - streaming attention arithmetic,
 - a continuous batching simulation,
 - a speculative decoding simulation,
+- a tensor-parallel transformer block verified against its unsharded twin,
+- a latency benchmark calibrated against a queueing-theory closed form,
 - and a sequence-packing heuristic for protein workloads.
 
 The goal is taste. Taste means knowing that INT4 weight-only quantization helps

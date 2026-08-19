@@ -79,6 +79,54 @@ bad to a user. A server that always responds immediately with batch size one
 may waste the GPU. Continuous batching exists because static batches do not
 match real request arrivals.
 
+## Little's Law ties the three numbers together
+
+Throughput, latency, and concurrency are not three independent dials. In any
+system at steady state, Little's Law holds regardless of arrival distribution,
+service distribution, or scheduling policy:
+
+$$
+L = \lambda W
+$$
+
+where $L$ is the mean number of requests resident in the system, $\lambda$ is
+the completion rate, and $W$ is the mean time a request spends inside. For an
+inference server this reads: **concurrency = throughput × latency.**
+
+The law is a conservation statement, not a model, which is what makes it useful:
+it means you cannot improve one term without moving one of the others. Three
+consequences follow immediately.
+
+*You cannot improve throughput without either raising concurrency or lowering
+latency.* If $W$ is fixed by the model and the decode length, then $\lambda$ is
+capped by how many requests you can hold. That cap is usually set by KV-cache
+capacity, not by compute.
+
+*Concurrency has a hard ceiling you can compute.* If the KV pool holds $M$ bytes
+and a request at its typical context costs $m$ bytes of cache, then
+$L \le M/m$, so
+
+$$
+\lambda \le \frac{M}{m \cdot W}
+$$
+
+This is a real number you can put on a slide before writing any code. For a
+70B-class model with 320 KB of cache per token, a 60 GB KV pool, an average
+8k-token session, and a 20-second mean request, the ceiling is roughly
+$60\text{e}9 / (8192 \cdot 320\text{e}3 \cdot 20) \approx 1.1$ requests per
+second. If your product needs ten times that, no kernel is going to save you;
+the cache budget has to change.
+
+*Latency and throughput trade only through concurrency.* Bigger batches raise
+$L$ and therefore raise $\lambda$, but they also raise $W$ for the requests
+inside them. The scheduler's real job is choosing where on that curve to sit,
+per request class, rather than maximizing one number.
+
+The previous section derived that decode intensity equals $2B/b$. Little's Law
+is what tells you whether the batch size $B$ that intensity wants is a batch
+size your memory budget can actually sustain. The two results meet at the KV
+cache, which is why the cache gets its own module later in the course.
+
 ## KV cache as a first-class object
 
 The KV cache stores attention keys and values for previous tokens. A useful
@@ -174,6 +222,8 @@ traffic, and workload constraints.
 
 Use these as anchors while taking the course:
 
+- Roofline: an insightful visual performance model (Williams, Waterman, Patterson): https://dl.acm.org/doi/10.1145/1498765.1498785
+- Efficiently scaling transformer inference, where much of the decode arithmetic in this course is worked out: https://arxiv.org/abs/2211.05102
 - FlashAttention-3 paper: https://arxiv.org/abs/2407.08608
 - vLLM / PagedAttention paper: https://arxiv.org/abs/2309.06180
 - NVIDIA TensorRT-LLM overview: https://developer.nvidia.com/tensorrt-llm

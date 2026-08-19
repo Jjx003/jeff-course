@@ -23,6 +23,29 @@ questions:
     correct: 0
     explanation: "Packing reduces padding waste when multiple variable-length sequences are processed together."
   - id: q5
+    type: multiple_choice
+    stem: "A transformer layer sharded with Megatron-style tensor parallelism needs how many all-reduces per token, and where?"
+    options: ["One, after the QKV projection", "Two: one after attention's output projection, one after the MLP's down projection", "One per matrix multiply", "None; sharding removes the need for communication"]
+    correct: 1
+    explanation: "Column-then-row sharding lets the elementwise nonlinearity and per-head attention run locally; the partial sums must be reduced once per attention block and once per MLP."
+  - id: q6
+    type: true_false
+    stem: "Pipeline parallelism reduces the inter-token latency of a single decode stream."
+    correct: false
+    explanation: "A token must traverse the stages in order, so per-token latency is the sum of stage times. PP buys throughput and capacity, not lower ITL; tensor parallelism is the latency tool."
+  - id: q7
+    type: multiple_choice
+    stem: "A benchmark script sends each request only after the previous one completes, then reports p99 latency near server saturation. What is wrong?"
+    options: ["Nothing, this is standard practice", "Coordinated omission: the generator backs off exactly when the server is slow, so the worst latencies are never sampled", "p99 cannot be computed from sequential requests", "The server should be restarted between requests"]
+    correct: 1
+    explanation: "A closed-loop client stops offering load while it waits, shedding demand precisely during congestion. Open-loop arrivals model users who keep arriving regardless."
+  - id: q8
+    type: multiple_choice
+    stem: "At decode batch size 1, an MoE model with 8 experts and top-2 routing reads roughly how many expert weights per token?"
+    options: ["All 8 experts' weights", "2 experts' weights per MoE layer", "None; experts are cached", "Half of each expert"]
+    correct: 1
+    explanation: "Only routed experts are loaded, so batch-1 decode traffic tracks active parameters. The union of routed experts grows with batch, which is what dilutes MoE's batching efficiency."
+  - id: q9
     type: parametric
     stem_template: "A speculative decoder drafts {{k}} tokens and accepts each with probability {{p}}%. What is the expected number of accepted drafted tokens, rounded, using a simple independent model?"
     params:

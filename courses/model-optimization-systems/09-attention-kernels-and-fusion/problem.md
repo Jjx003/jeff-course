@@ -42,6 +42,8 @@ entries. In BF16, that is about 134 MB for one head's probabilities alone. Multi
 
 The actual model also has Q, K, V, output activations, MLP activations, normalization buffers, and framework workspaces. The point of this estimate is simpler: if an intermediate is $O(L^2)$ and temporary, you should be suspicious of writing it to memory.
 
+![Log-log chart of bytes held per attention head against sequence length, comparing the quadratic growth of materialized score and probability matrices with the linear growth of a tiled kernel's accumulator and statistics](/courses/model-optimization-systems/attn-io-complexity.svg)
+
 ## What tiling changes
 
 Tiling splits the computation into blocks small enough to fit in faster memory. For each query block, the kernel streams over key/value blocks. It never needs the full row of scores at once. Instead it keeps:
@@ -50,7 +52,33 @@ Tiling splits the computation into blocks small enough to fit in faster memory. 
 - a running denominator $l$ for the softmax normalizer,
 - a running output accumulator $o$.
 
+![Diagram of the SRAM and HBM gap alongside the tiling loop, showing one query block meeting one key-value block and the three running statistics carried across blocks](/courses/model-optimization-systems/attn-flash-tiling.svg)
+
 The next coding lab implements this recurrence for one query row. Real kernels apply the same idea across many rows, heads, and blocks with careful scheduling.
+
+## The claim is a theorem, not a benchmark
+
+It is easy to read "FlashAttention is faster" as an engineering result. It is stronger than that. Let $N$ be the sequence length, $d$ the head dimension, and $M$ the size of on-chip SRAM, with $d \le M \le Nd$. Then:
+
+- standard attention performs $\Theta(Nd + N^2)$ HBM accesses;
+- tiled attention performs $\Theta(N^2d^2M^{-1})$ HBM accesses;
+- and **no exact attention algorithm can do asymptotically better** across all values of $M$ in that range.
+
+The counting argument for the middle line is short enough to follow here. The kernel picks block sizes so that a Q block, a K block, a V block, and the output accumulator all fit on chip at once, which means $B_c = \lceil M/4d \rceil$ key/value rows at a time. The number of outer iterations over key/value blocks is therefore
+
+$$
+T_c = \left\lceil \frac{N}{B_c} \right\rceil = \Theta\!\left(\frac{Nd}{M}\right)
+$$
+
+and each outer iteration must sweep the full $Q$ and $O$ tensors, which are $\Theta(Nd)$ elements each. Multiply:
+
+$$
+\Theta(Nd) \times \Theta\!\left(\frac{Nd}{M}\right) = \Theta\!\left(\frac{N^2d^2}{M}\right)
+$$
+
+Now look at what that expression says. Both algorithms are quadratic in $N$ — tiling does not change the asymptotic order in sequence length, and any summary claiming it makes attention linear is wrong. What tiling changes is the constant, which is $d^2/M$. At $d = 64$ and $M \approx 100$ KB that constant is about $1/25$, and measured HBM traffic drops roughly ninefold in practice.
+
+The constant is also the design guidance. $d^2/M$ says a *smaller head dimension* and a *larger SRAM* both help, quadratically and linearly. It explains why head dimension 64 kernels outrun head dimension 128 kernels by more than the FLOP count suggests, and why each GPU generation's larger on-chip memory buys attention performance beyond its raw bandwidth increase.
 
 ## Fusion as a general pattern
 
@@ -69,7 +97,17 @@ Fusion is not magic. It trades generality for a kernel that understands a specif
 
 ## 2026 reality
 
-The attention-kernel landscape keeps moving. FlashAttention-2 made exact attention much faster on Ampere/Ada/Hopper-class hardware. FlashAttention-3 pushed harder on Hopper features such as Tensor Memory Accelerator, warp specialization, asynchronous execution, and FP8-oriented paths. Serving stacks such as vLLM, TensorRT-LLM, SGLang, and vendor backends combine attention kernels with paged KV cache, prefix reuse, quantization, and continuous batching.
+The attention-kernel landscape keeps moving, and the three generations are worth distinguishing because they fix three genuinely different bottlenecks.
+
+| Version | The bottleneck it attacks | Core mechanism |
+|---|---|---|
+| FlashAttention | HBM traffic | tiling plus online softmax, recompute in backward |
+| FlashAttention-2 | idle SMs and non-matmul FLOPs | parallelize over sequence, split Q across warps, defer rescaling |
+| FlashAttention-3 | serialized data movement and softmax | producer/consumer warp specialization, async TMA copies, GEMM–softmax interleaving, FP8 |
+
+The pattern is that each version stops being memory-bound in the previous sense and becomes bound by something else. FlashAttention-1 solved traffic and left the GPU underutilized on long sequences with small batches. FlashAttention-2 fixed occupancy and left the exponential unit and the memory pipeline serialized against the tensor cores. FlashAttention-3 overlaps them. This is what optimization work usually looks like up close: not one fix, but a sequence in which each success promotes a new limiting resource.
+
+Serving stacks such as vLLM, TensorRT-LLM, SGLang, and vendor backends combine attention kernels with paged KV cache, prefix reuse, quantization, and continuous batching.
 
 For an optimization engineer, the practical workflow is:
 

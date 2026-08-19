@@ -56,17 +56,30 @@ weights that preserve layer outputs.
 
 Different methods protect different failure modes:
 
-| Method family | Core idea |
-|---|---|
-| simple uniform PTQ | choose scales and round |
-| groupwise quantization | use local scales for small groups |
-| GPTQ-style methods | account for approximate second-order error |
-| AWQ-style methods | protect activation-important weight channels |
-| SmoothQuant-style methods | move activation outliers into weights |
+| Method family | Core idea | What it minimizes |
+|---|---|---|
+| simple uniform PTQ | choose scales and round | weight error, $\lVert W - \hat{W}\rVert^2$ |
+| groupwise quantization | use local scales for small groups | weight error, per group |
+| GPTQ-style methods | account for approximate second-order error | **layer output** error, $\lVert WX - \hat{W}X\rVert_F^2$ |
+| AWQ-style methods | protect activation-important weight channels | output error, weighted by channel salience |
+| SmoothQuant-style methods | move activation outliers into weights | joint weight-and-activation quantizability |
 
-The names matter less than the pattern. Naive rounding is a baseline. Real
-systems add calibration because transformer weights and activations are not
-uniformly well behaved.
+The third column is the one that matters. Notice where the boundary falls:
+the first two rows minimize error on the weights, and everything below minimizes
+error on what the layer *computes*. Those are different objectives, and a method
+that is excellent at the first can be mediocre at the second, because a weight
+matters exactly as much as the activations it multiplies.
+
+That single shift — from $\lVert W - \hat{W}\rVert$ to $\lVert WX - \hat{W}X
+\rVert$ — is what separates a 2022-era quantizer from a modern one, and it is
+also why every method past the second row needs calibration data. You cannot
+know which weights matter without seeing what flows through them. The theory
+notes derive each objective and show what its closed-form solution looks like.
+
+A useful sanity check when reading a quantization paper: find the objective
+function in the first three pages. If the paper does not state one, it is
+probably describing a format, not a method, and formats and methods have very
+different failure modes.
 
 ## NF4 and QLoRA
 
@@ -75,6 +88,15 @@ placing levels evenly like a uniform integer quantizer, it places levels where
 normal-distributed values are more likely to occur. QLoRA uses NF4 to keep the
 large base model in low-bit storage while training small LoRA adapters in a
 higher-precision path.
+
+![Standard normal density with symmetric INT4 levels below it and NF4 levels below that, showing NF4 concentrating levels where the weights actually are](/courses/model-optimization-systems/quant-int4-vs-nf4.svg)
+
+*Both formats spend the same 4 bits and both still need a per-block scale. The
+difference is entirely in where the 16 code points are placed. Symmetric INT4
+puts five of its levels inside the region holding half the weights and wastes
+one code point outright; NF4 puts seven there and uses all sixteen. The theory
+notes give the quantile construction and are honest about what "optimal" means
+for it.*
 
 That separation changed the economics of fine-tuning. A user can adapt a large
 model without storing gradients and optimizer state for every base parameter.

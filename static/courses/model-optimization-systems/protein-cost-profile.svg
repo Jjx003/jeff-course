@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" role="img" aria-labelledby="title desc">
+  <title id="title">How folding-pipeline stages scale with chain length</title>
+  <desc id="desc">Left, a log-log chart comparing linear, quadratic, and cubic growth relative to a 100-residue chain: at 1600 residues a cubic term is 4096 times its starting cost while a linear term is only 16 times. Right, a table listing the cost term for each pipeline stage, from protein-language-model attention at L squared through triangle updates at L cubed, and noting that recycling multiplies everything above it.</desc>
+  <defs>
+    <style>
+      .h{font:700 19px system-ui;fill:#0f172a}
+      .t{font:15px system-ui;fill:#1e293b}
+      .s{font:13px system-ui;fill:#475569}
+      .m{font:italic 14px system-ui;fill:#0f172a}
+      .ax{font:12px system-ui;fill:#64748b}
+      .grid{stroke:#e2e8f0;stroke-width:1}
+    </style>
+  </defs>
+  <rect width="1000" height="560" rx="24" fill="#f8fafc"/>
+  <text x="40" y="40" class="h">In protein pipelines, the exponent decides the bottleneck</text>
+  <text x="40" y="62" class="s">Doubling a chain from 400 to 800 residues doubles the embedding work, quadruples the pair memory, and multiplies the triangle terms by eight.</text>
+
+  <text x="40" y="98" class="h">Relative cost vs a 100-residue chain</text>
+  <g class="grid">
+    <path d="M110 400H480M110 316.2H480M110 232.4H480M110 148.6H480"/>
+    <path d="M200 400V90M290 400V90M380 400V90M470 400V90"/>
+  </g>
+  <path d="M110 90V400H480" stroke="#475569" stroke-width="2" fill="none"/>
+  <g class="ax">
+    <text x="110" y="419" text-anchor="middle">100</text>
+    <text x="200" y="419" text-anchor="middle">200</text>
+    <text x="290" y="419" text-anchor="middle">400</text>
+    <text x="380" y="419" text-anchor="middle">800</text>
+    <text x="470" y="419" text-anchor="middle">1600</text>
+    <text x="102" y="404" text-anchor="end">1&#215;</text>
+    <text x="102" y="320" text-anchor="end">10&#215;</text>
+    <text x="102" y="236" text-anchor="end">100&#215;</text>
+    <text x="102" y="153" text-anchor="end">1000&#215;</text>
+  </g>
+  <text x="295" y="440" class="t" text-anchor="middle">chain length L (residues)</text>
+
+  <path d="M110 400L200 374.8L290 349.5L380 324.3L470 299.1" fill="none" stroke="#2563eb" stroke-width="3.5"/>
+  <path d="M110 400L200 349.5L290 299.1L380 248.6L470 198.2" fill="none" stroke="#d97706" stroke-width="3.5"/>
+  <path d="M110 400L200 324.3L290 248.6L380 173L470 97.3" fill="none" stroke="#dc2626" stroke-width="3.5"/>
+
+  <text x="486" y="303" class="s" fill="#1e3a8a">O(L) &#183; 16&#215;</text>
+  <text x="486" y="202" class="s" fill="#92400e">O(L&#178;) &#183; 256&#215;</text>
+  <text x="486" y="101" class="s" fill="#991b1b">O(L&#179;) &#183; 4096&#215;</text>
+
+  <text x="600" y="98" class="h">Which term each stage pays</text>
+
+  <g>
+    <rect x="600" y="112" width="360" height="46" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="616" y="134" class="t" fill="#1e3a8a">PLM trunk (ESM-2, ESMFold)</text>
+    <text x="616" y="152" class="s">O(L&#178;d) attention + O(Ld&#178;) MLP &#183; linear in batch</text>
+
+    <rect x="600" y="166" width="360" height="46" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="616" y="188" class="t">MSA and template search</text>
+    <text x="616" y="206" class="s">database I/O, independent of L &#183; cacheable, often dominant</text>
+
+    <rect x="600" y="220" width="360" height="46" rx="10" fill="#fef3c7" stroke="#d97706"/>
+    <text x="616" y="242" class="t" fill="#92400e">MSA row / column attention</text>
+    <text x="616" y="260" class="s">O(sL&#178;c) and O(s&#178;Lc) &#183; s = retained homologs</text>
+
+    <rect x="600" y="274" width="360" height="46" rx="10" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="616" y="296" class="t" fill="#991b1b">Triangle update / triangle attention</text>
+    <text x="616" y="314" class="s">O(L&#179;c) &#8212; the term that ends long-chain runs</text>
+
+    <rect x="600" y="328" width="360" height="46" rx="10" fill="#ede9fe" stroke="#7c3aed"/>
+    <text x="616" y="350" class="t" fill="#5b21b6">Diffusion / structure module</text>
+    <text x="616" y="368" class="s">T sampling steps &#215; per-atom work &#183; T is a tunable knob</text>
+
+    <rect x="600" y="382" width="360" height="46" rx="10" fill="#fce7f3" stroke="#db2777"/>
+    <text x="616" y="404" class="t" fill="#9d174d">Recycling</text>
+    <text x="616" y="422" class="s">multiplies every row above it by N&#7523;, typically 3 to 4</text>
+  </g>
+
+  <rect x="40" y="464" width="920" height="72" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="58" y="488" class="t">Why this matters for optimization</text>
+  <text x="58" y="510" class="s">Kernel-level wins (FlashAttention, quantization, packing) attack the O(L&#178;) and O(Ld&#178;) rows. They do almost nothing for the O(L&#179;) rows or for database search.</text>
+  <text x="58" y="528" class="s">On an MSA-heavy request with a cold cache, the fastest possible Evoformer still leaves the wall-clock dominated by disk. Profile before choosing a lever.</text>
+</svg>

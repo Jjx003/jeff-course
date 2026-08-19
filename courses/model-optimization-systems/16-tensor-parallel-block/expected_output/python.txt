@@ -1,0 +1,42 @@
+=== Tensor parallelism on simulated devices ===
+config: batch=2 seq=6 hidden=256 ffn=1024 q_heads=8 kv_heads=4 head_dim=32 tp=4
+
+--- sharding round-trip ---
+column shards of W_up: 4 x (256, 256)
+row shards of W_down: 4 x (256, 256)
+reassembled == original: True
+
+--- TP MLP forward ---
+all-reduces: 1
+payload per all-reduce: 12288 bytes
+ring bytes per GPU: 18432
+max |tp - ref| < 1e-5: True
+
+--- exact-arithmetic certificate (integer tensors, float64, ReLU) ---
+bit-exact equal: True
+(integer values stay exact in float64, so the only possible
+ difference is the cut itself. There is none: the cut is algebra,
+ and the fp32 residual above is summation-order rounding.)
+
+--- TP attention forward (GQA) ---
+q heads per rank: 2, kv heads per rank: 1
+all-reduces: 1
+max |tp - ref| < 1e-5: True
+
+--- full block ---
+all-reduces per layer: 2
+
+--- the wrong cut: row-parallel W_up, no pre-activation all-reduce ---
+relative error: 0.4299
+(gelu(a) + gelu(b) != gelu(a + b): partial sums must be reduced
+ before any nonlinearity, which would double the collectives.)
+
+--- what the collectives cost at 70B scale ---
+(80 layers, 2 all-reduces/layer, alpha = 10 us, batch 1 decode)
+ tp   GB/gpu   mem ms  comm ms  step ms  speedup
+  1    140.0    41.79     0.00    41.79    1.00x
+  2     70.0    20.90     1.60    22.50    1.86x
+  4     35.0    10.45     1.60    12.05    3.47x
+  8     17.5     5.22     1.60     6.82    6.12x
+
+=== all checks passed ===

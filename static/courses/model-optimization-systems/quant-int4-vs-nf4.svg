@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 540" role="img" aria-labelledby="title desc">
+  <title id="title">Uniform INT4 versus NF4 level placement under a Gaussian weight density</title>
+  <desc id="desc">A normal density is drawn over the normalized range minus one to plus one. Below it, symmetric INT4 places fifteen evenly spaced levels, five of which fall inside the high-density core. NF4 places sixteen quantile-spaced levels, seven of which fall inside the same core, spending its code points where the weights actually are.</desc>
+  <defs>
+    <style>
+      .h{font:700 20px system-ui;fill:#0f172a}
+      .t{font:15px system-ui;fill:#1e293b}
+      .s{font:13px system-ui;fill:#475569}
+      .ax{font:12px system-ui;fill:#64748b}
+    </style>
+  </defs>
+  <rect width="1000" height="540" rx="24" fill="#f8fafc"/>
+  <text x="40" y="40" class="h">Sixteen code points, two ways to spend them</text>
+  <text x="40" y="64" class="s">Pretrained weights in a block are close to zero-mean Gaussian. After absmax scaling, &#177;1 is roughly &#177;2.5&#963;.</text>
+
+  <rect x="438.5" y="100" width="223" height="150" fill="#e0f2fe"/>
+  <path d="M160 243.4L199 238.1L238 229.7L277 217.6L316 201.3L355 181.3L394 159L433 136.8L472 117.6L511 104.6L550 100L589 104.6L628 117.6L667 136.8L706 159L745 181.3L784 201.3L823 217.6L862 229.7L901 238.1L940 243.4"
+        fill="none" stroke="#0284c7" stroke-width="3"/>
+  <path d="M160 250H940" fill="none" stroke="#475569" stroke-width="2"/>
+  <text x="550" y="142" class="s" text-anchor="middle" fill="#075985">about 52% of the weights</text>
+  <text x="550" y="160" class="s" text-anchor="middle" fill="#075985">fall inside this &#177;0.7&#963; core</text>
+
+  <g class="ax">
+    <text x="160" y="270" text-anchor="middle">&#8722;1</text>
+    <text x="355" y="270" text-anchor="middle">&#8722;0.5</text>
+    <text x="550" y="270" text-anchor="middle">0</text>
+    <text x="745" y="270" text-anchor="middle">0.5</text>
+    <text x="940" y="270" text-anchor="middle">+1</text>
+  </g>
+
+  <text x="40" y="312" class="t" fill="#7c2d12">INT4</text>
+  <text x="40" y="331" class="s">15 levels at q/7</text>
+  <g stroke="#ea580c" stroke-width="3" fill="none">
+    <path d="M160 296v34M215.7 296v34M271.4 296v34M327.1 296v34M382.9 296v34M438.6 296v34M494.3 296v34M550 296v34M605.7 296v34M661.4 296v34M717.1 296v34M772.9 296v34M828.6 296v34M884.3 296v34M940 296v34"/>
+  </g>
+  <rect x="438.5" y="292" width="223" height="42" fill="none" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="160" y="354" class="s" fill="#7c2d12">Only 5 of the 15 levels land in the core, and the 16th code (&#8722;8) is never used. Most of the resolution is spent on the sparsely populated tails.</text>
+
+  <text x="40" y="412" class="t" fill="#14532d">NF4</text>
+  <text x="40" y="431" class="s">16 quantile levels</text>
+  <g stroke="#16a34a" stroke-width="3" fill="none">
+    <path d="M160 396v34M278.5 396v34M345.2 396v34M395.9 396v34M439.1 396v34M477.9 396v34M514.5 396v34M550 396v34M581 396v34M612.8 396v34M646 396v34M681.8 396v34M721.9 396v34M769.4 396v34M831.9 396v34M940 396v34"/>
+  </g>
+  <rect x="438.5" y="392" width="223" height="42" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="160" y="454" class="s" fill="#14532d">7 of the 16 levels land in the core, every code point is used, and zero is still represented exactly so that padding and pruned weights stay exact.</text>
+
+  <text x="40" y="498" class="s">NF4 levels are midpoints between quantiles of a standard normal, so each of the 16 codes receives roughly equal probability mass under the assumed density.</text>
+  <text x="40" y="520" class="s">Both formats still store a per-block scale. NF4 is not fewer bits &#8212; it is a better allocation of the same 16 code points, and only for weights that really are Gaussian.</text>
+</svg>

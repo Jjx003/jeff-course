@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 540" role="img" aria-labelledby="title desc">
+  <title id="title">The memory gap that tiled attention exploits</title>
+  <desc id="desc">On-chip SRAM is about ten times faster than HBM but roughly four thousand times smaller. Tiled attention loads one block of queries and one block of keys and values into SRAM, computes their scores there, folds them into a running maximum, denominator, and output accumulator, and discards the scores without ever writing the L by L score matrix to HBM.</desc>
+  <defs>
+    <marker id="a3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#475569"/></marker>
+    <marker id="a3g" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#16a34a"/></marker>
+    <style>
+      .h{font:700 19px system-ui;fill:#0f172a}
+      .t{font:15px system-ui;fill:#1e293b}
+      .s{font:13px system-ui;fill:#475569}
+      .m{font:italic 14px system-ui;fill:#0f172a}
+      .mono{font:13px ui-monospace,Consolas,monospace;fill:#1e293b}
+      .l{stroke:#475569;stroke-width:2.5;fill:none;marker-end:url(#a3)}
+    </style>
+  </defs>
+  <rect width="1000" height="540" rx="24" fill="#f8fafc"/>
+  <text x="40" y="40" class="h">Tiling does not change the math. It changes which memory the math touches.</text>
+  <text x="40" y="62" class="s">Capacities and bandwidths are for one NVIDIA A100 80GB, the device the FlashAttention analysis uses.</text>
+
+  <text x="40" y="102" class="h" fill="#0f172a">The gap</text>
+  <rect x="40" y="118" width="300" height="66" rx="12" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="58" y="143" class="t" fill="#1e3a8a">SRAM &#8212; on chip</text>
+  <text x="58" y="166" class="s">20 MB total (192 KB &#215; 108 SMs) &#183; ~19 TB/s</text>
+
+  <path class="l" d="M190 194v34"/>
+  <text x="205" y="216" class="s">~10&#215; slower, ~4000&#215; larger</text>
+
+  <rect x="40" y="238" width="300" height="66" rx="12" fill="#fee2e2" stroke="#dc2626"/>
+  <text x="58" y="263" class="t" fill="#7f1d1d">HBM &#8212; off chip</text>
+  <text x="58" y="286" class="s">80 GB &#183; ~2.0 TB/s</text>
+
+  <rect x="40" y="326" width="300" height="132" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="58" y="350" class="t">What has to live in HBM</text>
+  <text x="58" y="373" class="s">Q, K, V, O &#8212; that is 4&#183;L&#183;d values, linear in L.</text>
+  <text x="58" y="404" class="t">What must never reach HBM</text>
+  <text x="58" y="427" class="s">S = QK&#7488; and P = softmax(S) &#8212; 2&#183;L&#178; values.</text>
+  <text x="58" y="446" class="s">At L = 8192 that is 268 MB per head, and it is scratch.</text>
+
+  <text x="392" y="102" class="h" fill="#0f172a">The loop</text>
+  <text x="392" y="122" class="s">One block of Q rows meets one block of K/V rows at a time.</text>
+
+  <text x="392" y="152" class="s">K / V blocks &#8594;</text>
+  <g>
+    <rect x="470" y="164" width="88" height="42" rx="6" fill="#e2e8f0" stroke="#94a3b8"/>
+    <rect x="562" y="164" width="88" height="42" rx="6" fill="#e2e8f0" stroke="#94a3b8"/>
+    <rect x="654" y="164" width="88" height="42" rx="6" fill="#fde68a" stroke="#d97706" stroke-width="2.5"/>
+    <rect x="746" y="164" width="88" height="42" rx="6" fill="#e2e8f0" stroke="#94a3b8"/>
+    <rect x="838" y="164" width="88" height="42" rx="6" fill="#e2e8f0" stroke="#94a3b8"/>
+    <text x="698" y="191" class="s" text-anchor="middle" fill="#78350f">K&#11388;, V&#11388;</text>
+  </g>
+
+  <text x="392" y="248" class="s">Q blocks</text>
+  <text x="392" y="266" class="s">&#8595;</text>
+  <g>
+    <rect x="470" y="226" width="74" height="38" rx="6" fill="#e2e8f0" stroke="#94a3b8"/>
+    <rect x="470" y="270" width="74" height="38" rx="6" fill="#bbf7d0" stroke="#16a34a" stroke-width="2.5"/>
+    <rect x="470" y="314" width="74" height="38" rx="6" fill="#e2e8f0" stroke="#94a3b8"/>
+    <rect x="470" y="358" width="74" height="38" rx="6" fill="#e2e8f0" stroke="#94a3b8"/>
+    <text x="507" y="294" class="s" text-anchor="middle" fill="#14532d">Q&#7522;</text>
+  </g>
+
+  <rect x="654" y="270" width="88" height="38" rx="6" fill="#fef3c7" stroke="#d97706" stroke-dasharray="5 4"/>
+  <path d="M544 289h104" stroke="#16a34a" stroke-width="2.5" fill="none" marker-end="url(#a3g)"/>
+  <path d="M698 210v52" stroke="#d97706" stroke-width="2.5" fill="none" marker-end="url(#a3)"/>
+  <text x="698" y="294" class="s" text-anchor="middle" fill="#78350f">S&#7522;&#11388;</text>
+
+  <text x="758" y="252" class="s">computed in SRAM,</text>
+  <text x="758" y="270" class="s">consumed, discarded</text>
+
+  <rect x="596" y="330" width="330" height="126" rx="12" fill="#ecfdf5" stroke="#16a34a"/>
+  <text x="614" y="354" class="t" fill="#14532d">Carried across blocks, three vectors per Q row</text>
+  <text x="614" y="380" class="mono">m &#8592; running max of scores</text>
+  <text x="614" y="402" class="mono">l &#8592; running softmax denominator</text>
+  <text x="614" y="424" class="mono">O &#8592; running weighted sum of V</text>
+  <text x="614" y="446" class="s">Rescale by e^(m_old &#8722; m_new) when the max moves.</text>
+
+  <text x="392" y="424" class="s">Block sizes are</text>
+  <text x="392" y="443" class="s">chosen so one tile</text>
+  <text x="392" y="462" class="s">fits in SRAM:</text>
+  <text x="392" y="484" class="m">B&#8348; = &#8968;M/4d&#8969;</text>
+
+  <text x="40" y="504" class="s">Result: HBM traffic drops from &#920;(L&#178;) to &#920;(L&#178;d&#178;/M), and the attention output is identical up to floating-point rounding.</text>
+  <text x="40" y="524" class="s">Original diagram for this course; the algorithm is from Dao et al., FlashAttention (arXiv:2205.14135).</text>
+</svg>

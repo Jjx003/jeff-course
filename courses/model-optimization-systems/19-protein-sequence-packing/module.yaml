@@ -1,7 +1,7 @@
 title: "Protein sequence packing"
 slug: "protein-sequence-packing"
 description: "Pack real tokenized protein sequences with first-fit decreasing, then prove against ESM-2 8M that a block-diagonal mask makes the packed batch identical to independent inference - and measure what happens when the mask is wrong."
-order: 16
+order: 19
 difficulty: advanced
 estimatedMinutes: 75
 tags: [protein-language-models, batching, sequence-packing, attention-masks, torch]
