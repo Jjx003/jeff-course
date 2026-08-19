@@ -10,6 +10,14 @@
     advanced: 'badge-red'
   };
 
+  /** Optional modules are counted separately so this agrees with the "x / y" a
+   *  track shows once you enrol, which excludes them. */
+  function moduleCountLabel(track: { problems: { optional?: boolean }[] }): string {
+    const optional = track.problems.filter((p) => p.optional).length;
+    const core = track.problems.length - optional;
+    return optional === 0 ? `${core} modules` : `${core} modules + ${optional} optional`;
+  }
+
   function progressOf(slug: string): { completed: number; total: number } {
     return data.progressBySlug[slug] ?? { completed: 0, total: 0 };
   }
@@ -107,7 +115,7 @@
               </div>
               <p>{track.description}</p>
               <div class="catalog-meta">
-                <span>{track.problems.length} modules</span>
+                <span>{moduleCountLabel(track)}</span>
                 <span>{hoursLabel(track)}</span>
                 {#each track.tags.slice(0, 2) as tag}<span>{tag}</span>{/each}
               </div>

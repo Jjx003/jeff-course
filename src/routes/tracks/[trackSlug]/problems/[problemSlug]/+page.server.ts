@@ -2,6 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { localCourseRepository } from '$lib/services/local/courseRepository.local';
 import { isReadingCompleted, isProblemCompleted, getQuizProgress, getDrillProgress } from '$lib/server/stats';
+import { getDeckProgress } from '$lib/server/flashcards';
 import { isEnrolled } from '$lib/server/enrollments';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -32,7 +33,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
   // first render. The client re-checks via the API after hydration.
   const problemId = `${params.trackSlug}/${params.problemSlug}`;
   const initiallyCompleted =
-    problem.type === 'reading' || problem.type === 'quiz' || problem.type === 'test' || problem.type === 'drill'
+    problem.type !== 'coding'
       ? await isReadingCompleted(locals.user!.id, problemId)
       : await isProblemCompleted(locals.user!.id, problemId);
 
@@ -42,6 +43,23 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     problem.type === 'quiz' || problem.type === 'test' ? await getQuizProgress(locals.user!.id, problemId) : null;
   const initialDrillProgress =
     problem.type === 'drill' ? await getDrillProgress(locals.user!.id, problemId, problem.drill?.targetAccuracy) : null;
+  const initialFlashcardProgress =
+    problem.type === 'flashcards'
+      ? await getDeckProgress(
+          locals.user!.id,
+          problemId,
+          (problem.deck?.cards ?? []).map((card) => card.id)
+        )
+      : null;
 
-  return { track, problem, prevProblem, nextProblem, initiallyCompleted, initialQuizProgress, initialDrillProgress };
+  return {
+    track,
+    problem,
+    prevProblem,
+    nextProblem,
+    initiallyCompleted,
+    initialQuizProgress,
+    initialDrillProgress,
+    initialFlashcardProgress
+  };
 };

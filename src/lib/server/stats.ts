@@ -41,6 +41,14 @@ const DIFFICULTY_POINTS: Record<Difficulty, number> = {
 };
 const READING_POINTS = 5;
 
+/**
+ * Every module type that completes by being "worked through" rather than by
+ * passing a grader. These all record completion in `reading_completions`.
+ */
+function isNonCodingType(type: ModuleType): boolean {
+  return type === 'reading' || type === 'quiz' || type === 'test' || type === 'drill' || type === 'flashcards';
+}
+
 function pointsForCoding(difficulty: Difficulty): number {
   return DIFFICULTY_POINTS[difficulty] ?? 10;
 }
@@ -114,6 +122,8 @@ interface ActivityFacts {
   attemptsToSolve: Map<string, number>;
   /** First-completion timestamp keyed by problemId for reading modules. */
   readingCompletedAt: Map<string, number>;
+  /** Epoch ms of every flashcard review, for streaks and the heatmap. */
+  flashcardReviewedAt: number[];
   /** Total submissions across everything (for the dashboard). */
   totalSubmissions: number;
   /** Distinct quiz problemIds that have at least one passing attempt. */
@@ -174,6 +184,15 @@ async function loadActivityFacts(userId: string): Promise<ActivityFacts> {
     readingCompletedAt.set(r.problem_id, Number(r.completed_at));
   }
 
+  // Flashcard reviews are study activity in their own right. Without this a
+  // learner who reviews every day but finishes no deck has no streak at all,
+  // which is the opposite of what the review queue is for.
+  const reviewRows = await dbAll<{ reviewed_at: number }>(
+    'SELECT reviewed_at FROM flashcard_reviews WHERE user_id = ?',
+    [userId]
+  );
+  const flashcardReviewedAt = reviewRows.map((r) => Number(r.reviewed_at));
+
   // Quiz-specific facts. Aggregated in SQL so we don't pay for every row
   // — only the per-quiz "ever passed?" + global "ever perfect?" booleans
   // feed the achievement engine.
@@ -201,6 +220,7 @@ async function loadActivityFacts(userId: string): Promise<ActivityFacts> {
 
   return {
     firstSolveAt,
+    flashcardReviewedAt,
     solveLanguages,
     submissionCount,
     attemptsToSolve,
@@ -330,7 +350,7 @@ function evalAchievement(id: AchievementId, ctx: AchievementContext): Achievemen
       let bestTotal = 0;
       for (const t of ctx.tracks) {
         const codingProblems = t.problems.filter((p) => p.type === 'coding');
-        const readings = t.problems.filter((p) => p.type === 'reading' || p.type === 'quiz' || p.type === 'test' || p.type === 'drill');
+        const readings = t.problems.filter((p) => isNonCodingType(p.type));
         const total = codingProblems.length + readings.length;
         if (total === 0) continue;
         const solved =
@@ -464,12 +484,16 @@ async function persistNewAchievements(userId: string, ids: AchievementId[]): Pro
 
 function computeTrackProgress(tracks: Track[], facts: ActivityFacts): TrackProgress[] {
   return tracks.map((t) => {
-    const total = t.problems.length;
+    // Optional modules (appendices, deep dives) are outside the track's spine:
+    // finishing the required run should read as done, not as 45 of 49. They
+    // still earn points and study time; they just don't gate completion.
+    const core = t.problems.filter((p) => !p.optional);
+    const total = core.length;
     let completed = 0;
-    for (const p of t.problems) {
+    for (const p of core) {
       const pid = `${t.slug}/${p.slug}`;
       const isDone =
-        p.type === 'reading' || p.type === 'quiz' || p.type === 'test' || p.type === 'drill'
+        isNonCodingType(p.type)
           ? facts.readingCompletedAt.has(pid)
           : facts.firstSolveAt.has(pid);
       if (isDone) completed++;
@@ -493,7 +517,7 @@ function computePoints(tracks: Track[], facts: ActivityFacts): number {
       const pid = `${t.slug}/${p.slug}`;
       if (p.type === 'coding' && facts.firstSolveAt.has(pid)) {
         total += pointsForCoding(p.difficulty);
-      } else if ((p.type === 'reading' || p.type === 'quiz' || p.type === 'test' || p.type === 'drill') && facts.readingCompletedAt.has(pid)) {
+      } else if (isNonCodingType(p.type) && facts.readingCompletedAt.has(pid)) {
         total += READING_POINTS;
       }
     }
@@ -530,6 +554,14 @@ export async function getStatsSummary(userId: string): Promise<StatsSummary> {
     if (!knownProblemIds.has(pid)) continue;
     const key = toLocalDateKey(ts);
     readingsByDate.set(key, (readingsByDate.get(key) ?? 0) + 1);
+  }
+
+  // Reviews count toward the streak and the heatmap, but are folded into the
+  // readings bucket rather than given their own colour, so the heatmap keeps
+  // its two-category shape.
+  for (const ts of facts.flashcardReviewedAt) {
+    const key = toLocalDateKey(ts);
+    if (!readingsByDate.has(key)) readingsByDate.set(key, 0);
   }
 
   const activeDateSet = new Set<string>([
@@ -571,7 +603,7 @@ export async function getStatsSummary(userId: string): Promise<StatsSummary> {
     for (const p of t.problems) {
       const pid = `${t.slug}/${p.slug}`;
       if (p.type === 'coding' && facts.firstSolveAt.has(pid)) problemsSolved++;
-      else if ((p.type === 'reading' || p.type === 'quiz' || p.type === 'test' || p.type === 'drill') && facts.readingCompletedAt.has(pid)) readingsCompleted++;
+      else if (isNonCodingType(p.type) && facts.readingCompletedAt.has(pid)) readingsCompleted++;
     }
   }
   const totalPoints = computePoints(tracks, facts);

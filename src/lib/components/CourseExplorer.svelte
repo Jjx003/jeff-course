@@ -158,6 +158,7 @@
     if (problem.type === 'quiz') return 'Quiz';
     if (problem.type === 'test') return 'Test';
     if (problem.type === 'drill') return 'Drill';
+    if (problem.type === 'flashcards') return 'Cards';
     return 'Code';
   }
 

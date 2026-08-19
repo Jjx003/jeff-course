@@ -332,6 +332,9 @@
       event.preventDefault();
       void toggleOpen();
     } else if (event.key === 'Escape' && open && !streaming) {
+      // Claim the keystroke. The flashcard and drill views also listen on
+      // window, and would otherwise end the session behind the open panel.
+      event.preventDefault();
       open = false;
     }
   }

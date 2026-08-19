@@ -7,10 +7,17 @@
    * Features:
    * - Python and C++ syntax highlighting
    * - Dark theme (course-dark)
-   * - Auto-saves draft on every change (debounced 800ms)
+   * - Reports every edit via `onchange` so the parent can drive autosave
+   * - Keyboard shortcuts: Ctrl/Cmd+S save, Ctrl/Cmd+Enter run,
+   *   Ctrl/Cmd+Shift+Enter submit
    * - Optional vim keybindings (monaco-vim) with a status line
    * - Exposes `getValue()` for Run/Submit to read current code
-   * - Exposes `setValue(code)` for language switching
+   * - Exposes `setValue(code)` for language switching and Reset
+   *
+   * Autosave debouncing deliberately lives in the parent, not here: the
+   * parent is the only place that knows which (problem, language) pair an
+   * edit belongs to, and a timer that fires after the user has navigated
+   * elsewhere must still be attributed to the buffer it came from.
    *
    * Monaco is loaded dynamically inside onMount (browser-only).
    * A no-op worker blob is provided so Monaco doesn't error on missing workers.
@@ -29,18 +36,41 @@
     fontSize?: number;
     /** Enable vim keybindings. */
     vim?: boolean;
+    /** Fired on every edit, with the full buffer. Not debounced. */
+    onchange?: (code: string) => void;
+    /** Explicit save request: Ctrl/Cmd+S, or `:w` in vim mode. */
     onsave?: (code: string) => void;
+    /** Ctrl/Cmd+Enter. */
+    onrun?: () => void;
+    /** Ctrl/Cmd+Shift+Enter. */
+    onsubmit?: () => void;
     onready?: () => void;
   }
 
-  let { language, initialValue, fontSize = 14, vim = false, onsave, onready }: Props = $props();
+  let {
+    language,
+    initialValue,
+    fontSize = 14,
+    vim = false,
+    onchange,
+    onsave,
+    onrun,
+    onsubmit,
+    onready
+  }: Props = $props();
 
   let container: HTMLDivElement;
   let vimStatusBar: HTMLDivElement;
   let editor: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
   let monacoLib: typeof import('monaco-editor') | null = null;
-  let saveTimer: ReturnType<typeof setTimeout> | null = null;
   let mounted = $state(false);
+
+  /**
+   * Suppresses `onchange` while we write into the model ourselves (loading a
+   * draft, switching language, resetting). Without it, a programmatic write
+   * would look like a user edit and mark the buffer dirty.
+   */
+  let applyingProgrammaticEdit = false;
 
   /** Live monaco-vim binding; null whenever vim mode is off. */
   let vimBinding: { dispose(): void } | null = null;
@@ -113,11 +143,23 @@
       });
 
       editor.onDidChangeModelContent(() => {
-        if (saveTimer) clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => {
-          const code = editor?.getValue() ?? '';
-          onsave?.(code);
-        }, 800);
+        if (applyingProgrammaticEdit) return;
+        onchange?.(editor?.getValue() ?? '');
+      });
+
+      // ── Keyboard shortcuts ──
+      // Registered on the editor so they win over the browser defaults
+      // (Ctrl+S would otherwise open "Save page as…"). The page registers
+      // the same chords at window level for when focus is outside Monaco.
+      const { KeyMod, KeyCode } = monacoLib;
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => {
+        onsave?.(editor?.getValue() ?? '');
+      });
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.Enter, () => {
+        onrun?.();
+      });
+      editor.addCommand(KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Enter, () => {
+        onsubmit?.();
       });
 
       mounted = true;
@@ -126,7 +168,6 @@
 
     // Return synchronous cleanup
     return () => {
-      saveTimer && clearTimeout(saveTimer);
       vimBinding?.dispose();
       vimBinding = null;
       editor?.dispose();
@@ -134,18 +175,10 @@
   });
 
   onDestroy(() => {
-    saveTimer && clearTimeout(saveTimer);
     vimBinding?.dispose();
     vimBinding = null;
     editor?.dispose();
   });
-
-  /** Write the current buffer through the normal draft-save path, right now. */
-  function flushSave() {
-    if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = null;
-    onsave?.(editor?.getValue() ?? '');
-  }
 
   async function enableVim() {
     if (!editor || vimBinding || vimPending) return;
@@ -153,11 +186,14 @@
     try {
       const { initVimMode, VimMode } = await import('monaco-vim');
 
-      // `:w` flushes the draft instead of erroring out — drafts already
-      // autosave, so this just makes the muscle memory harmless.
+      // `:w` and `:wq` route into the normal save path instead of erroring
+      // out, so the muscle memory does what it looks like it does.
       // `Vim` is present at runtime but missing from monaco-vim's type surface.
       const vimApi = (VimMode as unknown as { Vim: { defineEx: (n: string, p: string, f: () => void) => void } }).Vim;
-      vimApi.defineEx('write', 'w', flushSave);
+      const save = () => onsave?.(editor?.getValue() ?? '');
+      vimApi.defineEx('write', 'w', save);
+      vimApi.defineEx('wq', 'wq', save);
+      vimApi.defineEx('xit', 'x', save);
 
       // The editor may have been torn down while the chunk was loading.
       if (!editor) return;
@@ -206,9 +242,34 @@
     return editor?.getValue() ?? '';
   }
 
-  export function setValue(code: string) {
+  export function focus() {
+    editor?.focus();
+  }
+
+  /**
+   * Replace the buffer contents.
+   *
+   * `keepUndo` routes the write through `executeEdits` so Ctrl+Z can walk
+   * it back — used by Reset, where wiping the user's work irreversibly is
+   * exactly the thing that stings. Draft/language loads pass `false`: those
+   * buffers belong to a different file, and merging their histories would
+   * let an undo paste one problem's code into another.
+   */
+  export function setValue(code: string, opts: { keepUndo?: boolean } = {}) {
     if (!editor) return;
-    editor.setValue(code);
+    const model = editor.getModel();
+    applyingProgrammaticEdit = true;
+    try {
+      if (opts.keepUndo && model) {
+        editor.pushUndoStop();
+        editor.executeEdits('course-editor', [{ range: model.getFullModelRange(), text: code }]);
+        editor.pushUndoStop();
+      } else {
+        editor.setValue(code);
+      }
+    } finally {
+      applyingProgrammaticEdit = false;
+    }
     editor.setPosition({ lineNumber: 1, column: 1 });
     editor.revealPosition({ lineNumber: 1, column: 1 });
   }

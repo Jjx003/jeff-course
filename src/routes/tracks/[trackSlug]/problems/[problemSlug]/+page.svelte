@@ -27,10 +27,13 @@
   import ReadingView from '$lib/components/ReadingView.svelte';
   import QuizView from '$lib/components/QuizView.svelte';
   import DrillView from '$lib/components/DrillView.svelte';
+  import FlashcardsView from '$lib/components/FlashcardsView.svelte';
   import RewardToast from '$lib/components/RewardToast.svelte';
   import StudyTimeTracker from '$lib/components/StudyTimeTracker.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import TutorPanel from '$lib/components/TutorPanel.svelte';
+
+  import { parseGraderMessage } from '$lib/execution/graderDiff.js';
 
   import type { Language } from '$lib/types/course.js';
   import type { RunSnapshot, SubmitSnapshot, RunResult, SubmitResult } from '$lib/types/execution.js';
@@ -60,6 +63,7 @@
   let isReading    = $derived(problem.type === 'reading');
   let isAssessment = $derived(problem.type === 'quiz' || problem.type === 'test');
   let isDrill      = $derived(problem.type === 'drill');
+  let isDeck       = $derived(problem.type === 'flashcards');
 
   // ── Problem ID ────────────────────────────────────────────────────────
   let problemId = $derived(`${track.slug}/${problem.slug}`);
@@ -69,7 +73,7 @@
   // Set proper default once problem is available (skipped for reading/assessment modules,
   // which have no editor and may carry placeholder language values).
   $effect.pre(() => {
-    if (!isReading && !isAssessment && !isDrill) currentLanguage = problem.defaultLanguage;
+    if (!isReading && !isAssessment && !isDrill && !isDeck) currentLanguage = problem.defaultLanguage;
   });
 
   // ── Editor ref ────────────────────────────────────────────────────────
@@ -94,10 +98,10 @@
   async function performReset() {
     if (!editorRef) return;
     const starter = problem.starterCode[currentLanguage] ?? '';
-    editorRef.setValue(starter);
-    if (services) {
-      await services.draftStorage.saveDraft(problemId, currentLanguage, starter);
-    }
+    // keepUndo: Ctrl+Z brings the user's work back if they hit Reset by mistake.
+    editorRef.setValue(starter, { keepUndo: true });
+    markDirty(starter);
+    await flushDraft();
   }
 
   // ── Running / submitting state ────────────────────────────────────────
@@ -274,6 +278,8 @@
   const OUTPUT_MAX = 700;
   let outputHeight = $state(220);
   let outputCollapsed = $state(false);
+  /** Which OutputPanel view is showing. Run and Submit each bring their own forward. */
+  let outputTab = $state<'output' | 'result'>('output');
   let outputResizing = $state(false);
   let editorPane = $state<HTMLDivElement | undefined>(undefined);
 
@@ -395,7 +401,7 @@
     }
 
     // Reading and assessment modules have no editor, runner, or drafts — stop here.
-    if (isReading || isAssessment || isDrill) return;
+    if (isReading || isAssessment || isDrill || isDeck) return;
 
     // Restore editor keybinding mode
     vimEnabled = localStorage.getItem(VIM_KEY) === 'true';
@@ -483,14 +489,19 @@
     if (problemId === lastSeenProblemId) return;
     lastSeenProblemId = problemId;
 
+    // The pending edit still carries the problem it was typed under, so
+    // flushing here writes it to the module the learner just left.
+    void flushDraft();
+
     latestRun = null;
     latestSubmit = null;
     submissions = [];
     solutionRevealed = false;
     activeTabId = 'problem';
     showSubmissions = false;
+    outputTab = 'output';
 
-    if (isReading || isAssessment || isDrill || !services) return;
+    if (isReading || isAssessment || isDrill || isDeck || !services) return;
 
     const svc = services;
     const pid = problemId;
@@ -514,8 +525,14 @@
     const draft = await services.draftStorage.getDraft(problemId, lang);
     const code = draft?.code ?? problem.starterCode[lang] ?? '';
     editorInitialValue = code;
-    // If editor is already mounted, push the new value directly
+    // If editor is already mounted, push the new value directly. This is a
+    // programmatic write, so it must not leave the buffer looking dirty.
     editorRef?.setValue(code);
+    pendingSave = null;
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    saveState = 'clean';
+    saveError = null;
+    lastSavedAt = draft?.lastSavedAt ?? null;
   }
 
   // ── Language switching ────────────────────────────────────────────────
@@ -523,20 +540,93 @@
   async function handleLanguageChange(lang: Language) {
     if (lang === currentLanguage) return;
 
-    // Save the current draft before switching
-    if (services && editorRef) {
-      await services.draftStorage.saveDraft(problemId, currentLanguage, editorRef.getValue());
-    }
+    // Write out whatever is pending first. `pendingSave` carries the
+    // language it was typed under, so this lands in the right row even
+    // though we are about to switch.
+    await flushDraft();
 
     currentLanguage = lang;
     await loadDraftIntoEditor(lang);
   }
 
-  // ── Auto-save draft ───────────────────────────────────────────────────
+  // ── Draft autosave ────────────────────────────────────────────────────
+  //
+  // The editor reports every keystroke; the debounce lives here because
+  // this is the only layer that knows which (problem, language) pair an
+  // edit belongs to. A timer that fires after the learner has navigated to
+  // the next module must still write to the buffer it was typed in — the
+  // previous design let a late timer save module A's code onto module B.
+  //
+  // Every exit from the page (navigation, tab close, language switch, Run,
+  // Submit, asking the tutor) flushes first, so "in progress" code is never
+  // stranded in a timer that never got to fire.
 
-  async function handleDraftSave(code: string) {
-    if (!services) return;
-    await services.draftStorage.saveDraft(problemId, currentLanguage, code);
+  const AUTOSAVE_DEBOUNCE_MS = 600;
+  const SAVE_RETRY_MS = 4000;
+
+  type SaveState = 'clean' | 'dirty' | 'saving' | 'saved' | 'error';
+
+  let saveState = $state<SaveState>('clean');
+  let lastSavedAt = $state<number | null>(null);
+  let saveError = $state<string | null>(null);
+
+  /** Newest edit not yet written, tagged with the buffer it came from. */
+  let pendingSave: { problemId: string; language: Language; code: string } | null = null;
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Serializes writes so a slow request can't land on top of a newer one. */
+  let saveChain: Promise<void> = Promise.resolve();
+
+  let hasUnsavedWork = $derived(saveState === 'dirty' || saveState === 'saving' || saveState === 'error');
+
+  function markDirty(code: string) {
+    pendingSave = { problemId, language: currentLanguage, code };
+    saveState = 'dirty';
+    saveError = null;
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { void flushDraft(); }, AUTOSAVE_DEBOUNCE_MS);
+  }
+
+  /** Write the pending edit now. Resolves once it has actually landed. */
+  function flushDraft(): Promise<void> {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    const job = pendingSave;
+    if (!job || !services) return saveChain;
+
+    const svc = services;
+    pendingSave = null;
+    saveState = 'saving';
+
+    saveChain = saveChain.then(async () => {
+      try {
+        await svc.draftStorage.saveDraft(job.problemId, job.language, job.code);
+        lastSavedAt = Date.now();
+        saveError = null;
+        // A keystroke may have landed while the request was in flight;
+        // don't claim "saved" over the top of it.
+        if (!pendingSave) saveState = 'saved';
+      } catch (err) {
+        // Put the work back so the retry (and any later flush) still has it.
+        if (!pendingSave) pendingSave = job;
+        saveError = err instanceof Error ? err.message : String(err);
+        saveState = 'error';
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => { void flushDraft(); }, SAVE_RETRY_MS);
+      }
+    });
+    return saveChain;
+  }
+
+  /** Ctrl/Cmd+S, the save chip, and `:w` all land here. */
+  async function saveNow() {
+    if (!editorRef) return;
+    // Always write, even when nothing is pending: an explicit save that
+    // silently does nothing reads as a broken save.
+    markDirty(editorRef.getValue());
+    await flushDraft();
+  }
+
+  function handleEditorChange(code: string) {
+    markDirty(code);
   }
 
   /**
@@ -547,9 +637,35 @@
    * otherwise be answered against code that is up to a debounce interval old.
    */
   async function flushDraftForTutor() {
-    if (!services || !editorRef) return;
-    await services.draftStorage.saveDraft(problemId, currentLanguage, editorRef.getValue());
+    await flushDraft();
   }
+
+  // ── Save-status chip ──────────────────────────────────────────────────
+  // Ticks so "saved 2 min ago" doesn't go stale while the learner reads.
+  let saveClock = $state(Date.now());
+  $effect(() => {
+    if (!browser) return;
+    const t = setInterval(() => { saveClock = Date.now(); }, 20_000);
+    return () => clearInterval(t);
+  });
+
+  function agoLabel(ts: number, now: number): string {
+    const secs = Math.max(0, Math.round((now - ts) / 1000));
+    if (secs < 45) return 'just now';
+    const mins = Math.round(secs / 60);
+    if (mins < 60) return `${mins}m ago`;
+    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  let saveLabel = $derived.by(() => {
+    switch (saveState) {
+      case 'dirty':  return 'Unsaved changes';
+      case 'saving': return 'Saving…';
+      case 'error':  return 'Save failed — retry';
+      case 'saved':  return lastSavedAt ? `Saved ${agoLabel(lastSavedAt, saveClock)}` : 'Saved';
+      default:       return lastSavedAt ? `Saved ${agoLabel(lastSavedAt, saveClock)}` : 'Draft saved automatically';
+    }
+  });
 
   // ── Run ───────────────────────────────────────────────────────────────
   //
@@ -565,13 +681,52 @@
   function statusToRunStatus(status: SessionStatus, exitCode: number | null): RunResult['status'] {
     if (status === 'completed' && exitCode === 0) return 'ok';
     if (status === 'killed') return 'timeout';
+    // Stopping your own run on purpose is not a failure, and labelling it
+    // as one sends people hunting for a bug that isn't there.
+    if (status === 'cancelled') return 'cancelled';
     return 'error';
   }
 
+  /**
+   * Append a chunk to the chronological log, merging into the previous
+   * entry when it came from the same stream. Keeps the array short while
+   * preserving the interleaving that makes output readable — an error
+   * printed halfway through a run belongs halfway through the transcript,
+   * not in a separate block underneath everything else.
+   */
+  function appendLog(result: RunResult, stream: 'stdout' | 'stderr', data: string) {
+    const log = result.log ?? (result.log = []);
+    const last = log[log.length - 1];
+    if (last && last.stream === stream) last.text += data;
+    else log.push({ stream, text: data });
+  }
+
+  function freshRunResult(): RunResult {
+    return { stdout: '', stderr: '', log: [], durationMs: null, success: false, status: 'ok', exitCode: null };
+  }
+
+  /** Write the run that just finished to history, with its actual output. */
+  async function persistRun() {
+    if (!services || !latestRun) return;
+    const snap = $state.snapshot(latestRun) as RunSnapshot;
+    await services.runHistoryStorage.addRun(snap).catch(() => {});
+  }
+
+  /**
+   * Resolver for the in-flight stream promise, so Stop can settle the UI
+   * even if the exit event never arrives.
+   */
+  let settleActiveStream: (() => void) | null = null;
+
   async function handleRun() {
-    if (!services || !editorRef || isRunning || activeSessionId) return;
+    if (!services || !editorRef || isRunning || isSubmitting || activeSessionId) return;
+    // Whatever is about to run is worth keeping — write it before we spend
+    // a minute in a container.
+    await flushDraft();
     isRunning = true;
     liveStatus = null;
+    outputTab = 'output';
+    if (outputCollapsed) toggleOutput();
 
     const code = editorRef.getValue();
     const startedAt = Date.now();
@@ -583,13 +738,7 @@
       problemId,
       language: currentLanguage,
       code,
-      result: {
-        stdout: '',
-        stderr: '',
-        durationMs: null,
-        success: false,
-        status: 'ok'
-      },
+      result: freshRunResult(),
       timestamp: startedAt
     };
     latestRun = snapshot;
@@ -606,25 +755,34 @@
       });
       sessionId = started.id;
     } catch (err) {
-      snapshot.result.stderr = err instanceof Error ? err.message : String(err);
+      const msg = err instanceof Error ? err.message : String(err);
+      snapshot.result.stderr = msg;
+      appendLog(snapshot.result, 'stderr', msg);
       snapshot.result.status = 'error';
+      // Reassign rather than mutate: `snapshot` is the raw object, and
+      // Svelte only tracks writes that go through the $state reference.
+      latestRun = { ...snapshot };
       isRunning = false;
       return;
     }
     activeSessionId = sessionId;
 
     await new Promise<void>((resolve) => {
+      settleActiveStream = resolve;
       const unsub = services!.sessionsService.subscribe(sessionId, async (chunk: LogChunk) => {
         if (chunk.kind === 'stdout') {
           latestRun!.result.stdout += chunk.data;
+          appendLog(latestRun!.result, 'stdout', chunk.data);
         } else if (chunk.kind === 'stderr') {
           latestRun!.result.stderr += chunk.data;
+          appendLog(latestRun!.result, 'stderr', chunk.data);
         } else if (chunk.kind === 'status') {
           liveStatus = chunk.status;
         } else if (chunk.kind === 'exit') {
           const rec = await services!.sessionsService.get(sessionId).catch(() => null);
           const finalStatus = rec?.status ?? 'completed';
           latestRun!.result.durationMs = chunk.durationMs;
+          latestRun!.result.exitCode = chunk.exitCode;
           latestRun!.result.status = statusToRunStatus(finalStatus, chunk.exitCode);
           latestRun!.result.success = finalStatus === 'completed' && chunk.exitCode === 0;
           resolve();
@@ -633,6 +791,7 @@
       unsubscribeStream = unsub;
     });
 
+    settleActiveStream = null;
     if (unsubscribeStream) {
       unsubscribeStream();
       unsubscribeStream = null;
@@ -642,7 +801,10 @@
     liveStatus = null;
 
     // Persist the run snapshot so it shows up after a page refresh.
-    await services.runHistoryStorage.addRun(snapshot).catch(() => {});
+    // Snapshot the *state* rather than the local object: the streamed
+    // output was written through the $state proxy, so the plain `snapshot`
+    // we created up top is still empty.
+    await persistRun();
   }
 
   // ── Load submission into editor ───────────────────────────────────────
@@ -651,16 +813,24 @@
     if (language !== currentLanguage) {
       await handleLanguageChange(language);
     }
-    editorRef?.setValue(code);
+    // keepUndo so Ctrl+Z walks back to whatever was in the buffer before.
+    editorRef?.setValue(code, { keepUndo: true });
+    // setValue is programmatic and so doesn't report a change — record it
+    // ourselves, otherwise a reload would resurrect the pre-load draft.
+    markDirty(code);
+    void flushDraft();
     showSubmissions = false;
   }
 
   // ── Submit ────────────────────────────────────────────────────────────
 
   async function handleSubmit() {
-    if (!services || !editorRef || isSubmitting || activeSessionId) return;
+    if (!services || !editorRef || isRunning || isSubmitting || activeSessionId) return;
+    await flushDraft();
     isSubmitting = true;
     liveStatus = null;
+    outputTab = 'result';
+    if (outputCollapsed) toggleOutput();
 
     const code = editorRef.getValue();
     const startedAt = Date.now();
@@ -676,19 +846,20 @@
       result: {
         verdict: 'pending',
         message: 'Running…',
+        summary: 'Running…',
         score: null
       },
       timestamp: startedAt
     };
     latestSubmit = submitSnapshot;
 
-    // Run tab mirrors stdout/stderr live so the user can watch progress.
+    // Output tab mirrors stdout/stderr live so the user can watch progress.
     const runSnapshot: RunSnapshot = {
       id: services.generateId(),
       problemId,
       language: currentLanguage,
       code,
-      result: { stdout: '', stderr: '', durationMs: null, success: false, status: 'ok' },
+      result: freshRunResult(),
       timestamp: startedAt
     };
     latestRun = runSnapshot;
@@ -705,11 +876,15 @@
       });
       sessionId = started.id;
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       submitSnapshot.result = {
         verdict: 'error',
-        message: err instanceof Error ? err.message : String(err),
+        message: msg,
+        summary: 'The run could not be started.',
+        stderr: msg,
         score: null
       };
+      latestSubmit = { ...submitSnapshot };
       isSubmitting = false;
       return;
     }
@@ -718,16 +893,20 @@
     // Captured in the closure below and read after the promise settles.
     const finalRecordRef: { value: SessionRecord | null } = { value: null };
     await new Promise<void>((resolve) => {
+      settleActiveStream = resolve;
       const unsub = services!.sessionsService.subscribe(sessionId, async (chunk: LogChunk) => {
         if (chunk.kind === 'stdout') {
           latestRun!.result.stdout += chunk.data;
+          appendLog(latestRun!.result, 'stdout', chunk.data);
         } else if (chunk.kind === 'stderr') {
           latestRun!.result.stderr += chunk.data;
+          appendLog(latestRun!.result, 'stderr', chunk.data);
         } else if (chunk.kind === 'status') {
           liveStatus = chunk.status;
         } else if (chunk.kind === 'exit') {
           finalRecordRef.value = await services!.sessionsService.get(sessionId).catch(() => null);
           latestRun!.result.durationMs = chunk.durationMs;
+          latestRun!.result.exitCode = chunk.exitCode;
           const fStatus = finalRecordRef.value?.status ?? 'completed';
           latestRun!.result.status = statusToRunStatus(fStatus, chunk.exitCode);
           latestRun!.result.success = fStatus === 'completed' && chunk.exitCode === 0;
@@ -738,6 +917,7 @@
     });
     const finalRecord = finalRecordRef.value;
 
+    settleActiveStream = null;
     if (unsubscribeStream) {
       unsubscribeStream();
       unsubscribeStream = null;
@@ -747,25 +927,44 @@
     liveStatus = null;
 
     // Build the final SubmitResult from the record's verdict fields.
+    //
+    // The grader hands back one string with the unified diff appended to a
+    // headline. We split it here so the panel can render an actual
+    // comparison, and so the structured form is what gets persisted — the
+    // tutor and the history dropdown then read the same shape.
     const verdict = finalRecord?.submitVerdict ?? 'error';
     const message = finalRecord?.submitMessage ?? 'Submission completed.';
     const score = finalRecord?.submitScore ?? null;
+    const parsedMessage = parseGraderMessage(message);
+
     const submitResult: SubmitResult = {
       verdict,
       message,
       score: verdict === 'pending' ? null : score,
-      testResults: verdict === 'pending' ? undefined : [
-        {
-          name: 'Expected output comparison',
-          passed: verdict === 'accepted',
-          actual: runSnapshot.result.stdout,
-          durationMs: runSnapshot.result.durationMs ?? undefined
-        }
-      ]
+      summary: parsedMessage.summary,
+      ...(parsedMessage.diff
+        ? {
+            diff: parsedMessage.diff,
+            expectedText: parsedMessage.expectedText,
+            actualText: parsedMessage.actualText
+          }
+        : {}),
+      ...(verdict === 'error'
+        // Read through the state reference — the streamed stderr landed
+        // on the proxy, not on the `runSnapshot` object we built earlier.
+        ? { stderr: (latestRun?.result.stderr ?? '').trim() || parsedMessage.summary }
+        : {})
     };
     submitSnapshot.result = submitResult;
+    // `submitSnapshot` is the raw object behind the $state proxy — writing
+    // to it directly is invisible to Svelte, which is why the verdict used
+    // to sit on "Running…" forever. Reassign so the panel actually updates.
+    latestSubmit = { ...submitSnapshot, result: submitResult };
 
-    await services.submissionStorage.addSubmission(submitSnapshot).catch(() => {});
+    // A submit is also a run — record it so a page refresh (and the
+    // tutor's "what did my last run print?") sees the real output.
+    await persistRun();
+    await services.submissionStorage.addSubmission($state.snapshot(latestSubmit) as SubmitSnapshot).catch(() => {});
     if (submitResult.verdict === 'accepted') {
       const isFirstSolve = !wasAlreadySolved;
       submissions = await services.submissionStorage.getSubmissions(problemId).catch(() => submissions);
@@ -806,7 +1005,25 @@
     }
   }
 
+  /**
+   * User-facing Stop. Unlike `cancelActiveSession` this leaves the stream
+   * open so the `exit` event still arrives and the panel settles into a
+   * real final state. The watchdog covers the case where it never does.
+   */
+  function stopActiveSession() {
+    if (!activeSessionId || !services) return;
+    void services.sessionsService.cancel(activeSessionId);
+    const settle = settleActiveStream;
+    setTimeout(() => {
+      if (settle && settle === settleActiveStream) settle();
+    }, 5000);
+  }
+
   beforeNavigate(({ cancel }) => {
+    // Drafts first: the pending edit is tagged with the buffer it came
+    // from, so this write is correct even mid-navigation.
+    void flushDraft();
+
     if (!isExecutionLive()) return;
     const ok = browser
       ? confirm(`A ${modeLabel(runMode)} run is still in progress. Cancel it and leave the page?`)
@@ -819,22 +1036,62 @@
   });
 
   onDestroy(() => {
+    void flushDraft();
     cancelActiveSession();
   });
 
   $effect(() => {
     if (!browser) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!isExecutionLive()) return;
+      // Last chance to get the buffer out. Fire-and-forget: the browser may
+      // cut it short, but the debounce is short enough that there is
+      // usually nothing left to write by this point.
+      void flushDraft();
+      if (!isExecutionLive() && !hasUnsavedWork) return;
       // Browsers ignore custom strings since 2017 and just show a generic
       // "Leave site?" prompt, but the preventDefault + returnValue dance
       // is still what triggers it.
       e.preventDefault();
       e.returnValue = '';
     };
+    // Backgrounding a tab is the moment a phone or laptop may freeze it, so
+    // treat it as a save point too.
+    const onHide = () => { void flushDraft(); };
+    const onVisibility = () => { if (document.visibilityState === 'hidden') void flushDraft(); };
+
     window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('pagehide', onHide);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      window.removeEventListener('pagehide', onHide);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   });
+
+  // ── Keyboard shortcuts ────────────────────────────────────────────────
+  //
+  // Monaco registers the same chords internally (see CodeEditor) so they
+  // work with the cursor in the buffer. These cover the rest of the page —
+  // notably Ctrl+S, which would otherwise hand the browser's "Save page
+  // as…" dialog to someone who just wanted to keep their work.
+
+  function onWindowKeydown(e: KeyboardEvent) {
+    if (isReading || isAssessment || isDrill) return;
+    if (!(e.ctrlKey || e.metaKey)) return;
+
+    const key = e.key.toLowerCase();
+    if (key === 's') {
+      e.preventDefault();
+      void saveNow();
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (e.shiftKey) void handleSubmit();
+      else void handleRun();
+    }
+  }
 
   /**
    * Fetch latest stats and surface any achievements unlocked since mount.
@@ -873,6 +1130,11 @@
   };
 </script>
 
+<!-- Page-level shortcuts. Monaco owns these chords while the cursor is in
+     the buffer; this covers everywhere else. The handler no-ops on
+     reading / quiz / drill modules, which have no editor. -->
+<svelte:window onkeydown={onWindowKeydown} />
+
 <RewardToast bind:this={toastRef} />
 
 <!-- Study-time tracker. Keyed on problemId so navigating between problems
@@ -891,7 +1153,7 @@
   trackSlug={track.slug}
   problemSlug={problem.slug}
   problemTitle={problem.title}
-  isCoding={!isReading && !isAssessment && !isDrill}
+  isCoding={!isReading && !isAssessment && !isDrill && !isDeck}
   flushDraft={flushDraftForTutor}
   language={currentLanguage}
   activeTab={activeTabId}
@@ -945,6 +1207,24 @@
         kind: 'points',
         title: '+5 pts',
         subtitle: `Drill target met · ${score}/${total}`
+      });
+      void checkForNewAchievements(1400);
+    }}
+  />
+{:else if isDeck}
+  <FlashcardsView
+    {track}
+    {problem}
+    {prevProblem}
+    {nextProblem}
+    deck={problem.deck ?? { cards: [] }}
+    initiallyCompleted={data.initiallyCompleted}
+    initialProgress={data.initialFlashcardProgress}
+    onDeckLearned={(total) => {
+      toastRef?.show({
+        kind: 'points',
+        title: '+5 pts',
+        subtitle: `Deck learned · ${total} cards`
       });
       void checkForNewAchievements(1400);
     }}
@@ -1147,6 +1427,19 @@
               >+</button>
             </div>
             <div class="flex items-center gap-2 ml-auto">
+              <!-- Save status. Click to force a save; doubles as the "your
+                   work is safe" reassurance that was missing entirely. -->
+              <button
+                class="save-chip save-{saveState}"
+                onclick={() => void saveNow()}
+                title={saveError
+                  ? `Could not save your draft: ${saveError}. Click to try again.`
+                  : 'Your code saves automatically. Click (or press Ctrl+S) to save right now.'}
+              >
+                <span class="save-dot"></span>
+                {saveLabel}
+              </button>
+
               <!-- Reset to starter code -->
               <button
                 class="btn-ghost text-xs"
@@ -1202,11 +1495,22 @@
                 {/if}
               </div>
 
+              {#if isRunning || isSubmitting}
+                <!-- One clearly-labelled way out of a run that is taking too
+                     long, instead of navigating away and hoping. -->
+                <button
+                  class="btn-ghost text-xs"
+                  onclick={stopActiveSession}
+                  title="Stop the running program"
+                >
+                  ■ Stop
+                </button>
+              {/if}
               <button
                 class="btn-ghost"
                 onclick={handleRun}
-                disabled={isRunning}
-                title="Run code (Ctrl+Enter)"
+                disabled={isRunning || isSubmitting}
+                title="Run your code and watch its output — Ctrl+Enter"
               >
                 {#if isRunning}
                   <span class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-600 border-t-slate-200"></span>
@@ -1218,7 +1522,8 @@
               <button
                 class="btn-success"
                 onclick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isRunning || isSubmitting}
+                title="Check your output against what this module expects — Ctrl+Shift+Enter"
               >
                 {#if isSubmitting}
                   <span class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-green-800 border-t-white"></span>
@@ -1302,7 +1607,10 @@
               initialValue={editorInitialValue}
               fontSize={editorFontSize}
               vim={vimEnabled}
-              onsave={handleDraftSave}
+              onchange={handleEditorChange}
+              onsave={() => void saveNow()}
+              onrun={() => void handleRun()}
+              onsubmit={() => void handleSubmit()}
             />
           </div>
 
@@ -1329,6 +1637,10 @@
                 {latestRun}
                 {latestSubmit}
                 {liveStatus}
+                {isRunning}
+                {isSubmitting}
+                bind:activeTab={outputTab}
+                oncancel={stopActiveSession}
               />
             </div>
           {/if}
@@ -1662,6 +1974,40 @@
     color: #64748b;
     font-variant-numeric: tabular-nums;
   }
+
+  /* ── Save status chip ── */
+  .save-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid #1e293b;
+    background: #0f1117;
+    font-size: 0.68rem;
+    color: #64748b;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .save-chip:hover { color: #cbd5e1; border-color: #334155; }
+
+  .save-dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: #475569;
+    flex-shrink: 0;
+  }
+
+  .save-clean .save-dot,
+  .save-saved .save-dot  { background: #4ade80; }
+  .save-dirty            { color: #fbbf24; border-color: #713f12; }
+  .save-dirty .save-dot  { background: #fbbf24; }
+  .save-saving .save-dot { background: #60a5fa; animation: save-pulse 1s ease-in-out infinite; }
+  .save-error            { color: #fca5a5; border-color: #7f1d1d; }
+  .save-error .save-dot  { background: #f87171; }
+
+  @keyframes save-pulse { 50% { opacity: 0.3; } }
 
 
   /* ── Submissions dropdown ── */

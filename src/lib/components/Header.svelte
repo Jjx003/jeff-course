@@ -48,6 +48,7 @@
 
   <nav class="header-actions" aria-label="Primary navigation">
     <SessionPill />
+    <a href="/review" class="header-link" class:active={page.url.pathname.startsWith('/review')} title="Flashcards due across every course">Review</a>
     <a href="/sessions" class="header-link" class:active={page.url.pathname.startsWith('/sessions')} title="Running and recent sandbox sessions">Sessions</a>
     <a href="/stats" class="header-link" class:active={page.url.pathname.startsWith('/stats')} title="Your progress">Stats</a>
     {#if page.data.user}

@@ -25,6 +25,7 @@ import type {
   RawQuizYaml,
   QuizQuestion,
   DrillConfig,
+  FlashcardDeck,
   RuntimeHint,
   Language,
   Difficulty,
@@ -69,6 +70,7 @@ function normalizeModuleType(value: string | undefined): ModuleType {
   if (value === 'quiz') return 'quiz';
   if (value === 'test') return 'test';
   if (value === 'drill') return 'drill';
+  if (value === 'flashcards') return 'flashcards';
   return 'coding';
 }
 
@@ -138,7 +140,9 @@ function parseModuleMeta(
     type,
     languages,
     defaultLanguage,
-    ...(runtime ? { runtime } : {})
+    ...(runtime ? { runtime } : {}),
+    ...(raw.section ? { section: raw.section } : {}),
+    ...(raw.optional ? { optional: true } : {})
   };
 }
 
@@ -213,6 +217,13 @@ export function parseFullProblem(
     drill = readYaml<DrillConfig>(path.join(modulePath, 'drill.yaml')) ?? undefined;
   }
 
+  let deck: FlashcardDeck | undefined;
+  if (meta.type === 'flashcards') {
+    const rawDeck = readYaml<FlashcardDeck>(path.join(modulePath, 'cards.yaml'));
+    // Normalize so the view never has to null-check the card array.
+    deck = { ...(rawDeck ?? {}), cards: rawDeck?.cards ?? [] };
+  }
+
   return {
     ...meta,
     tabs,
@@ -223,7 +234,8 @@ export function parseFullProblem(
     ...(hasExpectedOutput ? { expectedOutput: expectedOutput as Record<Language, string> } : {}),
     ...(hasSolutionCode ? { solutionCode } : {}),
     ...(quizQuestions !== undefined ? { quizQuestions } : {}),
-    ...(drill !== undefined ? { drill } : {})
+    ...(drill !== undefined ? { drill } : {}),
+    ...(deck !== undefined ? { deck } : {})
   };
 }
 

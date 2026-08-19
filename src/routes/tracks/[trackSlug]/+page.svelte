@@ -16,14 +16,23 @@
     return m;
   });
 
-  let completedCount = $derived(completions.filter((c) => c.completed).length);
-  let totalCount = $derived(track.problems.length);
+  // Optional modules (appendices, deep dives) sit outside the track's spine:
+  // finishing the required run should read as 100%, not as 45 of 52.
+  let coreProblems = $derived(track.problems.filter((problem) => !problem.optional));
+  let completedCount = $derived(
+    completions.filter(
+      (c) => c.completed && coreProblems.some((p) => `${track.slug}/${p.slug}` === c.problemId)
+    ).length
+  );
+  let totalCount = $derived(coreProblems.length);
   let progress = $derived(totalCount === 0 ? 0 : completedCount / totalCount);
-  let nextProblem = $derived(track.problems.find((problem) => !isCompleted(problem.slug)) ?? track.problems[0] ?? null);
-  let totalMinutes = $derived(track.problems.reduce((sum, problem) => sum + problem.estimatedMinutes, 0));
+  let nextProblem = $derived(
+    coreProblems.find((problem) => !isCompleted(problem.slug)) ?? coreProblems[0] ?? null
+  );
+  let totalMinutes = $derived(coreProblems.reduce((sum, problem) => sum + problem.estimatedMinutes, 0));
   let moduleCounts = $derived.by(() => {
     const counts: Record<string, number> = { coding: 0, reading: 0, quiz: 0, test: 0, drill: 0 };
-    for (const problem of track.problems) counts[problem.type] = (counts[problem.type] ?? 0) + 1;
+    for (const problem of coreProblems) counts[problem.type] = (counts[problem.type] ?? 0) + 1;
     return counts;
   });
 
@@ -42,6 +51,7 @@
     if (type === 'quiz') return 'Quiz';
     if (type === 'test') return 'Test';
     if (type === 'drill') return 'Drill';
+    if (type === 'flashcards') return 'Cards';
     return 'Code';
   }
 
@@ -50,6 +60,7 @@
     if (type === 'quiz') return 'type-quiz';
     if (type === 'test') return 'type-test';
     if (type === 'drill') return 'type-drill';
+    if (type === 'flashcards') return 'type-cards';
     return 'type-code';
   }
 </script>
@@ -141,6 +152,13 @@
   <div class="module-list mt-6">
     {#each track.problems as problem, idx}
       {@const done = isCompleted(problem.slug)}
+      {#if problem.section && problem.section !== track.problems[idx - 1]?.section}
+        <div class="section-divider">
+          <span class="section-rule"></span>
+          <span class="section-label">{problem.section}</span>
+          <span class="section-rule"></span>
+        </div>
+      {/if}
       <svelte:element
         this={enrolled ? 'a' : 'div'}
         href={enrolled ? `/tracks/${track.slug}/problems/${problem.slug}` : undefined}
@@ -176,6 +194,9 @@
 
         <!-- Metadata -->
         <div class="module-meta">
+          {#if problem.optional}
+            <span class="type-pill pill-optional">Optional</span>
+          {/if}
           <span class="type-pill {typeTone(problem.type)}">{moduleKind(problem.type)}</span>
           <span class="badge {DIFFICULTY_BADGE[problem.difficulty] ?? 'badge-blue'}">
             {problem.difficulty}
@@ -348,6 +369,31 @@
     letter-spacing: 0.05em;
     text-transform: uppercase;
   }
+  /* Muted on purpose: an appendix row should read as available, not as work owed. */
+  .pill-optional {
+    border-color: rgba(148, 163, 184, 0.3);
+    background: rgba(148, 163, 184, 0.07);
+    color: #cbd5e1;
+  }
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin: 1.6rem 0 0.4rem;
+  }
+  .section-rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(148, 163, 184, 0.28), transparent);
+  }
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 750;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    white-space: nowrap;
+  }
   .type-code {
     border-color: rgba(56, 189, 248, 0.3);
     background: rgba(56, 189, 248, 0.09);
@@ -372,6 +418,12 @@
     border-color: rgba(244, 114, 182, 0.32);
     background: rgba(244, 114, 182, 0.08);
     color: #f9a8d4;
+  }
+
+  .type-cards {
+    border-color: rgba(45, 212, 191, 0.32);
+    background: rgba(45, 212, 191, 0.08);
+    color: #5eead4;
   }
 
   /* Row variants */

@@ -159,6 +159,19 @@
     });
   }
 
+  /**
+   * Absolute slack and percentage slack are combined by taking whichever is
+   * larger, so one item can span its whole parameter grid: the absolute value
+   * keeps small answers gradeable, the percentage stops the top of the range
+   * from demanding four-significant-figure mental arithmetic.
+   */
+  function effectiveTolerance(item: DrillItem, correct: number): number {
+    const absolute = item.tolerance ?? 0;
+    const pct = item.tolerancePercent ?? 0;
+    if (pct <= 0) return absolute;
+    return Math.max(absolute, (Math.abs(correct) * pct) / 100);
+  }
+
   function generatePrompt(): GeneratedPrompt {
     const items = drill.items ?? [];
     const item = items[Math.floor(Math.random() * items.length)] ?? items[0];
@@ -207,7 +220,7 @@
   function submitAnswer() {
     if (phase !== 'running' || !currentPrompt || answeredCurrent) return;
     const numeric = Number(currentAnswer.replace(/[,%\s]/g, ''));
-    const tolerance = currentPrompt.item.tolerance ?? 0;
+    const tolerance = effectiveTolerance(currentPrompt.item, currentPrompt.correct);
     const isCorrect = Number.isFinite(numeric) && Math.abs(numeric - currentPrompt.correct) <= tolerance;
     const record: ResponseRecord = {
       prompt: currentPrompt,

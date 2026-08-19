@@ -26,6 +26,7 @@ export { apiReadingProgressService as readingProgressService } from './api/readi
 export { apiStudyTimeService as studyTimeService } from './api/studyTimeService.api.js';
 export { apiQuizService as quizService } from './api/quizService.api.js';
 export { apiDrillService as drillService } from './api/drillService.api.js';
+export { apiFlashcardService as flashcardService } from './api/flashcardService.api.js';
 
 // Execution service
 export { localExecutionService as executionService } from './local/executionService.local.js';

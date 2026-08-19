@@ -77,11 +77,36 @@
   // types) into a uniform ResolvedQuestion[] ready for the renderer. Each
   // call generates fresh random values for parametric questions.
 
+  /**
+   * Fisher-Yates, carrying the correct answer's identity through the
+   * permutation. Static options are authored in a fixed order, and authors
+   * cluster the right answer — without this, a quiz can be passed by always
+   * picking the same letter.
+   */
+  function shuffleOptions(options: string[], correctIndex: number): {
+    options: string[];
+    correctIndex: number;
+  } {
+    const items = options.map((label, i) => ({ label, isCorrect: i === correctIndex }));
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    const shuffledCorrect = items.findIndex((it) => it.isCorrect);
+    return {
+      options: items.map((it) => it.label),
+      // findIndex returns -1 if the authored correct index was out of range;
+      // fall back to 0 rather than rendering a question with no right answer.
+      correctIndex: shuffledCorrect === -1 ? 0 : shuffledCorrect
+    };
+  }
+
   function resolveQuestions(questions: QuizQuestion[]): ResolvedQuestion[] {
     return questions.map((q): ResolvedQuestion => {
       if (q.type === 'multiple_choice') {
-        const options = q.options ?? [];
-        const correctIndex = typeof q.correct === 'number' ? q.correct : 0;
+        const authored = q.options ?? [];
+        const authoredCorrect = typeof q.correct === 'number' ? q.correct : 0;
+        const { options, correctIndex } = shuffleOptions(authored, authoredCorrect);
         return {
           id: q.id,
           type: 'multiple_choice',

@@ -222,7 +222,9 @@ export async function startSession(
         submitMessage = outcome.capturedStderr.trim() || outcome.errorMessage || `Process exited with code ${outcome.exitCode}`;
       } else if (!expected) {
         submitVerdict = 'pending';
-        submitMessage = 'No expected output configured for this language.';
+        submitMessage =
+          'This module has no fixed expected output for ' + req.language + ', so it is not ' +
+          'auto-graded. Check your results against the problem statement, or ask the tutor.';
       } else {
         const grade = gradeOutput(expected, outcome.capturedStdout);
         if (grade.passed) {
@@ -230,10 +232,13 @@ export async function startSession(
           submitMessage = 'All outputs matched.';
           submitScore = 100;
         } else {
+          // Headline first, then the diff after a blank line. The client
+          // splits on the `--- expected` header (see `parseGraderMessage`)
+          // to render a real comparison rather than this raw text.
           submitVerdict = 'wrong_answer';
           submitMessage = grade.diff
-            ? `Output did not match expected.\n\n${grade.diff}`
-            : 'Output did not match expected.';
+            ? `Your output did not match what this module expects.\n\n${grade.diff}`
+            : 'Your output did not match what this module expects.';
           submitScore = 0;
         }
       }

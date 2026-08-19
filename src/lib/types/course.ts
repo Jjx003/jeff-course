@@ -42,8 +42,12 @@ export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
  *                 explanations are withheld until the results screen.
  *   - `drill`   : replayable timed practice using `drill.yaml`, optimized for
  *                 speed, fluency, and visible improvement over time.
+ *   - `flashcards` : spaced-repetition deck loaded from `cards.yaml`. Cards are
+ *                 scheduled per learner with an SM-2-style algorithm, so unlike
+ *                 a quiz the deck is never "done" — learned cards keep coming
+ *                 back on the global /review page when they fall due.
  */
-export type ModuleType = 'coding' | 'reading' | 'quiz' | 'test' | 'drill';
+export type ModuleType = 'coding' | 'reading' | 'quiz' | 'test' | 'drill' | 'flashcards';
 
 // ── Quiz types ───────────────────────────────────────────────────────────
 
@@ -152,7 +156,15 @@ export interface DrillItem {
   params: Record<string, { min: number; max: number; step: number }>;
   correct_formula: string;
   answer_suffix?: string;
+  /** Absolute slack, in answer units. Acts as a floor so small answers stay gradeable. */
   tolerance?: number;
+  /**
+   * Slack as a percentage of the correct answer, applied alongside `tolerance`
+   * (the larger of the two wins). Multiplicative items span 30-100x across
+   * their parameter grid, so a single absolute tolerance either punishes sound
+   * approximation at the top of the range or accepts garbage at the bottom.
+   */
+  tolerancePercent?: number;
   explanation_template?: string;
 }
 
@@ -163,6 +175,89 @@ export interface DrillConfig {
   targetAccuracy?: number;
   itemsPerRound?: number;
   items: DrillItem[];
+}
+
+// ── Flashcard types ─────────────────────────────────────
+
+/** One card as authored in `cards.yaml`. Front/back support Markdown + LaTeX. */
+export interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  /** Optional nudge the learner can reveal before the answer. */
+  hint?: string;
+  /** Free-form labels, shown on the card and usable for filtering. */
+  tags?: string[];
+  /** Where the fact came from (paper, blog, lecture). Rendered under the back. */
+  source?: string;
+}
+
+/** Raw shape of `cards.yaml` on disk. */
+export interface FlashcardDeck {
+  title?: string;
+  instructions?: string;
+  /** Cap on previously unseen cards introduced in one sitting. */
+  newPerSession?: number;
+  /** Hard cap on total cards in one sitting (new + due reviews). */
+  maxPerSession?: number;
+  cards: Flashcard[];
+}
+
+/** The four self-grades, ordered from worst to best recall. */
+export type FlashcardGrade = 'again' | 'hard' | 'good' | 'easy';
+
+/** Per-learner scheduling state for a single card. */
+export interface FlashcardCardState {
+  cardId: string;
+  /** Successful reviews in the current streak (reset to 0 by `again`). */
+  reps: number;
+  /** How many times this card was forgotten after having been learned. */
+  lapses: number;
+  /** SM-2 ease factor, clamped to [1.3, 2.8]. */
+  ease: number;
+  /** Current scheduling interval in days (0 while still in learning). */
+  intervalDays: number;
+  /** Epoch ms when this card next becomes due. */
+  dueAt: number;
+  lastGrade: FlashcardGrade | null;
+  lastReviewedAt: number | null;
+  /** True once the card has been graded `good` or `easy` at least once. */
+  learned: boolean;
+}
+
+/** Aggregate deck progress used by the intro screen and the review page. */
+export interface FlashcardProgress {
+  problemId: string;
+  totalCards: number;
+  /** Cards with any recorded review. */
+  seen: number;
+  /** Cards ever graded `good` or `easy`. */
+  learned: number;
+  /** Cards that are scheduled and due right now. */
+  due: number;
+  /** Cards never reviewed. */
+  fresh: number;
+  /** Total reviews recorded across all cards in this deck. */
+  reviews: number;
+  /** Soonest future due timestamp among scheduled cards, or null. */
+  nextDueAt: number | null;
+  /** True once every card in the deck has been learned at least once. */
+  hasPassed: boolean;
+  passedAt: number | null;
+  states: FlashcardCardState[];
+}
+
+/** One deck's due counts, used by the cross-course /review page. */
+export interface FlashcardDueDeck {
+  trackSlug: string;
+  trackTitle: string;
+  problemSlug: string;
+  problemTitle: string;
+  deckTitle: string;
+  totalCards: number;
+  due: number;
+  fresh: number;
+  learned: number;
 }
 
 export interface DrillProgress {
@@ -211,6 +306,13 @@ export interface RawModuleYaml {
   defaultLanguage?: Language;
   /** Optional sandbox runtime hint (recommended mode + default resources). */
   runtime?: RuntimeHint;
+  /**
+   * Heading this module sits under in the track list. Modules sharing a
+   * section render beneath one divider; omitting it keeps the flat list.
+   */
+  section?: string;
+  /** Excluded from track progress, module counts, and "continue where you left off". */
+  optional?: boolean;
 }
 
 // ── Normalized app models ────────────────────────────────────────────────
@@ -249,6 +351,10 @@ export interface ProblemMeta {
   defaultLanguage: Language;
   /** Optional sandbox runtime hint authored in module.yaml. */
   runtime?: RuntimeHint;
+  /** Heading this module sits under in the track list, if any. */
+  section?: string;
+  /** Excluded from track progress, module counts, and "continue where you left off". */
+  optional?: boolean;
 }
 
 /**
@@ -280,4 +386,6 @@ export interface Problem extends ProblemMeta {
   quizQuestions?: QuizQuestion[];
   /** Present only for type: drill modules. Loaded from drill.yaml. */
   drill?: DrillConfig;
+  /** Present only for type: flashcards modules. Loaded from cards.yaml. */
+  deck?: FlashcardDeck;
 }

@@ -264,15 +264,35 @@ const readSubmissionResult: ToolDefinition = {
       `Last ${language} submission (${when})`,
       `verdict: ${result.verdict}`,
       `score: ${result.score ?? 'not scored'}`,
-      `message: ${result.message || '(none)'}`
+      `summary: ${result.summary || result.message || '(none)'}`
     ];
 
-    for (const test of result.testResults ?? []) {
-      lines.push('', `test "${test.name}": ${test.passed ? 'passed' : 'FAILED'}`);
-      // Only failing cases are worth the tokens; a pass needs no diff.
-      if (!test.passed) {
-        if (test.expected) lines.push(describeStream('  expected', test.expected));
-        if (test.actual) lines.push(describeStream('  actual', test.actual));
+    // Newer submissions carry the comparison in structured form; the
+    // mismatching lines are the part worth spending tokens on.
+    if (result.diff?.length) {
+      const bad = result.diff.filter((row) => row.kind !== 'same');
+      lines.push(
+        '',
+        `${bad.length} of ${result.diff.length} output lines differ:`,
+        ...bad.slice(0, 40).map((row) => {
+          const at = row.expectedNo ?? row.actualNo ?? '?';
+          if (row.kind === 'missing') return `  line ${at}: expected "${row.expected}" — the learner printed nothing here`;
+          if (row.kind === 'extra')   return `  line ${at}: the learner printed "${row.actual}" — not expected`;
+          return `  line ${at}: expected "${row.expected}" but got "${row.actual}"`;
+        })
+      );
+      if (bad.length > 40) lines.push(`  [...${bad.length - 40} more differing lines...]`);
+    } else if (result.stderr) {
+      lines.push('', describeStream('error output', result.stderr));
+    } else {
+      // Submissions saved before the structured fields existed.
+      for (const test of result.testResults ?? []) {
+        lines.push('', `test "${test.name}": ${test.passed ? 'passed' : 'FAILED'}`);
+        // Only failing cases are worth the tokens; a pass needs no diff.
+        if (!test.passed) {
+          if (test.expected) lines.push(describeStream('  expected', test.expected));
+          if (test.actual) lines.push(describeStream('  actual', test.actual));
+        }
       }
     }
 

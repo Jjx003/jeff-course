@@ -16,6 +16,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { startSession, getSession, cancelSession, collectOutput } from '$lib/server/sandbox/index.js';
+import { parseGraderMessage } from '$lib/execution/graderDiff.js';
 import type { Language } from '$lib/types/course.js';
 import type { RunResult, SubmitResult } from '$lib/types/execution.js';
 
@@ -65,7 +66,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   if (action === 'run') {
     const status: RunResult['status'] =
       collected.status === 'killed' ? 'timeout'
-      : collected.status === 'cancelled' ? 'error'
+      : collected.status === 'cancelled' ? 'cancelled'
       : collected.status === 'completed' ? 'ok'
       : 'error';
     const runResult: RunResult = {
@@ -82,18 +83,16 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   const verdict = (finalRecord?.submitVerdict ?? 'error') as SubmitResult['verdict'];
   const message = finalRecord?.submitMessage ?? collected.stderr ?? 'Submission failed.';
   const score = finalRecord?.submitScore ?? (verdict === 'accepted' ? 100 : 0);
+  const parsed = parseGraderMessage(message);
   const submitResult: SubmitResult = {
     verdict,
     message,
     score: verdict === 'pending' ? null : score,
-    testResults: verdict === 'pending' ? undefined : [
-      {
-        name: 'Expected output comparison',
-        passed: verdict === 'accepted',
-        actual: collected.stdout,
-        durationMs: collected.durationMs
-      }
-    ]
+    summary: parsed.summary,
+    ...(parsed.diff
+      ? { diff: parsed.diff, expectedText: parsed.expectedText, actualText: parsed.actualText }
+      : {}),
+    ...(verdict === 'error' ? { stderr: collected.stderr?.trim() || parsed.summary } : {})
   };
   return json(submitResult);
 };

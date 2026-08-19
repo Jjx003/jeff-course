@@ -10,7 +10,7 @@ const cwd = process.cwd();
 const manifestPath = process.env.COURSE_PACKS_MANIFEST ?? path.join(cwd, 'data', 'course-packs.yaml');
 const repoDir = process.env.COURSE_PACKS_DIR ?? path.join(cwd, 'data', 'course-packs', 'repos');
 
-const MODULE_TYPES = new Set(['coding', 'reading', 'quiz', 'test', 'drill']);
+const MODULE_TYPES = new Set(['coding', 'reading', 'quiz', 'test', 'drill', 'flashcards']);
 const LANGUAGES = new Set(['python', 'cpp']);
 const DIFFICULTIES = new Set(['beginner', 'intermediate', 'advanced']);
 const QUESTION_TYPES = new Set(['multiple_choice', 'true_false', 'parametric']);
@@ -21,6 +21,7 @@ const MODULE_ARTIFACTS = new Set([
   'tips.md',
   'quiz.yaml',
   'drill.yaml',
+  'cards.yaml',
   'requirements.txt',
   'starter'
 ]);
@@ -380,6 +381,53 @@ function validateDrill(filePath, issues) {
   });
 }
 
+function validateCards(filePath, issues) {
+  const deck = readValidationYaml(filePath, issues);
+  if (!isObject(deck)) {
+    // Unlike the optional files, cards.yaml is required for this module type,
+    // so an empty or non-object file is an error rather than an absence.
+    issues.push(diagnostic(filePath, '', 'expected a YAML object with a cards list'));
+    return;
+  }
+  if (deck.title !== undefined) requireString(deck.title, filePath, 'title', issues);
+  if (deck.instructions !== undefined) requireString(deck.instructions, filePath, 'instructions', issues);
+  optionalNumber(deck.newPerSession, filePath, 'newPerSession', issues, { min: 1, integer: true });
+  optionalNumber(deck.maxPerSession, filePath, 'maxPerSession', issues, { min: 1, integer: true });
+  if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
+    issues.push(diagnostic(filePath, 'cards', 'expected a non-empty array'));
+    return;
+  }
+  if (
+    typeof deck.newPerSession === 'number' &&
+    typeof deck.maxPerSession === 'number' &&
+    deck.maxPerSession < deck.newPerSession
+  ) {
+    issues.push(
+      diagnostic(filePath, 'maxPerSession', 'must be at least newPerSession, or new cards are silently dropped')
+    );
+  }
+
+  const ids = new Set();
+  deck.cards.forEach((card, index) => {
+    const base = `cards[${index}]`;
+    if (!isObject(card)) {
+      issues.push(diagnostic(filePath, base, 'expected a flashcard object'));
+      return;
+    }
+    if (requireString(card.id, filePath, `${base}.id`, issues)) {
+      if (ids.has(card.id)) {
+        issues.push(diagnostic(filePath, `${base}.id`, `duplicate card id "${card.id}"`));
+      }
+      ids.add(card.id);
+    }
+    requireString(card.front, filePath, `${base}.front`, issues);
+    requireString(card.back, filePath, `${base}.back`, issues);
+    if (card.hint !== undefined) requireString(card.hint, filePath, `${base}.hint`, issues);
+    if (card.source !== undefined) requireString(card.source, filePath, `${base}.source`, issues);
+    if (card.tags !== undefined) requireStringArray(card.tags, filePath, `${base}.tags`, issues);
+  });
+}
+
 function isLikelyModuleDir(entry, directory) {
   if (/^\d+(?:\.\d+)?[-_]/.test(entry.name)) return true;
   return fs.readdirSync(directory).some((name) => MODULE_ARTIFACTS.has(name));
@@ -471,6 +519,11 @@ function validateTrack(trackDir) {
       const drillPath = path.join(moduleDir, 'drill.yaml');
       if (!fs.existsSync(drillPath)) issues.push(diagnostic(drillPath, '', 'missing required file for drill module'));
       else validateDrill(drillPath, issues);
+    }
+    if (type === 'flashcards') {
+      const cardsPath = path.join(moduleDir, 'cards.yaml');
+      if (!fs.existsSync(cardsPath)) issues.push(diagnostic(cardsPath, '', 'missing required file for flashcards module'));
+      else validateCards(cardsPath, issues);
     }
   }
 

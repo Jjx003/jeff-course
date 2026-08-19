@@ -286,6 +286,41 @@ export const dbReady: Promise<void> = (async () => {
     SELECT 'local', track_slug, preferred_mode, resources_json, updated_at FROM __OLD__
   `);
 
+  // Spaced-repetition flashcards. Two tables: the per-card scheduling state
+  // (one row per learner+card, overwritten on every review) and an append-only
+  // review log used for history and study-activity rollups. Both are new
+  // tables, so no single-user migration path is needed.
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS flashcard_states (
+      user_id          VARCHAR NOT NULL,
+      problem_id       VARCHAR NOT NULL,
+      card_id          VARCHAR NOT NULL,
+      reps             INTEGER NOT NULL,
+      lapses           INTEGER NOT NULL,
+      ease             DOUBLE  NOT NULL,
+      interval_days    DOUBLE  NOT NULL,
+      due_at           BIGINT  NOT NULL,
+      last_grade       VARCHAR,
+      last_reviewed_at BIGINT,
+      learned          BOOLEAN NOT NULL,
+      PRIMARY KEY (user_id, problem_id, card_id)
+    )
+  `);
+  await dbRun(`CREATE INDEX IF NOT EXISTS flashcard_states_due_idx ON flashcard_states (user_id, due_at)`);
+
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS flashcard_reviews (
+      id          VARCHAR PRIMARY KEY,
+      user_id     VARCHAR NOT NULL,
+      problem_id  VARCHAR NOT NULL,
+      card_id     VARCHAR NOT NULL,
+      grade       VARCHAR NOT NULL,
+      response_ms BIGINT  NOT NULL,
+      reviewed_at BIGINT  NOT NULL
+    )
+  `);
+  await dbRun(`CREATE INDEX IF NOT EXISTS flashcard_reviews_deck_idx ON flashcard_reviews (user_id, problem_id, reviewed_at)`);
+
   await dbRun(`
     CREATE TABLE IF NOT EXISTS tutor_messages (
       id         VARCHAR PRIMARY KEY,
