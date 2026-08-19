@@ -62,6 +62,15 @@ languages: [python, cpp]
 defaultLanguage: python
 ```
 
+Two optional keys control how a module appears in the track list:
+
+| Key | Effect |
+|---|---|
+| `section: "Appendix — Optional Deep Dives"` | Renders a labelled divider above this module. Consecutive modules sharing a value sit under one divider. Omit for a flat list. |
+| `optional: true` | Keeps the module out of track progress, module counts, and "continue where you left off". It still earns points and study time. Use for appendices and deep dives that are not prerequisites for anything. |
+
+The two are independent, but an appendix normally wants both.
+
 Supported `type` values:
 
 | Type | Files |
@@ -71,6 +80,7 @@ Supported `type` values:
 | `quiz` | `problem.md` plus `quiz.yaml` |
 | `test` | `problem.md` plus `quiz.yaml`; feedback is delayed until results |
 | `drill` | `problem.md` plus `drill.yaml` |
+| `flashcards` | `problem.md` plus `cards.yaml`; optional `theory.md`, `tips.md` |
 
 Only coding modules should include `languages`, `defaultLanguage`, starter code,
 or expected output.
@@ -188,6 +198,81 @@ items:
 
 Drills use generated numeric prompts and record accuracy, speed, best streak,
 and personal bests.
+
+### Tolerances
+
+An answer counts as correct within `tolerance` (absolute, in answer units) or
+`tolerancePercent` (a percentage of the correct answer), whichever is larger.
+
+Use both on any item whose answer spans a wide range. A multiplicative item can
+easily run 30–100× across its parameter grid, and a single absolute tolerance
+then either demands four-significant-figure mental arithmetic at the top of the
+range or accepts nearly anything at the bottom. The absolute value keeps small
+answers gradeable; the percentage carries the large ones.
+
+```yaml
+    tolerance: 5          # floor, so an answer of 66 is not graded to 1%
+    tolerancePercent: 1   # carries the top of the range, where answers reach 4196
+```
+
+Leave `tolerancePercent` off for exact arithmetic — `p * 2` bytes, `1/p`, a head
+count — where any slack would accept a wrong method.
+
+When adding or editing an item, sweep its full parameter grid before committing:
+check that no combination yields a correct answer of 0 or a non-integer, and that
+the tolerance is neither larger than the smallest answer nor an implausibly tight
+fraction of the largest.
+
+## Flashcard Modules
+
+`cards.yaml`
+
+```yaml
+title: "Transformer Internals"
+instructions: >
+  Say each answer out loud before flipping.
+newPerSession: 12
+maxPerSession: 40
+cards:
+  - id: sqrt-dk
+    front: "Why divide attention logits by $\sqrt{d_k}$?"
+    back: |
+      The dot product of two unit-variance vectors of length $d_k$ has
+      standard deviation $\sqrt{d_k}$, so unscaled logits saturate softmax
+      as head dimension grows.
+    hint: "Think about the variance of a sum of $d_k$ products."
+    tags: [attention]
+    source: "Attention Is All You Need, section 3.2.1"
+```
+
+`front`, `back`, and `hint` support Markdown, LaTeX, and code blocks. `id` must
+be unique within the deck and stable across edits — it is the key scheduling
+state is stored under, so renaming an id resets that card's history for every
+learner.
+
+Cards are scheduled per learner with an SM-2-style algorithm implemented in
+`src/lib/flashcards/scheduler.ts`. A review applies one of four grades:
+
+| Grade | Effect |
+|---|---|
+| Again | back into learning, due in ~10 minutes, ease drops, lapse counted |
+| Hard | short interval, ease drops slightly |
+| Good | 1 day on the first pass, then `interval * ease` each time |
+| Easy | the Good interval stretched by a bonus, ease rises |
+
+`newPerSession` caps how many previously unseen cards are introduced in one
+sitting (default 15); `maxPerSession` caps the total queue (default 60). A deck
+also offers a "cram all" mode that ignores both.
+
+The module completes once every card has been graded Good or Easy at least
+once. Completion is deliberately a "you have been through the deck" bar rather
+than a mastery bar — mastery is what the recurring queue is for, and gating
+module completion behind a never-ending review schedule would make a track
+impossible to finish.
+
+Every flashcards module in every enrolled track also feeds the cross-course
+`/review` page, which is where learners are expected to do their daily
+repetition rather than revisiting individual deck pages.
 
 ## Generate, Review, Validate, Preview, Share
 

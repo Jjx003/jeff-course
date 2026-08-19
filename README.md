@@ -80,11 +80,28 @@ Each course can mix several module types:
 | Quiz | Self-checks with immediate feedback |
 | Test | Exam-style assessments that reveal answers at the end |
 | Drill | Timed generated practice for speed and fluency |
+| Flashcards | Spaced-repetition decks that feed a cross-course review queue |
 
 Any module type can be discussed with the built-in [AI tutor](#ai-tutor).
 
 See [Course Authoring](docs/course-authoring.md) for the file format and sharing
 workflow.
+
+## Daily Review
+
+Flashcard modules feed a single cross-course queue at `/review`. Every deck in
+every track a learner is enrolled in contributes, and cards are scheduled per
+learner with an SM-2-style algorithm: cards you grade *Again* come back in
+minutes, cards you grade *Easy* drift weeks out.
+
+The intent is that individual deck pages are where you meet a topic once, and
+`/review` is where you keep it. A deck page still works on its own — it shows
+what is due, what you have never seen, and offers a cram-the-whole-deck mode —
+but the daily habit lives on the review page.
+
+Scheduling state is per profile and lives in the local DuckDB file, alongside
+an append-only review log. Resetting a deck clears its schedule without
+removing the module's completion.
 
 ## AI Tutor
 
@@ -167,13 +184,16 @@ jeff-course/
 
 | Track | Modules |
 |---|---:|
+| Getting Hired at an AI Lab | 45 |
 | Biochem & Org Chem Warm-up | 15 |
 | Database Implementation in C++ | 17 |
-| Model Optimization Systems | 18 |
+| Immunology: From Recognition to Immune Engineering | 19 |
+| Model Optimization Systems | 21 |
 | Number Theory | 35 |
 | Poker Theory: Mathematics & Strategy | 23 |
 | Protein Folding and Design | 27 |
 | Semiconductor Pipeline and Ecosystem | 19 |
+| Supply Chain Systems | 12 |
 | Introduction to Tensors | 11 |
 
 ## Scripts
